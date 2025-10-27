@@ -5,6 +5,7 @@ node_modules/
 
 # Expo
 .expo/
+.expo-shared/
 dist/
 web-build/
 expo-env.d.ts
@@ -29,9 +30,12 @@ yarn-error.*
 # macOS
 .DS_Store
 *.pem
+Thumbs.db
 
 # local env files
+.env
 .env*.local
+.env.*.local
 
 # typescript
 *.tsbuildinfo
@@ -43,9 +47,9 @@ yarn-error.*
 # Credentials (NEVER commit these)
 CREDENTIALS.md
 
-# Environment files
-.env
-
 # IDE
 .vscode/
 .idea/
+
+# Build
+build/
