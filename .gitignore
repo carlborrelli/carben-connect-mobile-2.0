@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.expo/
+.expo-shared/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Credentials (NEVER commit these)
+CREDENTIALS.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build
+dist/
+build/
