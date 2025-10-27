@@ -120,3 +120,54 @@ Refine UI, permissions, and feedback channels once the admin workflow is seamles
 
 🧭 Initial Layout Proposal
 Bottom Menu Bar
+Projects | Inbox | Home | Clients | More/Menu
+
+Optional Top Bar (Contextual)
+
+Appears in:
+
+Draft Mode
+
+Edit Views
+
+Calendar (navigation/filter tools)
+
+🧠 Guiding Principles
+
+No idea is set in stone — everything is open to iteration.
+
+Build for clarity, not complexity.
+
+The admin side will reveal most design challenges — solving them elegantly will shape the entire system.
+
+Encourage creative problem-solving — think outside the box when it makes sense.
+
+💡 Developer Notes
+
+Suggested Stack (if continuing Claude Code base):
+
+Frontend: React Native (Expo)
+
+Backend: Firebase (Auth + Firestore + Functions)
+
+Integrations: QuickBooks API, OpenAI, Whisper
+
+Design: Tailwind (or NativeWind) + Apple-style animation hierarchy
+
+✅ Next Steps
+
+Scaffold the new project (expo init or Claude project seed).
+
+Implement persistent bottom navigation bar.
+
+Build the Inbox module skeleton.
+
+Create mock data for Projects and Clients.
+
+Draft Mode UI prototype.
+
+🗒️ Notes to Future Devs
+
+This document isn’t a strict roadmap — it’s a vision framework.
+Every detail here is up for discussion, but the spirit of the project should remain:
+Clean. Smart. Effortless.
