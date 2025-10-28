@@ -17,7 +17,7 @@ import { useAuth } from '../contexts/AuthContext';
 import ProjectCard from '../components/ProjectCard';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../theme';
 
-export default function ProjectsScreen() {
+export default function ProjectsScreen({ navigation }) {
   const { userProfile, isAdmin } = useAuth();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,8 +74,7 @@ export default function ProjectsScreen() {
   };
 
   const handleProjectPress = (project) => {
-    // TODO: Navigate to project detail screen
-    console.log('Pressed project:', project.id);
+    navigation.navigate('ProjectDetail', { projectId: project.id });
   };
 
   // Loading state
