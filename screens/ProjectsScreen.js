@@ -1,16 +1,18 @@
 // ProjectsScreen - List and manage projects
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  FlatList, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
   ActivityIndicator,
-  RefreshControl 
+  RefreshControl,
+  TextInput
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,15 +22,17 @@ import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../theme';
 export default function ProjectsScreen({ navigation }) {
   const { userProfile, isAdmin } = useAuth();
   const [projects, setProjects] = useState([]);
+  const [filteredProjects, setFilteredProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Load projects from Firestore
   useEffect(() => {
     if (!userProfile) return;
 
     let projectQuery;
-    
+
     if (isAdmin()) {
       // Admin sees all projects
       projectQuery = query(
@@ -55,6 +59,7 @@ export default function ProjectsScreen({ navigation }) {
           messageCount: 0, // TODO: Count messages from messages collection
         }));
         setProjects(projectsData);
+        setFilteredProjects(projectsData);
         setLoading(false);
         setRefreshing(false);
       },
@@ -68,25 +73,78 @@ export default function ProjectsScreen({ navigation }) {
     return () => unsubscribe();
   }, [userProfile]);
 
+  // Filter projects when search query changes
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredProjects(projects);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = projects.filter(project => {
+      const title = (project.title || '').toLowerCase();
+      const clientName = (project.clientName || '').toLowerCase();
+      const description = (project.description || '').toLowerCase();
+      const status = (project.status || '').toLowerCase();
+
+      return title.includes(query) ||
+             clientName.includes(query) ||
+             description.includes(query) ||
+             status.includes(query);
+    });
+
+    setFilteredProjects(filtered);
+  }, [searchQuery, projects]);
+
   const handleRefresh = () => {
     setRefreshing(true);
     // Firestore listener will automatically refresh
   };
 
   const handleProjectPress = (project) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate('ProjectDetail', { projectId: project.id });
   };
 
+  const handleClearSearch = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSearchQuery('');
+  };
+
   const renderHeader = () => (
-    <View style={styles.header}>
-      <Text style={styles.title}>Projects</Text>
-      <View style={styles.headerIcons}>
-        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Calendar")}>
-          <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
-          <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
-        </TouchableOpacity>
+    <View style={styles.headerContainer}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Projects</Text>
+        <View style={styles.headerIcons}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Calendar")}>
+            <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
+            <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputContainer}>
+          <Ionicons name="search" size={20} color={COLORS.tertiaryLabel} style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search projects..."
+            placeholderTextColor={COLORS.tertiaryLabel}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            returnKeyType="search"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={handleClearSearch} style={styles.clearButton}>
+              <Ionicons name="close-circle" size={20} color={COLORS.tertiaryLabel} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -121,13 +179,31 @@ export default function ProjectsScreen({ navigation }) {
     );
   }
 
+  // No search results
+  if (filteredProjects.length === 0 && searchQuery.length > 0) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        {renderHeader()}
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyState}>
+            <Ionicons name="search-outline" size={64} color={COLORS.tertiaryLabel} />
+            <Text style={styles.emptyTitle}>No Results Found</Text>
+            <Text style={styles.emptyText}>
+              Try searching with different keywords
+            </Text>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   // Projects list
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {renderHeader()}
-      
+
       <FlatList
-        data={projects}
+        data={filteredProjects}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <ProjectCard project={item} onPress={handleProjectPress} />
@@ -150,13 +226,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.systemGroupedBackground,
   },
+  headerContainer: {
+    backgroundColor: COLORS.systemBackground,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COLORS.separator,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-    backgroundColor: COLORS.systemBackground,
+    paddingTop: SPACING.md,
+    paddingBottom: SPACING.sm,
   },
   title: {
     ...TYPOGRAPHY.largeTitle,
@@ -171,6 +252,30 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  searchContainer: {
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.md,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: SPACING.sm,
+    height: 44,
+  },
+  searchIcon: {
+    marginRight: SPACING.xs,
+  },
+  searchInput: {
+    flex: 1,
+    ...TYPOGRAPHY.body,
+    color: COLORS.label,
+    height: 44,
+  },
+  clearButton: {
+    padding: SPACING.xs,
   },
   loadingContainer: {
     flex: 1,
