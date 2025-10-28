@@ -67,7 +67,6 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (err) {
-      console.error('Sign in error:', err);
       let errorMessage = 'Failed to sign in';
       
       if (err.code === 'auth/invalid-email') {
