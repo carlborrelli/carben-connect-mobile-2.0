@@ -1,5 +1,5 @@
 // Navigation - Main navigation structure
-import React from 'react';
+import React, { useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -86,7 +86,18 @@ function MoreStackScreen() {
   );
 }
 
+// Map of tab names to their root screens
+const TAB_ROOT_SCREENS = {
+  'Projects': 'ProjectsList',
+  'Inbox': 'InboxMain',
+  'Home': 'HomeMain',
+  'Clients': 'ClientsMain',
+  'More': 'MoreMain',
+};
+
 export default function Navigation() {
+  const previousTabRef = useRef('Home');
+
   return (
     <NavigationContainer>
       <Tab.Navigator
@@ -94,125 +105,38 @@ export default function Navigation() {
         screenOptions={{
           headerShown: false,
         }}
+        screenListeners={({ navigation, route }) => ({
+          state: (e) => {
+            // Get current tab name
+            const state = navigation.getState();
+            const currentTabName = state.routes[state.index]?.name;
+            
+            // If tab changed, reset the PREVIOUS tab to its root screen
+            if (previousTabRef.current && previousTabRef.current !== currentTabName) {
+              const previousTab = state.routes.find(r => r.name === previousTabRef.current);
+              if (previousTab?.state?.index > 0) {
+                // Previous tab has nested screens, reset it
+                navigation.dispatch({
+                  ...CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: TAB_ROOT_SCREENS[previousTabRef.current] }],
+                  }),
+                  source: previousTab.key,
+                  target: state.key,
+                });
+              }
+            }
+            
+            previousTabRef.current = currentTabName;
+          },
+        })}
         initialRouteName="Home"
       >
-        <Tab.Screen
-          name="Projects"
-          component={ProjectsStackScreen}
-          listeners={({ navigation }) => ({
-            tabPress: (e) => {
-              // Get current route in this tab
-              const state = navigation.getState();
-              const currentTab = state.routes.find(route => route.name === 'Projects');
-              
-              // If we're already on this tab and in a nested screen, reset to root
-              if (currentTab && state.index === state.routes.indexOf(currentTab)) {
-                const tabState = currentTab.state;
-                if (tabState && tabState.index > 0) {
-                  e.preventDefault();
-                  navigation.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [{ name: 'ProjectsList' }],
-                    })
-                  );
-                }
-              }
-            },
-          })}
-        />
-        <Tab.Screen
-          name="Inbox"
-          component={InboxStackScreen}
-          listeners={({ navigation }) => ({
-            tabPress: (e) => {
-              const state = navigation.getState();
-              const currentTab = state.routes.find(route => route.name === 'Inbox');
-              
-              if (currentTab && state.index === state.routes.indexOf(currentTab)) {
-                const tabState = currentTab.state;
-                if (tabState && tabState.index > 0) {
-                  e.preventDefault();
-                  navigation.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [{ name: 'InboxMain' }],
-                    })
-                  );
-                }
-              }
-            },
-          })}
-        />
-        <Tab.Screen
-          name="Home"
-          component={HomeStackScreen}
-          listeners={({ navigation }) => ({
-            tabPress: (e) => {
-              const state = navigation.getState();
-              const currentTab = state.routes.find(route => route.name === 'Home');
-              
-              if (currentTab && state.index === state.routes.indexOf(currentTab)) {
-                const tabState = currentTab.state;
-                if (tabState && tabState.index > 0) {
-                  e.preventDefault();
-                  navigation.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [{ name: 'HomeMain' }],
-                    })
-                  );
-                }
-              }
-            },
-          })}
-        />
-        <Tab.Screen
-          name="Clients"
-          component={ClientsStackScreen}
-          listeners={({ navigation }) => ({
-            tabPress: (e) => {
-              const state = navigation.getState();
-              const currentTab = state.routes.find(route => route.name === 'Clients');
-              
-              if (currentTab && state.index === state.routes.indexOf(currentTab)) {
-                const tabState = currentTab.state;
-                if (tabState && tabState.index > 0) {
-                  e.preventDefault();
-                  navigation.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [{ name: 'ClientsMain' }],
-                    })
-                  );
-                }
-              }
-            },
-          })}
-        />
-        <Tab.Screen
-          name="More"
-          component={MoreStackScreen}
-          listeners={({ navigation }) => ({
-            tabPress: (e) => {
-              const state = navigation.getState();
-              const currentTab = state.routes.find(route => route.name === 'More');
-              
-              if (currentTab && state.index === state.routes.indexOf(currentTab)) {
-                const tabState = currentTab.state;
-                if (tabState && tabState.index > 0) {
-                  e.preventDefault();
-                  navigation.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [{ name: 'MoreMain' }],
-                    })
-                  );
-                }
-              }
-            },
-          })}
-        />
+        <Tab.Screen name="Projects" component={ProjectsStackScreen} />
+        <Tab.Screen name="Inbox" component={InboxStackScreen} />
+        <Tab.Screen name="Home" component={HomeStackScreen} />
+        <Tab.Screen name="Clients" component={ClientsStackScreen} />
+        <Tab.Screen name="More" component={MoreStackScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
