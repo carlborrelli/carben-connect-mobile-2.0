@@ -92,64 +92,15 @@ export default function Navigation() {
         tabBar={(props) => <CustomTabBar {...props} />}
         screenOptions={{
           headerShown: false,
+          unmountOnBlur: true, // Reset stack when switching tabs
         }}
-        screenListeners={({ navigation }) => ({
-          blur: () => {
-            // Reset stack to root screen when tab is blurred (switching away)
-            navigation.navigate({
-              name: navigation.getState().routeNames[navigation.getState().index],
-              params: undefined,
-              merge: true,
-            });
-          },
-        })}
         initialRouteName="Home"
       >
-        <Tab.Screen
-          name="Projects"
-          component={ProjectsStackScreen}
-          listeners={({ navigation }) => ({
-            blur: () => {
-              navigation.navigate('ProjectsList');
-            },
-          })}
-        />
-        <Tab.Screen
-          name="Inbox"
-          component={InboxStackScreen}
-          listeners={({ navigation }) => ({
-            blur: () => {
-              navigation.navigate('InboxMain');
-            },
-          })}
-        />
-        <Tab.Screen
-          name="Home"
-          component={HomeStackScreen}
-          listeners={({ navigation }) => ({
-            blur: () => {
-              navigation.navigate('HomeMain');
-            },
-          })}
-        />
-        <Tab.Screen
-          name="Clients"
-          component={ClientsStackScreen}
-          listeners={({ navigation }) => ({
-            blur: () => {
-              navigation.navigate('ClientsMain');
-            },
-          })}
-        />
-        <Tab.Screen
-          name="More"
-          component={MoreStackScreen}
-          listeners={({ navigation }) => ({
-            blur: () => {
-              navigation.navigate('MoreMain');
-            },
-          })}
-        />
+        <Tab.Screen name="Projects" component={ProjectsStackScreen} />
+        <Tab.Screen name="Inbox" component={InboxStackScreen} />
+        <Tab.Screen name="Home" component={HomeStackScreen} />
+        <Tab.Screen name="Clients" component={ClientsStackScreen} />
+        <Tab.Screen name="More" component={MoreStackScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
