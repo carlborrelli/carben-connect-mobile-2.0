@@ -14,7 +14,7 @@ export default function ClientsScreen({ navigation }) {
       <View style={styles.header}>
         <Text style={styles.title}>Clients</Text>
         <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Calendar")}>
             <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
