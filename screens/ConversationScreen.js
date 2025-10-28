@@ -44,7 +44,7 @@ export default function ConversationScreen({ route, navigation }) {
           ...doc.data(),
         }));
 
-        // Sort by createdAt in JavaScript to avoid composite index requirement
+        // Sort by createdAt in JavaScript
         messagesData.sort((a, b) => {
           const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
           const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
@@ -70,6 +70,39 @@ export default function ConversationScreen({ route, navigation }) {
     return () => unsubscribe();
   }, [projectId]);
 
+  const sendMessage = async () => {
+    if (!messageText.trim() || sending) return;
+
+    const trimmedMessage = messageText.trim();
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setSending(true);
+    setMessageText(''); // Clear input immediately
+
+    try {
+      await addDoc(collection(db, 'messages'), {
+        projectId: projectId,
+        projectTitle: projectTitle,
+        senderId: userProfile.id,
+        senderName: userProfile.name,
+        senderRole: userProfile.role || 'client',
+        message: trimmedMessage,
+        text: trimmedMessage,
+        createdAt: new Date(),
+        read: false,
+        unread: true,
+      });
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setMessageText(trimmedMessage);
+    } finally {
+      setSending(false);
+    }
+  };
+
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -89,40 +122,6 @@ export default function ConversationScreen({ route, navigation }) {
       return 'Yesterday';
     } else {
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    }
-  };
-
-  const sendMessage = async () => {
-    if (!messageText.trim() || sending) return;
-
-    const trimmedMessage = messageText.trim();
-
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setSending(true);
-    setMessageText(''); // Clear input immediately for better UX
-
-    try {
-      await addDoc(collection(db, 'messages'), {
-        projectId: projectId,
-        projectTitle: projectTitle,
-        senderId: userProfile.id,
-        senderName: userProfile.name,
-        senderRole: userProfile.role || 'client',
-        message: trimmedMessage,
-        text: trimmedMessage, // Some parts of code use 'text', some use 'message'
-        createdAt: new Date(),
-        read: false,
-        unread: true, // For MessageCard display
-      });
-
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (error) {
-      console.error('Error sending message:', error);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      // Restore message text on error
-      setMessageText(trimmedMessage);
-    } finally {
-      setSending(false);
     }
   };
 
