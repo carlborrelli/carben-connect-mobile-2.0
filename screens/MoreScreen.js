@@ -29,6 +29,14 @@ export default function MoreScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>More</Text>
+        <View style={styles.headerIcons}>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
+          </TouchableOpacity>
+        </View>
       </View>
       
       <ScrollView contentContainerStyle={styles.content}>
@@ -95,6 +103,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.systemGroupedBackground,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
     backgroundColor: COLORS.systemBackground,
@@ -102,6 +113,16 @@ const styles = StyleSheet.create({
   title: {
     ...TYPOGRAPHY.largeTitle,
     color: COLORS.label,
+  },
+  headerIcons: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+  },
+  iconButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     padding: SPACING.lg,

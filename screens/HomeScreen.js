@@ -12,13 +12,24 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header with icons */}
+      <View style={styles.headerBar}>
+        <Text style={styles.headerTitle}>Home</Text>
+        <View style={styles.headerIcons}>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Welcome back,</Text>
-            <Text style={styles.name}>{userProfile?.name || 'User'}</Text>
-          </View>
+        {/* Greeting */}
+        <View style={styles.greeting}>
+          <Text style={styles.greetingText}>Welcome back,</Text>
+          <Text style={styles.name}>{userProfile?.name || 'User'}</Text>
         </View>
 
         {/* Quick Stats */}
@@ -71,13 +82,35 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.systemGroupedBackground,
   },
+  headerBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    backgroundColor: COLORS.systemBackground,
+  },
+  headerTitle: {
+    ...TYPOGRAPHY.largeTitle,
+    color: COLORS.label,
+  },
+  headerIcons: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+  },
+  iconButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   content: {
     padding: SPACING.lg,
   },
-  header: {
+  greeting: {
     marginBottom: SPACING.lg,
   },
-  greeting: {
+  greetingText: {
     ...TYPOGRAPHY.body,
     color: COLORS.secondaryLabel,
   },
