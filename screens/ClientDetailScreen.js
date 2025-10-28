@@ -59,7 +59,7 @@ export default function ClientDetailScreen({ route, navigation }) {
 
   const handleProjectPress = (project) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate('ProjectDetail', { project });
+    navigation.navigate('ProjectDetail', { projectId: project.id });
   };
 
   if (loading) {
