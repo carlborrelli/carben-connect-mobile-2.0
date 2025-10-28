@@ -182,7 +182,7 @@ export default function ConversationScreen({ route, navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -376,7 +376,9 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    padding: SPACING.md,
+    paddingHorizontal: SPACING.md,
+    paddingTop: SPACING.md,
+    paddingBottom: Platform.OS === 'ios' ? SPACING.xl : SPACING.md,
     backgroundColor: COLORS.systemBackground,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: COLORS.separator,
