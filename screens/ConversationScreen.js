@@ -7,10 +7,9 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  KeyboardAvoidingView,
   Platform,
   TextInput,
-  InputAccessoryView,
-  Keyboard,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
@@ -21,8 +20,6 @@ import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 
-const ACCESSORY_ID = 'chat-input-accessory';
-
 export default function ConversationScreen({ route, navigation }) {
   const { projectId, projectTitle } = route.params;
   const { userProfile } = useAuth();
@@ -32,22 +29,10 @@ export default function ConversationScreen({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState('');
   const [sending, setSending] = useState(false);
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const flatListRef = useRef(null);
 
-  // Track keyboard visibility
-  useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-    const showListener = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
-    const hideListener = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
-
-    return () => {
-      showListener.remove();
-      hideListener.remove();
-    };
-  }, []);
+  // KeyboardAvoidingView offset: only bottom inset (tab bar is hidden on keyboard)
+  const keyboardVerticalOffset = Platform.OS === 'ios' ? insets.bottom : 0;
 
   useEffect(() => {
     if (!projectId) return;
@@ -183,43 +168,6 @@ export default function ConversationScreen({ route, navigation }) {
     );
   };
 
-  // Input bar component with visible TextInput that has inputAccessoryViewID
-  const InputBar = (
-    <View style={styles.inputContainer}>
-      <TextInput
-        style={styles.input}
-        placeholder="Type a message..."
-        placeholderTextColor={COLORS.tertiaryLabel}
-        value={messageText}
-        onChangeText={setMessageText}
-        multiline
-        maxLength={1000}
-        editable={!sending}
-        scrollEnabled={false}
-        textAlignVertical="top"
-        {...(Platform.OS === 'ios' ? { inputAccessoryViewID: ACCESSORY_ID } : {})}
-      />
-      <TouchableOpacity
-        style={[
-          styles.sendButton,
-          (!messageText.trim() || sending) && styles.sendButtonDisabled
-        ]}
-        onPress={sendMessage}
-        disabled={!messageText.trim() || sending}
-      >
-        {sending ? (
-          <ActivityIndicator size="small" color={COLORS.systemBackground} />
-        ) : (
-          <Ionicons
-            name="send"
-            size={20}
-            color={messageText.trim() ? COLORS.systemBackground : COLORS.tertiaryLabel}
-          />
-        )}
-      </TouchableOpacity>
-    </View>
-  );
-
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -253,59 +201,75 @@ export default function ConversationScreen({ route, navigation }) {
         <View style={{ width: 44 }} />
       </View>
 
-      {/* Messages */}
-      {messages.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Ionicons name="chatbubbles-outline" size={64} color={COLORS.tertiaryLabel} />
-          <Text style={styles.emptyText}>No messages yet</Text>
-          <Text style={styles.emptySubtext}>
-            Start a conversation about this project
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          keyExtractor={(item) => item.id}
-          renderItem={renderMessage}
-          contentContainerStyle={{
-            padding: SPACING.md,
-            paddingBottom: (keyboardVisible && Platform.OS === 'ios')
-              ? SPACING.md // iOS accessory covers input; list can sit close
-              : tabBarHeight + 44 + SPACING.md, // keyboard hidden → room for docked input + tab bar
-          }}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
-          scrollIndicatorInsets={{
-            bottom: (keyboardVisible && Platform.OS === 'ios')
-              ? SPACING.md
-              : tabBarHeight + 44 + SPACING.md,
-          }}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
-        />
-      )}
-
-      {/* Input: conditional rendering based on platform and keyboard state */}
-      {Platform.OS === 'ios' ? (
-        keyboardVisible ? (
-          // Keyboard is visible - render InputAccessoryView
-          <InputAccessoryView nativeID={ACCESSORY_ID}>
-            {InputBar}
-          </InputAccessoryView>
+      {/* Content with KeyboardAvoidingView */}
+      <KeyboardAvoidingView
+        style={styles.flex1}
+        behavior={Platform.OS === 'ios' ? 'position' : undefined}
+        keyboardVerticalOffset={keyboardVerticalOffset}
+      >
+        {/* Messages */}
+        {messages.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="chatbubbles-outline" size={64} color={COLORS.tertiaryLabel} />
+            <Text style={styles.emptyText}>No messages yet</Text>
+            <Text style={styles.emptySubtext}>
+              Start a conversation about this project
+            </Text>
+          </View>
         ) : (
-          // Keyboard is hidden - dock input above tab bar
-          <>
-            {InputBar}
-            <View style={{ height: tabBarHeight }} />
-          </>
-        )
-      ) : (
-        // Android - simple docked bar
-        <>
-          {InputBar}
-          <View style={{ height: tabBarHeight }} />
-        </>
-      )}
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            keyExtractor={(item) => item.id}
+            renderItem={renderMessage}
+            contentContainerStyle={[
+              styles.messagesList,
+              { paddingBottom: 44 + SPACING.md } // Room for input
+            ]}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
+            scrollIndicatorInsets={{ bottom: 44 + SPACING.md }}
+            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+          />
+        )}
+
+        {/* Docked Input Bar */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Type a message..."
+            placeholderTextColor={COLORS.tertiaryLabel}
+            value={messageText}
+            onChangeText={setMessageText}
+            multiline
+            maxLength={1000}
+            editable={!sending}
+            scrollEnabled={false}
+            textAlignVertical="top"
+          />
+          <TouchableOpacity
+            style={[
+              styles.sendButton,
+              (!messageText.trim() || sending) && styles.sendButtonDisabled
+            ]}
+            onPress={sendMessage}
+            disabled={!messageText.trim() || sending}
+          >
+            {sending ? (
+              <ActivityIndicator size="small" color={COLORS.systemBackground} />
+            ) : (
+              <Ionicons
+                name="send"
+                size={20}
+                color={messageText.trim() ? COLORS.systemBackground : COLORS.tertiaryLabel}
+              />
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Spacer so docked input sits above tab bar when keyboard is hidden */}
+        <View style={{ height: tabBarHeight }} />
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -314,6 +278,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.systemGroupedBackground,
+  },
+  flex1: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
@@ -347,6 +314,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  messagesList: {
+    padding: SPACING.md,
   },
   dateSeparator: {
     alignItems: 'center',
