@@ -1,9 +1,9 @@
 // Navigation - Main navigation structure
-import React, { useRef } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { CommonActions } from '@react-navigation/native';
+import { StackActions } from '@react-navigation/native';
 
 // Screens
 import HomeScreen from './screens/HomeScreen';
@@ -86,18 +86,7 @@ function MoreStackScreen() {
   );
 }
 
-// Map of tab names to their root screens
-const TAB_ROOT_SCREENS = {
-  'Projects': 'ProjectsList',
-  'Inbox': 'InboxMain',
-  'Home': 'HomeMain',
-  'Clients': 'ClientsMain',
-  'More': 'MoreMain',
-};
-
 export default function Navigation() {
-  const previousTabRef = useRef('Home');
-
   return (
     <NavigationContainer>
       <Tab.Navigator
@@ -105,38 +94,53 @@ export default function Navigation() {
         screenOptions={{
           headerShown: false,
         }}
-        screenListeners={({ navigation, route }) => ({
-          state: (e) => {
-            // Get current tab name
-            const state = navigation.getState();
-            const currentTabName = state.routes[state.index]?.name;
-            
-            // If tab changed, reset the PREVIOUS tab to its root screen
-            if (previousTabRef.current && previousTabRef.current !== currentTabName) {
-              const previousTab = state.routes.find(r => r.name === previousTabRef.current);
-              if (previousTab?.state?.index > 0) {
-                // Previous tab has nested screens, reset it
-                navigation.dispatch({
-                  ...CommonActions.reset({
-                    index: 0,
-                    routes: [{ name: TAB_ROOT_SCREENS[previousTabRef.current] }],
-                  }),
-                  source: previousTab.key,
-                  target: state.key,
-                });
-              }
-            }
-            
-            previousTabRef.current = currentTabName;
-          },
-        })}
         initialRouteName="Home"
       >
-        <Tab.Screen name="Projects" component={ProjectsStackScreen} />
-        <Tab.Screen name="Inbox" component={InboxStackScreen} />
-        <Tab.Screen name="Home" component={HomeStackScreen} />
-        <Tab.Screen name="Clients" component={ClientsStackScreen} />
-        <Tab.Screen name="More" component={MoreStackScreen} />
+        <Tab.Screen 
+          name="Projects" 
+          component={ProjectsStackScreen}
+          listeners={({ navigation }) => ({
+            blur: () => {
+              navigation.dispatch(StackActions.popToTop());
+            },
+          })}
+        />
+        <Tab.Screen 
+          name="Inbox" 
+          component={InboxStackScreen}
+          listeners={({ navigation }) => ({
+            blur: () => {
+              navigation.dispatch(StackActions.popToTop());
+            },
+          })}
+        />
+        <Tab.Screen 
+          name="Home" 
+          component={HomeStackScreen}
+          listeners={({ navigation }) => ({
+            blur: () => {
+              navigation.dispatch(StackActions.popToTop());
+            },
+          })}
+        />
+        <Tab.Screen 
+          name="Clients" 
+          component={ClientsStackScreen}
+          listeners={({ navigation }) => ({
+            blur: () => {
+              navigation.dispatch(StackActions.popToTop());
+            },
+          })}
+        />
+        <Tab.Screen 
+          name="More" 
+          component={MoreStackScreen}
+          listeners={({ navigation }) => ({
+            blur: () => {
+              navigation.dispatch(StackActions.popToTop());
+            },
+          })}
+        />
       </Tab.Navigator>
     </NavigationContainer>
   );
