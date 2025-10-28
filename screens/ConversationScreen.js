@@ -32,7 +32,14 @@ export default function ConversationScreen({ route, navigation }) {
   const [sending, setSending] = useState(false);
   const [inputHeight, setInputHeight] = useState(0);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [inputContentHeight, setInputContentHeight] = useState(44);
   const flatListRef = useRef(null);
+
+  // Auto-grow input: min 44px, max ~6 lines (140px)
+  const MIN_INPUT = 44;
+  const MAX_INPUT = 140;
+  const inputHeightStyle = Math.min(MAX_INPUT, Math.max(MIN_INPUT, inputContentHeight));
+  const inputShouldScroll = inputContentHeight > MAX_INPUT;
 
   // Track keyboard visibility
   useEffect(() => {
@@ -258,16 +265,18 @@ export default function ConversationScreen({ route, navigation }) {
           style={[styles.inputContainer, { paddingBottom: inputPadBottom }]}
         >
           <TextInput
-            style={styles.input}
+            style={[styles.input, { height: inputHeightStyle }]}
             placeholder="Type a message..."
             placeholderTextColor={COLORS.tertiaryLabel}
             value={messageText}
             onChangeText={setMessageText}
+            onContentSizeChange={(e) => setInputContentHeight(e.nativeEvent.contentSize.height)}
             multiline
             maxLength={1000}
             editable={!sending}
-            scrollEnabled={false}
+            scrollEnabled={inputShouldScroll}
             textAlignVertical="top"
+            blurOnSubmit={false}
           />
           <TouchableOpacity
             style={[
@@ -427,7 +436,6 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm,
     paddingTop: SPACING.sm,
     color: COLORS.label,
-    maxHeight: 100,
     minHeight: 44,
   },
   sendButton: {
