@@ -9,14 +9,17 @@ import {
   ActivityIndicator,
   Image,
   Dimensions,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 const PHOTO_SIZE = (width - (SPACING.lg * 3)) / 2;
 
 const STATUS_COLORS = {
@@ -41,6 +44,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
   const { projectId } = route.params;
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
 
   useEffect(() => {
     loadProject();
@@ -57,6 +61,16 @@ export default function ProjectDetailScreen({ route, navigation }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePhotoPress = (photo) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedPhoto(photo);
+  };
+
+  const closePhotoViewer = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedPhoto(null);
   };
 
   if (loading) {
@@ -151,7 +165,11 @@ export default function ProjectDetailScreen({ route, navigation }) {
             </View>
             <View style={styles.photoGrid}>
               {project.photos.map((photo, index) => (
-                <TouchableOpacity key={index} style={styles.photoContainer}>
+                <TouchableOpacity 
+                  key={index} 
+                  style={styles.photoContainer}
+                  onPress={() => handlePhotoPress(photo)}
+                >
                   <Image
                     source={{ uri: photo.url || photo }}
                     style={styles.photo}
@@ -173,6 +191,35 @@ export default function ProjectDetailScreen({ route, navigation }) {
           </View>
         )}
       </ScrollView>
+
+      {/* Photo Viewer Modal */}
+      <Modal
+        visible={selectedPhoto !== null}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closePhotoViewer}
+      >
+        <Pressable style={styles.modalOverlay} onPress={closePhotoViewer}>
+          <SafeAreaView style={styles.modalContainer} edges={['top', 'bottom']}>
+            {/* Close Button */}
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={closePhotoViewer}
+            >
+              <Ionicons name="close" size={32} color={COLORS.systemBackground} />
+            </TouchableOpacity>
+
+            {/* Full Screen Photo */}
+            {selectedPhoto && (
+              <Image
+                source={{ uri: selectedPhoto.url || selectedPhoto }}
+                style={styles.fullScreenPhoto}
+                resizeMode="contain"
+              />
+            )}
+          </SafeAreaView>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -294,5 +341,29 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.body,
     color: COLORS.tertiaryLabel,
     marginTop: SPACING.sm,
+  },
+  // Photo Viewer Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+  },
+  modalContainer: {
+    flex: 1,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: SPACING.lg,
+    right: SPACING.lg,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 22,
+    zIndex: 10,
+  },
+  fullScreenPhoto: {
+    width: width,
+    height: height,
   },
 });
