@@ -16,7 +16,7 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.headerBar}>
         <Text style={styles.headerTitle}>Home</Text>
         <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Calendar")}>
             <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
