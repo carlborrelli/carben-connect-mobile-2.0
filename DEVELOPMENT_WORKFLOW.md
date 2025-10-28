@@ -211,6 +211,59 @@ refactor: Extract color system to theme file
    - Merging branches
    - Force pushing
 
+
+
+### GitHub API Access (for Claude):
+
+**Method 1: GitHub CLI (gh) - DOES NOT WORK**
+```bash
+gh repo view carlborrelli/carben-connect-mobile-2.0
+gh api repos/carlborrelli/carben-connect-mobile-2.0/commits
+```
+- ❌ Not available in this environment
+- ❌ `command not found` error
+- Don't attempt to use this method
+
+**Method 2: GitHub REST API with Token - ✅ WORKS**
+```bash
+# View repository info
+curl -H "Authorization: token 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" \
+  https://api.github.com/repos/carlborrelli/carben-connect-mobile-2.0
+
+# Get commit history
+curl -H "Authorization: token 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" \
+  https://api.github.com/repos/carlborrelli/carben-connect-mobile-2.0/commits
+
+# List repository files
+curl -H "Authorization: token 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" \
+  https://api.github.com/repos/carlborrelli/carben-connect-mobile-2.0/contents
+
+# Download specific file
+curl -H "Authorization: token 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" \
+  https://api.github.com/repos/carlborrelli/carben-connect-mobile-2.0/contents/PROGRESS.md \
+  | grep '"download_url"' | cut -d'"' -f4 | xargs curl -s
+```
+- ✅ Works perfectly
+- ✅ Token from CREDENTIALS.md
+- ✅ Use this for checking repo status, commits, and files
+
+**Method 3: Git Commands on Mac - ✅ WORKS**
+```bash
+# Git operations via SSH to Mac (git is already authenticated there)
+sshpass -p 'Cb136479' ssh carlborrelli@10.30.82.252 \
+  "cd ~/carben-connect-mobile-2.0 && git push origin main"
+
+sshpass -p 'Cb136479' ssh carlborrelli@10.30.82.252 \
+  "cd ~/carben-connect-mobile-2.0 && git status"
+
+sshpass -p 'Cb136479' ssh carlborrelli@10.30.82.252 \
+  "cd ~/carben-connect-mobile-2.0 && git pull origin main"
+```
+- ✅ Mac has git already configured
+- ✅ Use for all git operations (commit, push, pull, status)
+- ✅ Most reliable method for git operations
+
+
 ## Metro Bundler Workflow
 
 ### Starting Development Server
