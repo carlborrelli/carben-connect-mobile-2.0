@@ -34,6 +34,9 @@ export default function ConversationScreen({ route, navigation }) {
   // KeyboardAvoidingView offset: only bottom inset (tab bar is hidden on keyboard)
   const keyboardVerticalOffset = Platform.OS === 'ios' ? insets.bottom : 0;
 
+  // Fixed input visible height: padding top (16) + minHeight (44) + padding bottom (16)
+  const INPUT_VISIBLE_HEIGHT = SPACING.md * 2 + 44;
+
   useEffect(() => {
     if (!projectId) return;
 
@@ -204,7 +207,7 @@ export default function ConversationScreen({ route, navigation }) {
       {/* Content with KeyboardAvoidingView */}
       <KeyboardAvoidingView
         style={styles.flex1}
-        behavior={Platform.OS === 'ios' ? 'position' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={keyboardVerticalOffset}
       >
         {/* Messages */}
@@ -224,11 +227,11 @@ export default function ConversationScreen({ route, navigation }) {
             renderItem={renderMessage}
             contentContainerStyle={[
               styles.messagesList,
-              { paddingBottom: 44 + SPACING.md } // Room for input
+              { paddingBottom: INPUT_VISIBLE_HEIGHT }
             ]}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
-            scrollIndicatorInsets={{ bottom: 44 + SPACING.md }}
+            scrollIndicatorInsets={{ bottom: INPUT_VISIBLE_HEIGHT }}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
           />
         )}
@@ -266,9 +269,6 @@ export default function ConversationScreen({ route, navigation }) {
             )}
           </TouchableOpacity>
         </View>
-
-        {/* Spacer so docked input sits above tab bar when keyboard is hidden */}
-        <View style={{ height: tabBarHeight }} />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
