@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { collection, query, where, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
@@ -33,8 +33,7 @@ export default function ConversationScreen({ route, navigation }) {
 
     const messagesQuery = query(
       collection(db, 'messages'),
-      where('projectId', '==', projectId),
-      orderBy('createdAt', 'asc')
+      where('projectId', '==', projectId)
     );
 
     const unsubscribe = onSnapshot(
@@ -44,6 +43,14 @@ export default function ConversationScreen({ route, navigation }) {
           id: doc.id,
           ...doc.data(),
         }));
+
+        // Sort by createdAt in JavaScript to avoid composite index requirement
+        messagesData.sort((a, b) => {
+          const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+          const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+          return timeA - timeB;
+        });
+
         setMessages(messagesData);
         setLoading(false);
 
