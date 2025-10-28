@@ -98,6 +98,35 @@ export default function AddPhotosScreen({ navigation }) {
     }
   };
 
+  const takePhoto = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Please allow access to your camera to take photos.'
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.8,
+        allowsEditing: true,
+      });
+
+      if (!result.canceled && result.assets) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        // Add to existing selected images
+        setSelectedImages(prev => [...prev, ...result.assets]);
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      Alert.alert('Error', 'Failed to take photo');
+    }
+  };
+
   const removeImage = (index) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedImages(prev => prev.filter((_, i) => i !== index));
@@ -243,6 +272,14 @@ export default function AddPhotosScreen({ navigation }) {
           <Text style={styles.label}>Photos</Text>
           <TouchableOpacity
             style={styles.pickButton}
+            onPress={takePhoto}
+            disabled={uploading}
+          >
+            <Ionicons name="camera" size={24} color={COLORS.primary} />
+            <Text style={styles.pickButtonText}>Take Photo</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.pickButton, { marginTop: SPACING.sm }]}
             onPress={pickImages}
             disabled={uploading}
           >
