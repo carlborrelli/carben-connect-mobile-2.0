@@ -97,12 +97,15 @@ export default function ConversationScreen({ route, navigation }) {
     try {
       await addDoc(collection(db, 'messages'), {
         projectId: projectId,
+        projectTitle: projectTitle,
         senderId: userProfile.id,
         senderName: userProfile.name,
+        senderRole: userProfile.role || 'client',
         message: trimmedMessage,
         text: trimmedMessage, // Some parts of code use 'text', some use 'message'
         createdAt: new Date(),
         read: false,
+        unread: true, // For MessageCard display
       });
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
