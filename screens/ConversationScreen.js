@@ -12,6 +12,7 @@ import {
   TextInput,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { collection, query, where, onSnapshot, addDoc } from 'firebase/firestore';
@@ -23,24 +24,12 @@ export default function ConversationScreen({ route, navigation }) {
   const { projectId, projectTitle } = route.params;
   const { userProfile } = useAuth();
   const insets = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState('');
   const [sending, setSending] = useState(false);
   const flatListRef = useRef(null);
-
-  // Hide tab bar when this screen is focused
-  useEffect(() => {
-    const parent = navigation.getParent();
-    parent?.setOptions({
-      tabBarStyle: { display: 'none' }
-    });
-    return () => {
-      parent?.setOptions({
-        tabBarStyle: undefined
-      });
-    };
-  }, [navigation]);
 
   useEffect(() => {
     if (!projectId) return;
@@ -235,7 +224,7 @@ export default function ConversationScreen({ route, navigation }) {
         )}
 
         {/* Message Input */}
-        <View style={[styles.inputContainer, { paddingBottom: SPACING.md + insets.bottom }]}>
+        <View style={[styles.inputContainer, { marginBottom: tabBarHeight }]}>
           <TextInput
             style={styles.input}
             placeholder="Type a message..."
