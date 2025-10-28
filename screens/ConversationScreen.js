@@ -29,6 +29,19 @@ export default function ConversationScreen({ route, navigation }) {
   const [sending, setSending] = useState(false);
   const flatListRef = useRef(null);
 
+  // Hide tab bar when this screen is focused
+  useEffect(() => {
+    const parent = navigation.getParent();
+    parent?.setOptions({
+      tabBarStyle: { display: 'none' }
+    });
+    return () => {
+      parent?.setOptions({
+        tabBarStyle: undefined
+      });
+    };
+  }, [navigation]);
+
   useEffect(() => {
     if (!projectId) return;
 
