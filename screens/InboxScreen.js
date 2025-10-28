@@ -72,8 +72,10 @@ export default function InboxScreen({ navigation }) {
   };
 
   const handleMessagePress = (message) => {
-    // TODO: Navigate to conversation view
-    console.log('Pressed message:', message.id);
+    navigation.navigate('Conversation', {
+      projectId: message.projectId,
+      projectTitle: message.projectTitle || 'Conversation'
+    });
   };
 
   const renderHeader = () => (

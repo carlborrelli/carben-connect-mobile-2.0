@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
+import { collection, query, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import ClientCard from '../components/ClientCard';
@@ -34,8 +34,7 @@ export default function ClientsScreen({ navigation }) {
       // Admin sees all clients
       clientsQuery = query(
         collection(db, 'users'),
-        where('role', '==', 'client'),
-        orderBy('name', 'asc')
+        where('role', '==', 'client')
       );
     } else {
       // Client sees only themselves
@@ -53,6 +52,12 @@ export default function ClientsScreen({ navigation }) {
           id: doc.id,
           ...doc.data(),
         }));
+        // Sort by name in JavaScript
+        clientsData.sort((a, b) => {
+          const nameA = (a.name || '').toLowerCase();
+          const nameB = (b.name || '').toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
         setClients(clientsData);
         setLoading(false);
         setRefreshing(false);
