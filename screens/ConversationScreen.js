@@ -7,9 +7,9 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
   TextInput,
+  InputAccessoryView,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
@@ -19,6 +19,8 @@ import { collection, query, where, onSnapshot, addDoc } from 'firebase/firestore
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+
+const ACCESSORY_ID = 'chat-input-accessory';
 
 export default function ConversationScreen({ route, navigation }) {
   const { projectId, projectTitle } = route.params;
@@ -165,6 +167,42 @@ export default function ConversationScreen({ route, navigation }) {
     );
   };
 
+  // The input bar component (reused for both iOS and Android)
+  const InputBar = (
+    <View style={styles.inputContainer}>
+      <TextInput
+        style={styles.input}
+        placeholder="Type a message..."
+        placeholderTextColor={COLORS.tertiaryLabel}
+        value={messageText}
+        onChangeText={setMessageText}
+        multiline
+        maxLength={1000}
+        editable={!sending}
+        scrollEnabled={false}
+        textAlignVertical="top"
+      />
+      <TouchableOpacity
+        style={[
+          styles.sendButton,
+          (!messageText.trim() || sending) && styles.sendButtonDisabled
+        ]}
+        onPress={sendMessage}
+        disabled={!messageText.trim() || sending}
+      >
+        {sending ? (
+          <ActivityIndicator size="small" color={COLORS.systemBackground} />
+        ) : (
+          <Ionicons
+            name="send"
+            size={20}
+            color={messageText.trim() ? COLORS.systemBackground : COLORS.tertiaryLabel}
+          />
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -184,11 +222,6 @@ export default function ConversationScreen({ route, navigation }) {
     );
   }
 
-  // Calculate keyboard offset for iOS
-  const keyboardVerticalOffset = Platform.OS === 'ios'
-    ? Math.max(0, insets.bottom) + tabBarHeight
-    : 0;
-
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
@@ -204,71 +237,55 @@ export default function ConversationScreen({ route, navigation }) {
       </View>
 
       {/* Messages */}
-      <KeyboardAvoidingView
-        style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={keyboardVerticalOffset}
-      >
-        {messages.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="chatbubbles-outline" size={64} color={COLORS.tertiaryLabel} />
-            <Text style={styles.emptyText}>No messages yet</Text>
-            <Text style={styles.emptySubtext}>
-              Start a conversation about this project
-            </Text>
-          </View>
-        ) : (
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            keyExtractor={(item) => item.id}
-            renderItem={renderMessage}
-            contentContainerStyle={[
-              styles.messagesList,
-              { paddingBottom: SPACING.md + 44 + SPACING.md } // padding + input height + padding
-            ]}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
-            scrollIndicatorInsets={{ bottom: 44 + SPACING.md }}
-            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
-          />
-        )}
-
-        {/* Message Input */}
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Type a message..."
-            placeholderTextColor={COLORS.tertiaryLabel}
-            value={messageText}
-            onChangeText={setMessageText}
-            multiline
-            maxLength={1000}
-            editable={!sending}
-          />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              (!messageText.trim() || sending) && styles.sendButtonDisabled
-            ]}
-            onPress={sendMessage}
-            disabled={!messageText.trim() || sending}
-          >
-            {sending ? (
-              <ActivityIndicator size="small" color={COLORS.systemBackground} />
-            ) : (
-              <Ionicons
-                name="send"
-                size={20}
-                color={messageText.trim() ? COLORS.systemBackground : COLORS.tertiaryLabel}
-              />
-            )}
-          </TouchableOpacity>
+      {messages.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Ionicons name="chatbubbles-outline" size={64} color={COLORS.tertiaryLabel} />
+          <Text style={styles.emptyText}>No messages yet</Text>
+          <Text style={styles.emptySubtext}>
+            Start a conversation about this project
+          </Text>
         </View>
+      ) : (
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={renderMessage}
+          contentContainerStyle={[
+            styles.messagesList,
+            { paddingBottom: tabBarHeight + 44 + SPACING.md }
+          ]}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
+          scrollIndicatorInsets={{ bottom: tabBarHeight + 44 + SPACING.md }}
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+        />
+      )}
 
-        {/* Spacer to keep input above tab bar when keyboard is hidden */}
-        <View style={{ height: tabBarHeight }} />
-      </KeyboardAvoidingView>
+      {/* Input: iOS uses InputAccessoryView, Android uses regular View */}
+      {Platform.OS === 'ios' ? (
+        <>
+          {/* Spacer to keep input above tab bar when keyboard is hidden */}
+          <View style={{ height: tabBarHeight }} />
+
+          {/* Pin the input to the keyboard */}
+          <InputAccessoryView nativeID={ACCESSORY_ID}>
+            {InputBar}
+          </InputAccessoryView>
+
+          {/* Invisible TextInput anchor required to attach accessory */}
+          <TextInput
+            style={{ height: 0, width: 0 }}
+            inputAccessoryViewID={ACCESSORY_ID}
+          />
+        </>
+      ) : (
+        // Android fallback
+        <>
+          {InputBar}
+          <View style={{ height: tabBarHeight }} />
+        </>
+      )}
     </SafeAreaView>
   );
 }
@@ -311,12 +328,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  keyboardView: {
-    flex: 1,
-  },
   messagesList: {
     padding: SPACING.md,
-    paddingBottom: SPACING.lg,
   },
   dateSeparator: {
     alignItems: 'center',

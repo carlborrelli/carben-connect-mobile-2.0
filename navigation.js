@@ -119,7 +119,11 @@ export default function Navigation() {
         initialRouteName="Home"
       >
         <Tab.Screen name="Projects" component={ProjectsStackScreen} />
-        <Tab.Screen name="Inbox" component={InboxStackScreen} />
+        <Tab.Screen
+          name="Inbox"
+          component={InboxStackScreen}
+          options={{ tabBarHideOnKeyboard: true }}
+        />
         <Tab.Screen name="Home" component={HomeStackScreen} />
         <Tab.Screen name="Clients" component={ClientsStackScreen} />
         <Tab.Screen name="More" component={MoreStackScreen} />
