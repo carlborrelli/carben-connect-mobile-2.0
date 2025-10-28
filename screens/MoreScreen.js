@@ -62,7 +62,7 @@ export default function MoreScreen({ navigation }) {
           <View style={styles.menuCard}>
             <MenuItem icon="person-outline" title="Profile" onPress={() => {}} />
             <View style={styles.separator} />
-            <MenuItem icon="settings-outline" title="Settings" onPress={() => {}} />
+            <MenuItem icon="settings-outline" title="Settings" onPress={() => navigation.navigate("Settings")} />
           </View>
         </View>
 

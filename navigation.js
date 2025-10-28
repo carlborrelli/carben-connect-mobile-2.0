@@ -17,6 +17,7 @@ import ClientDetailScreen from './screens/ClientDetailScreen';
 import MoreScreen from './screens/MoreScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import CalendarScreen from './screens/CalendarScreen';
+import SettingsScreen from './screens/SettingsScreen';
 
 // Components
 import CustomTabBar from './components/CustomTabBar';
@@ -77,6 +78,7 @@ function MoreStackScreen() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MoreMain" component={MoreScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Calendar" component={CalendarScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
