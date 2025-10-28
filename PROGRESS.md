@@ -1,7 +1,7 @@
 # Carben Connect Mobile 2.0 - Development Progress
 
 **Last Updated:** 2025-10-27  
-**Current Status:** Phase 5 Week 2 - Project Data Integration COMPLETE
+**Current Status:** Phase 5 Week 2 COMPLETE - All Navigation & Icons Functional
 
 ---
 
@@ -67,11 +67,11 @@ npx expo start
    - Home as default initial route
 
 6. **Header Icons on All Screens**
-   - Calendar icon (left)
-   - Profile icon (right)
+   - Calendar icon (left) - FULLY FUNCTIONAL
+   - Profile icon (right) - FULLY FUNCTIONAL
    - Consistent across all 5 main screens
 
-### Phase 5 Week 2: Project Data Integration (COMPLETE)
+### Phase 5 Week 2: Project Data Integration & Icon Functionality (COMPLETE)
 
 **Components:**
 
@@ -91,6 +91,7 @@ npx expo start
    - Empty state for no projects
    - FlatList for efficient rendering
    - Navigation to project details
+   - Refactored header to fix icon issues
 
 3. **ProjectDetailScreen** (screens/ProjectDetailScreen.js)
    - Full project details view
@@ -116,12 +117,31 @@ npx expo start
    - QuickBooks info (customer ID, location)
    - Sign out button
    - Accessible from all screens via profile icon
+   - **FULLY WORKING ON ALL SCREENS**
+
+6. **CalendarScreen** (screens/CalendarScreen.js)
+   - Apple-styled calendar view
+   - Month/year navigation with prev/next
+   - Calendar grid with 7-day week layout
+   - Today highlighting (orange background)
+   - Date selection with haptic feedback
+   - Events section placeholder
+   - Back button navigation
+   - **FULLY WORKING ON ALL SCREENS**
+
+7. **Quick Actions (HomeScreen)**
+   - "New Project" button with coming soon alert
+   - "Add Photos" button with coming soon alert
+   - Both include haptic feedback
+   - Placeholders for future implementation
 
 **Navigation Updates:**
-- Stack navigators for all tabs
+- Stack navigators for all 5 tabs
 - ProfileScreen accessible from every tab
+- CalendarScreen accessible from every tab
 - ProjectDetailScreen accessible from Projects tab
 - Proper back navigation throughout
+- Fixed ProjectsScreen header duplication issue
 
 ---
 
@@ -131,7 +151,7 @@ npx expo start
 carben-connect-mobile-2.0/
 ├── App.js                      # Main entry with auth
 ├── theme.js                    # Apple design system
-├── navigation.js               # Tab + Stack navigation
+├── navigation.js               # Tab + Stack navigation (5 stacks)
 ├── config/
 │   └── firebase.js            # Firebase config
 ├── contexts/
@@ -141,18 +161,19 @@ carben-connect-mobile-2.0/
 │   └── ProjectCard.js         # Project list card
 └── screens/
     ├── LoginScreen.js         # Authentication
-    ├── HomeScreen.js          # Dashboard
+    ├── HomeScreen.js          # Dashboard + Quick Actions
     ├── ProjectsScreen.js      # Projects list (Firestore)
     ├── ProjectDetailScreen.js # Project details + photos
     ├── InboxScreen.js         # Messages
     ├── ClientsScreen.js       # Clients
     ├── MoreScreen.js          # Settings menu
-    └── ProfileScreen.js       # User profile
+    ├── ProfileScreen.js       # User profile (works everywhere!)
+    └── CalendarScreen.js      # Calendar view (works everywhere!)
 ```
 
 ---
 
-## What's Working
+## What's Working - FULLY TESTED
 
 - ✅ Authentication (sign in/out with friendly errors)
 - ✅ 5-tab navigation with circular home button
@@ -164,22 +185,40 @@ carben-connect-mobile-2.0/
 - ✅ **Tap project → view full details**
 - ✅ **Tap photo → full-screen viewer**
 - ✅ **Pull-to-refresh on projects list**
-- ✅ **Profile screen with user info**
-- ✅ **Profile icon functional on all screens**
+- ✅ **Profile icon → ProfileScreen (ALL SCREENS)**
+- ✅ **Calendar icon → CalendarScreen (ALL SCREENS)**
+- ✅ **Quick Actions show feedback alerts**
+- ✅ **Back navigation works everywhere**
 
 ---
 
-## What's Next - Week 2 Continued
+## What's Next - Week 3
 
-### Priority 3: Make Remaining Icons Functional
-1. ⏳ **Calendar icon** → Create CalendarScreen and wire up icons
-2. ⏳ **Quick Actions on Home** → Wire up "New Project" and "Add Photos"
+### Priority 1: Messages/Inbox Integration
+1. Load messages from Firestore
+2. Display message threads by project
+3. Message detail view
+4. Real-time updates
 
-### Priority 4: Additional Features
-1. Messages/Inbox integration
-2. Client list with data
-3. Search and filtering
-4. Admin features (user management, etc.)
+### Priority 2: Client List with Data
+1. Load clients from Firestore
+2. Display client cards
+3. Client detail view
+4. Filter by admin/client
+
+### Priority 3: Implement Quick Actions
+1. **New Project** - Create project form
+2. **Add Photos** - Photo picker and upload
+
+### Priority 4: Search & Filtering
+1. Search projects by name/client
+2. Filter by status
+3. Sort options
+
+### Priority 5: Admin Features
+1. User management
+2. QuickBooks integration screens
+3. Settings
 
 ---
 
@@ -219,12 +258,13 @@ git push origin main
 
 - **Theme**: theme.js
 - **Auth**: contexts/AuthContext.js
-- **Navigation**: navigation.js (with stacks)
+- **Navigation**: navigation.js (with 5 stacks)
 - **Firebase**: config/firebase.js
 - **Credentials**: CREDENTIALS.md (NOT in git)
 - **Components**: components/ProjectCard.js
 - **Project Details**: screens/ProjectDetailScreen.js
 - **Profile**: screens/ProfileScreen.js
+- **Calendar**: screens/CalendarScreen.js
 
 ---
 
@@ -235,16 +275,21 @@ git push origin main
 - Added navigation prop to all screens
 - Updated navigation with stack navigators for all tabs
 - Home screen is now default landing page
-- Profile icon works from all screens
+- Calendar icons work from all screens (fixed duplication issue)
+- Profile icons work from all screens
+- Quick Actions provide user feedback
+- ProjectsScreen refactored to use renderHeader() function
 
 ---
 
 ## Summary
 
 **Phase 5 Week 1 Complete:** Foundation with auth, navigation, and Apple design  
-**Phase 5 Week 2 In Progress:** Project data integration COMPLETE, making icons functional
+**Phase 5 Week 2 Complete:** Project data integration + All icons functional
 
-The app now has real functionality with projects loading from Firestore, full project details, photo viewing, and a complete profile screen. Next up: Calendar functionality and Quick Actions.
+The app now has full navigation functionality! All header icons work consistently across all screens. Projects load from Firestore with real-time updates. Users can view project details, browse photos in full-screen, check their profile, and view a calendar. Quick Actions provide feedback placeholders.
 
-**Last Commit:** 59f207a  
-**Next Task:** Create CalendarScreen and wire up calendar icons
+**Next up:** Integrate Messages/Inbox with real data and implement Client list functionality.
+
+**Last Commit:** 1dabd94  
+**Next Task:** Load and display messages from Firestore in InboxScreen
