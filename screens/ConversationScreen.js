@@ -77,7 +77,7 @@ export default function ConversationScreen({ route, navigation }) {
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSending(true);
-    setMessageText(''); // Clear input immediately
+    setMessageText('');
 
     try {
       await addDoc(collection(db, 'messages'), {
@@ -182,25 +182,25 @@ export default function ConversationScreen({ route, navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={0}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
-          </TouchableOpacity>
-          <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle} numberOfLines={1}>{projectTitle || 'Conversation'}</Text>
-            <Text style={styles.headerSubtitle}>{messages.length} messages</Text>
-          </View>
-          <View style={{ width: 44 }} />
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
+        </TouchableOpacity>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle} numberOfLines={1}>{projectTitle || 'Conversation'}</Text>
+          <Text style={styles.headerSubtitle}>{messages.length} messages</Text>
         </View>
+        <View style={{ width: 44 }} />
+      </View>
 
-        {/* Messages */}
+      {/* Messages */}
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
         {messages.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="chatbubbles-outline" size={64} color={COLORS.tertiaryLabel} />
@@ -231,8 +231,6 @@ export default function ConversationScreen({ route, navigation }) {
             multiline
             maxLength={1000}
             editable={!sending}
-            returnKeyType="default"
-            blurOnSubmit={false}
           />
           <TouchableOpacity
             style={[
@@ -295,6 +293,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  keyboardView: {
+    flex: 1,
   },
   messagesList: {
     padding: SPACING.md,
@@ -376,7 +377,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     padding: SPACING.md,
-    paddingBottom: SPACING.md,
     backgroundColor: COLORS.systemBackground,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: COLORS.separator,
