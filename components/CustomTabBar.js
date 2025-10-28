@@ -1,11 +1,35 @@
 // CustomTabBar - iOS-style tab bar with circular center button
-import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, TouchableOpacity, StyleSheet, Platform, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { COLORS, SPACING, SHADOWS } from '../theme';
 
 export default function CustomTabBar({ state, descriptors, navigation }) {
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showListener = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideListener = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+
+    return () => {
+      showListener.remove();
+      hideListener.remove();
+    };
+  }, []);
+
+  // Check if current route has tabBarHideOnKeyboard option
+  const currentRoute = state.routes[state.index];
+  const currentDescriptor = descriptors[currentRoute.key];
+  const shouldHide = currentDescriptor?.options?.tabBarHideOnKeyboard && keyboardVisible;
+
+  if (shouldHide) {
+    return null;
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.tabBar}>

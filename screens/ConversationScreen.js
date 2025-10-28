@@ -10,6 +10,7 @@ import {
   Platform,
   TextInput,
   InputAccessoryView,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
@@ -31,7 +32,22 @@ export default function ConversationScreen({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState('');
   const [sending, setSending] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const flatListRef = useRef(null);
+
+  // Track keyboard visibility
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showListener = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideListener = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+
+    return () => {
+      showListener.remove();
+      hideListener.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (!projectId) return;
@@ -167,7 +183,7 @@ export default function ConversationScreen({ route, navigation }) {
     );
   };
 
-  // The input bar component (reused for both iOS and Android)
+  // Input bar component with visible TextInput that has inputAccessoryViewID
   const InputBar = (
     <View style={styles.inputContainer}>
       <TextInput
@@ -181,6 +197,7 @@ export default function ConversationScreen({ route, navigation }) {
         editable={!sending}
         scrollEnabled={false}
         textAlignVertical="top"
+        {...(Platform.OS === 'ios' ? { inputAccessoryViewID: ACCESSORY_ID } : {})}
       />
       <TouchableOpacity
         style={[
@@ -251,36 +268,39 @@ export default function ConversationScreen({ route, navigation }) {
           data={messages}
           keyExtractor={(item) => item.id}
           renderItem={renderMessage}
-          contentContainerStyle={[
-            styles.messagesList,
-            { paddingBottom: tabBarHeight + 44 + SPACING.md }
-          ]}
+          contentContainerStyle={{
+            padding: SPACING.md,
+            paddingBottom: (keyboardVisible && Platform.OS === 'ios')
+              ? SPACING.md // iOS accessory covers input; list can sit close
+              : tabBarHeight + 44 + SPACING.md, // keyboard hidden → room for docked input + tab bar
+          }}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
-          scrollIndicatorInsets={{ bottom: tabBarHeight + 44 + SPACING.md }}
+          scrollIndicatorInsets={{
+            bottom: (keyboardVisible && Platform.OS === 'ios')
+              ? SPACING.md
+              : tabBarHeight + 44 + SPACING.md,
+          }}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
         />
       )}
 
-      {/* Input: iOS uses InputAccessoryView, Android uses regular View */}
+      {/* Input: conditional rendering based on platform and keyboard state */}
       {Platform.OS === 'ios' ? (
-        <>
-          {/* Spacer to keep input above tab bar when keyboard is hidden */}
-          <View style={{ height: tabBarHeight }} />
-
-          {/* Pin the input to the keyboard */}
+        keyboardVisible ? (
+          // Keyboard is visible - render InputAccessoryView
           <InputAccessoryView nativeID={ACCESSORY_ID}>
             {InputBar}
           </InputAccessoryView>
-
-          {/* Invisible TextInput anchor required to attach accessory */}
-          <TextInput
-            style={{ height: 0, width: 0 }}
-            inputAccessoryViewID={ACCESSORY_ID}
-          />
-        </>
+        ) : (
+          // Keyboard is hidden - dock input above tab bar
+          <>
+            {InputBar}
+            <View style={{ height: tabBarHeight }} />
+          </>
+        )
       ) : (
-        // Android fallback
+        // Android - simple docked bar
         <>
           {InputBar}
           <View style={{ height: tabBarHeight }} />
@@ -327,9 +347,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  messagesList: {
-    padding: SPACING.md,
   },
   dateSeparator: {
     alignItems: 'center',
