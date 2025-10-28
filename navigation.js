@@ -96,16 +96,22 @@ export default function Navigation() {
         }}
         screenListeners={({ navigation, route }) => ({
           blur: () => {
-            // Find this tab's child state from the root nav state
-            const navState = navigation.getState();
-            const thisTab = navState.routes.find(r => r.key === route.key);
+            // 1) Read the full state tree
+            const root = navigation.getState();
 
-            // If the tab hosts a stack and it's deeper than index 0, pop it
-            const childState = thisTab?.state;
-            if (childState?.type === 'stack' && childState.index > 0) {
+            // 2) Find this tab's route
+            const tabRoute = root.routes.find(r => r.key === route.key);
+
+            // 3) Get the child navigator state (the stack)
+            const child = tabRoute?.state;
+
+            // 4) If the stack is nested, pop it to root
+            if (child?.type === 'stack' && child.index > 0) {
+              const childNavKey = child.key; // Target the child navigator, not the tab route
+
               navigation.dispatch({
                 ...StackActions.popToTop(),
-                target: route.key, // scope to the child stack
+                target: childNavKey, // This is the critical piece - target the child stack key
               });
             }
           },
