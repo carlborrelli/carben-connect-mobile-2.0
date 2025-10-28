@@ -30,6 +30,13 @@ const STATUS_FILTERS = [
   { key: 'PAID', label: 'Paid' },
 ];
 
+const SORT_OPTIONS = [
+  { key: 'DATE_DESC', label: 'Newest First', icon: 'calendar' },
+  { key: 'DATE_ASC', label: 'Oldest First', icon: 'calendar-outline' },
+  { key: 'CLIENT_NAME', label: 'Client (A-Z)', icon: 'person' },
+  { key: 'STATUS', label: 'Status', icon: 'flag' },
+];
+
 export default function ProjectsScreen({ navigation }) {
   const { userProfile, isAdmin } = useAuth();
   const [projects, setProjects] = useState([]);
@@ -38,6 +45,8 @@ export default function ProjectsScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('ALL');
+  const [sortBy, setSortBy] = useState('DATE_DESC');
+  const [showSortMenu, setShowSortMenu] = useState(false);
 
   // Load projects from Firestore
   useEffect(() => {
@@ -85,9 +94,9 @@ export default function ProjectsScreen({ navigation }) {
     return () => unsubscribe();
   }, [userProfile]);
 
-  // Filter projects when search query or status changes
+  // Filter and sort projects when search query, status, or sort changes
   useEffect(() => {
-    let filtered = projects;
+    let filtered = [...projects];
 
     // Filter by status
     if (selectedStatus !== 'ALL') {
@@ -110,8 +119,26 @@ export default function ProjectsScreen({ navigation }) {
       });
     }
 
+    // Sort projects
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'DATE_DESC':
+          return (b.createdAt?.toDate?.() || new Date(b.createdAt || 0)).getTime() -
+                 (a.createdAt?.toDate?.() || new Date(a.createdAt || 0)).getTime();
+        case 'DATE_ASC':
+          return (a.createdAt?.toDate?.() || new Date(a.createdAt || 0)).getTime() -
+                 (b.createdAt?.toDate?.() || new Date(b.createdAt || 0)).getTime();
+        case 'CLIENT_NAME':
+          return (a.clientName || '').localeCompare(b.clientName || '');
+        case 'STATUS':
+          return (a.status || '').localeCompare(b.status || '');
+        default:
+          return 0;
+      }
+    });
+
     setFilteredProjects(filtered);
-  }, [searchQuery, selectedStatus, projects]);
+  }, [searchQuery, selectedStatus, sortBy, projects]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -133,10 +160,29 @@ export default function ProjectsScreen({ navigation }) {
     setSelectedStatus(status);
   };
 
+  const handleSortChange = (newSort) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSortBy(newSort);
+    setShowSortMenu(false);
+  };
+
+  const toggleSortMenu = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowSortMenu(!showSortMenu);
+  };
+
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <View style={styles.header}>
-        <Text style={styles.title}>Projects</Text>
+        <View style={styles.headerLeft}>
+          <Text style={styles.title}>Projects</Text>
+          <TouchableOpacity onPress={toggleSortMenu} style={styles.sortButton}>
+            <Ionicons name={showSortMenu ? "funnel" : "funnel-outline"} size={20} color={COLORS.primary} />
+            <Text style={styles.sortButtonText}>
+              {SORT_OPTIONS.find(opt => opt.key === sortBy)?.label || 'Sort'}
+            </Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.headerIcons}>
           <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Calendar")}>
             <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
@@ -146,6 +192,34 @@ export default function ProjectsScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Sort Menu */}
+      {showSortMenu && (
+        <View style={styles.sortMenu}>
+          {SORT_OPTIONS.map(option => (
+            <TouchableOpacity
+              key={option.key}
+              style={styles.sortMenuItem}
+              onPress={() => handleSortChange(option.key)}
+            >
+              <Ionicons
+                name={option.icon}
+                size={20}
+                color={sortBy === option.key ? COLORS.primary : COLORS.secondaryLabel}
+              />
+              <Text style={[
+                styles.sortMenuItemText,
+                sortBy === option.key && styles.sortMenuItemTextActive
+              ]}>
+                {option.label}
+              </Text>
+              {sortBy === option.key && (
+                <Ionicons name="checkmark" size={20} color={COLORS.primary} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
@@ -281,14 +355,53 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingHorizontal: SPACING.lg,
     paddingTop: SPACING.md,
     paddingBottom: SPACING.sm,
   },
+  headerLeft: {
+    flex: 1,
+  },
   title: {
     ...TYPOGRAPHY.largeTitle,
     color: COLORS.label,
+    marginBottom: SPACING.xs / 2,
+  },
+  sortButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs / 2,
+  },
+  sortButtonText: {
+    ...TYPOGRAPHY.footnote,
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
+  sortMenu: {
+    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.sm,
+    borderRadius: RADIUS.md,
+    ...SHADOWS.small,
+  },
+  sortMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    gap: SPACING.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COLORS.separator,
+  },
+  sortMenuItemText: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.label,
+    flex: 1,
+  },
+  sortMenuItemTextActive: {
+    color: COLORS.primary,
+    fontWeight: '600',
   },
   headerIcons: {
     flexDirection: 'row',
