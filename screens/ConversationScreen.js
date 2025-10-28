@@ -167,7 +167,7 @@ export default function ConversationScreen({ route, navigation }) {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
@@ -184,8 +184,13 @@ export default function ConversationScreen({ route, navigation }) {
     );
   }
 
+  // Calculate keyboard offset for iOS
+  const keyboardVerticalOffset = Platform.OS === 'ios'
+    ? Math.max(0, insets.bottom) + tabBarHeight
+    : 0;
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -202,7 +207,7 @@ export default function ConversationScreen({ route, navigation }) {
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={0}
+        keyboardVerticalOffset={keyboardVerticalOffset}
       >
         {messages.length === 0 ? (
           <View style={styles.emptyState}>
@@ -218,13 +223,19 @@ export default function ConversationScreen({ route, navigation }) {
             data={messages}
             keyExtractor={(item) => item.id}
             renderItem={renderMessage}
-            contentContainerStyle={styles.messagesList}
+            contentContainerStyle={[
+              styles.messagesList,
+              { paddingBottom: SPACING.md + 44 + SPACING.md } // padding + input height + padding
+            ]}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
+            scrollIndicatorInsets={{ bottom: 44 + SPACING.md }}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
           />
         )}
 
         {/* Message Input */}
-        <View style={[styles.inputContainer, { marginBottom: tabBarHeight }]}>
+        <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
             placeholder="Type a message..."
@@ -254,6 +265,9 @@ export default function ConversationScreen({ route, navigation }) {
             )}
           </TouchableOpacity>
         </View>
+
+        {/* Spacer to keep input above tab bar when keyboard is hidden */}
+        <View style={{ height: tabBarHeight }} />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
