@@ -379,8 +379,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.md,
+    padding: SPACING.md,
     backgroundColor: COLORS.systemBackground,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: COLORS.separator,
