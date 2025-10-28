@@ -29,13 +29,8 @@ export default function ConversationScreen({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState('');
   const [sending, setSending] = useState(false);
+  const [inputHeight, setInputHeight] = useState(0);
   const flatListRef = useRef(null);
-
-  // KeyboardAvoidingView offset: only bottom inset (tab bar is hidden on keyboard)
-  const keyboardVerticalOffset = Platform.OS === 'ios' ? insets.bottom : 0;
-
-  // Fixed input visible height: padding top (16) + minHeight (44) + padding bottom (16)
-  const INPUT_VISIBLE_HEIGHT = SPACING.md * 2 + 44;
 
   useEffect(() => {
     if (!projectId) return;
@@ -173,7 +168,7 @@ export default function ConversationScreen({ route, navigation }) {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
@@ -191,7 +186,7 @@ export default function ConversationScreen({ route, navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -208,7 +203,7 @@ export default function ConversationScreen({ route, navigation }) {
       <KeyboardAvoidingView
         style={styles.flex1}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={keyboardVerticalOffset}
+        keyboardVerticalOffset={0}
       >
         {/* Messages */}
         {messages.length === 0 ? (
@@ -227,17 +222,21 @@ export default function ConversationScreen({ route, navigation }) {
             renderItem={renderMessage}
             contentContainerStyle={[
               styles.messagesList,
-              { paddingBottom: INPUT_VISIBLE_HEIGHT }
+              { paddingBottom: inputHeight }
             ]}
+            contentInsetAdjustmentBehavior="never"
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
-            scrollIndicatorInsets={{ bottom: INPUT_VISIBLE_HEIGHT }}
+            scrollIndicatorInsets={{ bottom: inputHeight }}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
           />
         )}
 
         {/* Docked Input Bar */}
-        <View style={styles.inputContainer}>
+        <View
+          onLayout={(e) => setInputHeight(e.nativeEvent.layout.height)}
+          style={[styles.inputContainer, { paddingBottom: SPACING.md + insets.bottom }]}
+        >
           <TextInput
             style={styles.input}
             placeholder="Type a message..."
