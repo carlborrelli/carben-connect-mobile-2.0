@@ -1,5 +1,5 @@
 // ConversationScreen - View conversation for a specific project
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,12 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import * as Haptics from 'expo-haptics';
+import { collection, query, where, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
@@ -22,6 +24,9 @@ export default function ConversationScreen({ route, navigation }) {
   const { userProfile } = useAuth();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [messageText, setMessageText] = useState('');
+  const [sending, setSending] = useState(false);
+  const flatListRef = useRef(null);
 
   useEffect(() => {
     if (!projectId) return;
@@ -41,6 +46,13 @@ export default function ConversationScreen({ route, navigation }) {
         }));
         setMessages(messagesData);
         setLoading(false);
+
+        // Scroll to bottom when new messages arrive
+        if (messagesData.length > 0) {
+          setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: true });
+          }, 100);
+        }
       },
       (error) => {
         console.error('Error loading conversation:', error);
@@ -63,7 +75,7 @@ export default function ConversationScreen({ route, navigation }) {
     const now = new Date();
     const diff = now - date;
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    
+
     if (days === 0) {
       return 'Today';
     } else if (days === 1) {
@@ -73,10 +85,41 @@ export default function ConversationScreen({ route, navigation }) {
     }
   };
 
+  const sendMessage = async () => {
+    if (!messageText.trim() || sending) return;
+
+    const trimmedMessage = messageText.trim();
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setSending(true);
+    setMessageText(''); // Clear input immediately for better UX
+
+    try {
+      await addDoc(collection(db, 'messages'), {
+        projectId: projectId,
+        senderId: userProfile.id,
+        senderName: userProfile.name,
+        message: trimmedMessage,
+        text: trimmedMessage, // Some parts of code use 'text', some use 'message'
+        createdAt: new Date(),
+        read: false,
+      });
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      // Restore message text on error
+      setMessageText(trimmedMessage);
+    } finally {
+      setSending(false);
+    }
+  };
+
   const renderMessage = ({ item, index }) => {
     const isCurrentUser = item.senderId === userProfile?.id;
-    const showDate = index === 0 || 
-      (messages[index - 1] && 
+    const showDate = index === 0 ||
+      (messages[index - 1] &&
        formatDate(item.createdAt) !== formatDate(messages[index - 1].createdAt));
 
     return (
@@ -130,8 +173,8 @@ export default function ConversationScreen({ route, navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView 
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={0}
@@ -159,19 +202,47 @@ export default function ConversationScreen({ route, navigation }) {
           </View>
         ) : (
           <FlatList
+            ref={flatListRef}
             data={messages}
             keyExtractor={(item) => item.id}
             renderItem={renderMessage}
             contentContainerStyle={styles.messagesList}
-            inverted={false}
+            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
           />
         )}
 
-        {/* Input placeholder */}
+        {/* Message Input */}
         <View style={styles.inputContainer}>
-          <View style={styles.input}>
-            <Text style={styles.inputPlaceholder}>Message input coming soon...</Text>
-          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Type a message..."
+            placeholderTextColor={COLORS.tertiaryLabel}
+            value={messageText}
+            onChangeText={setMessageText}
+            multiline
+            maxLength={1000}
+            editable={!sending}
+            returnKeyType="default"
+            blurOnSubmit={false}
+          />
+          <TouchableOpacity
+            style={[
+              styles.sendButton,
+              (!messageText.trim() || sending) && styles.sendButtonDisabled
+            ]}
+            onPress={sendMessage}
+            disabled={!messageText.trim() || sending}
+          >
+            {sending ? (
+              <ActivityIndicator size="small" color={COLORS.systemBackground} />
+            ) : (
+              <Ionicons
+                name="send"
+                size={20}
+                color={messageText.trim() ? COLORS.systemBackground : COLORS.tertiaryLabel}
+              />
+            )}
+          </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -218,6 +289,7 @@ const styles = StyleSheet.create({
   },
   messagesList: {
     padding: SPACING.md,
+    paddingBottom: SPACING.lg,
   },
   dateSeparator: {
     alignItems: 'center',
@@ -292,21 +364,36 @@ const styles = StyleSheet.create({
     marginTop: SPACING.xs,
   },
   inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
     padding: SPACING.md,
+    paddingBottom: SPACING.md,
     backgroundColor: COLORS.systemBackground,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: COLORS.separator,
+    gap: SPACING.sm,
   },
   input: {
+    flex: 1,
+    ...TYPOGRAPHY.body,
     backgroundColor: COLORS.secondarySystemBackground,
     borderRadius: RADIUS.lg,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
+    paddingTop: SPACING.sm,
+    color: COLORS.label,
+    maxHeight: 100,
     minHeight: 44,
+  },
+  sendButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  inputPlaceholder: {
-    ...TYPOGRAPHY.body,
-    color: COLORS.tertiaryLabel,
+  sendButtonDisabled: {
+    backgroundColor: COLORS.tertiarySystemBackground,
   },
 });

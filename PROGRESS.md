@@ -1,7 +1,7 @@
 # Carben Connect Mobile 2.0 - Development Progress
 
 **Last Updated:** 2025-10-27
-**Current Status:** Phase 5 Week 3 - Priority 3 Complete (Quick Actions)
+**Current Status:** Phase 5 Week 3 - Priority 4 Complete (Detail Screens)
 
 ---
 
@@ -174,7 +174,7 @@ npx expo start
    - Timestamp on each message
    - Sender name on received messages
    - Empty state for new conversations
-   - Message input placeholder (coming soon)
+   - **Message input with send functionality** ✅
    - KeyboardAvoidingView for iOS
 
 **What's Working:**
@@ -184,6 +184,10 @@ npx expo start
 - ✅ Smart date/time formatting
 - ✅ Pull-to-refresh on inbox
 - ✅ Role-based message filtering
+- ✅ **Send messages with TextInput and send button**
+- ✅ **Auto-scroll to latest message**
+- ✅ **Haptic feedback on send**
+- ✅ **Loading state while sending**
 
 #### Priority 2: Client List with Data (✅ COMPLETE)
 
@@ -287,7 +291,7 @@ npx expo start
 - Updated HomeScreen Quick Action to navigate to AddPhotosScreen
 - Upload button functional with Firebase Storage
 
-#### Priority 4: Detail Screens (✅ ITEM 1 COMPLETE)
+#### Priority 4: Detail Screens (✅ COMPLETE)
 
 **1. Client Detail Screen (✅ COMPLETE)**
 
@@ -318,11 +322,44 @@ npx expo start
 - ✅ Pull-to-refresh on client details
 - ✅ Empty state when client has no projects
 - ✅ Project count indicator
+- ✅ **Fixed navigation bug (pass projectId not project object)**
 
-**2. Message Sending (⏳ PENDING)**
-- Message input field in ConversationScreen
-- Send button with Firestore integration
-- Real-time message delivery
+**2. Message Sending (✅ COMPLETE)**
+
+**ConversationScreen Updates**
+- Replaced placeholder with functional TextInput
+- Send button with icon
+  - Enabled when text is entered
+  - Disabled/grayed when empty
+  - Shows loading spinner while sending
+- Firestore integration
+  - Saves message to 'messages' collection
+  - Includes projectId, senderId, senderName, timestamp
+  - Sets read: false for unread tracking
+- Auto-scroll to latest message
+  - Scrolls on new messages
+  - Scrolls when sending
+- Input handling
+  - Multiline support (up to 100px height)
+  - 1000 character limit
+  - Clears input on successful send
+  - Restores text on error
+- Haptic feedback
+  - Medium impact on send
+  - Success notification on delivery
+  - Error notification on failure
+- KeyboardAvoidingView for proper iOS keyboard handling
+
+**What's Working:**
+- ✅ Type message in TextInput
+- ✅ Send button enables/disables based on input
+- ✅ Tap send → message saves to Firestore
+- ✅ Message appears in conversation immediately (real-time)
+- ✅ Input clears after sending
+- ✅ Auto-scroll to latest message
+- ✅ Loading state while sending
+- ✅ Error handling with text restoration
+- ✅ Multiline input support
 
 ---
 
@@ -351,7 +388,7 @@ carben-connect-mobile-2.0/
     ├── NewProjectScreen.js    # Create new project form
     ├── AddPhotosScreen.js     # Upload photos to projects
     ├── InboxScreen.js         # Messages list (Firestore)
-    ├── ConversationScreen.js  # Message thread view
+    ├── ConversationScreen.js  # Message thread view + sending
     ├── ClientsScreen.js       # Clients list (Firestore)
     ├── ClientDetailScreen.js  # Client details + projects
     ├── MoreScreen.js          # Settings menu
@@ -377,6 +414,8 @@ carben-connect-mobile-2.0/
 - ✅ **Message cards with unread indicators**
 - ✅ **Tap message → view conversation**
 - ✅ **Chat-style message bubbles**
+- ✅ **Type and send messages in real-time**
+- ✅ **Auto-scroll to latest message**
 - ✅ **Clients load from Firestore in real-time**
 - ✅ **Client cards with contact info**
 - ✅ **Tap client → view client details**
@@ -399,10 +438,6 @@ carben-connect-mobile-2.0/
 
 ## What's Next
 
-### Priority 4: Remaining Detail Screens
-1. ~~Client detail screen with project list~~ ✅ COMPLETE
-2. **Message sending functionality**
-
 ### Priority 5: Search & Filtering
 1. Search projects by name/client
 2. Filter by status
@@ -412,6 +447,12 @@ carben-connect-mobile-2.0/
 1. User management
 2. QuickBooks integration screens
 3. Settings
+
+### Additional Enhancements
+1. Message read/unread status updates
+2. Push notifications for new messages
+3. Project status updates
+4. Export data features
 
 ---
 
@@ -445,6 +486,7 @@ git push origin main
   - **photos** - Array of photo objects with URLs from Firebase Storage
 - **estimates** - Project estimates
 - **messages** - Project messages (real-time updates working!)
+  - **read** - Boolean for unread tracking
 
 ---
 
@@ -459,7 +501,7 @@ git push origin main
 - **Project Details**: screens/ProjectDetailScreen.js
 - **New Project**: screens/NewProjectScreen.js
 - **Add Photos**: screens/AddPhotosScreen.js
-- **Messages**: screens/InboxScreen.js, ConversationScreen.js
+- **Messages**: screens/InboxScreen.js, ConversationScreen.js (with sending)
 - **Clients**: screens/ClientsScreen.js, ClientDetailScreen.js
 - **Profile**: screens/ProfileScreen.js
 - **Calendar**: screens/CalendarScreen.js
@@ -485,12 +527,17 @@ git push origin main
 - Created ClientDetailScreen with client info and projects list
 - Added ClientDetailScreen to ClientsStack navigation
 - Connected client tap to navigate to detail screen
+- Fixed ClientDetailScreen navigation bug (pass projectId not project object)
 - Created AddPhotosScreen with photo picker and Firebase Storage upload
 - Installed expo-image-picker (SDK 54 compatible)
 - Added AddPhotosScreen to navigation (HomeStack and ProjectsStack)
 - Connected Add Photos Quick Action to navigate to upload screen
 - Implemented multiple photo selection and preview
 - Photos upload to Firebase Storage and save URLs to Firestore
+- **Implemented message sending in ConversationScreen**
+- **Added functional TextInput with send button**
+- **Auto-scroll to latest messages**
+- **Haptic feedback and loading states for messages**
 
 ---
 
@@ -501,10 +548,10 @@ git push origin main
 **Phase 5 Week 3 - Priority 1 Complete:** Messages/Inbox with real-time data
 **Phase 5 Week 3 - Priority 2 Complete:** Client list with real-time data
 **Phase 5 Week 3 - Priority 3 Complete:** Quick Actions (New Project + Add Photos)
-**Phase 5 Week 3 - Priority 4 Item 1 Complete:** Client detail screen with projects
+**Phase 5 Week 3 - Priority 4 Complete:** Detail Screens (Client Details + Message Sending)
 
-The app now has full Quick Actions functionality! Users can create new projects through a validated form and upload photos to any project. Photos are stored in Firebase Storage and displayed in the project detail view. The entire photo upload flow includes project selection, multiple photo picking, preview, and upload progress with success feedback.
+The app now has complete messaging functionality! Users can view conversations and send messages in real-time. Messages are saved to Firestore with sender info and timestamps. The conversation view includes auto-scrolling, haptic feedback, loading states, and proper keyboard handling. Combined with project creation, photo uploads, and client management, the app provides a comprehensive construction project management solution.
 
-**Next up:** Message sending functionality
+**Next up:** Search & filtering for projects, then admin features
 
-**Next Task:** Implement message input and send functionality in ConversationScreen
+**Next Task:** Implement search functionality in ProjectsScreen to filter by name/client and status
