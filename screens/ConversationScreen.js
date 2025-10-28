@@ -11,7 +11,7 @@ import {
   Platform,
   TextInput,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { collection, query, where, onSnapshot, addDoc } from 'firebase/firestore';
@@ -22,6 +22,7 @@ import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 export default function ConversationScreen({ route, navigation }) {
   const { projectId, projectTitle } = route.params;
   const { userProfile } = useAuth();
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState('');
@@ -182,8 +183,7 @@ export default function ConversationScreen({ route, navigation }) {
   }
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={{ flex: 0 }} edges={['top']} />
+    <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -222,7 +222,7 @@ export default function ConversationScreen({ route, navigation }) {
         )}
 
         {/* Message Input */}
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { paddingBottom: SPACING.md + insets.bottom }]}>
           <TextInput
             style={styles.input}
             placeholder="Type a message..."
@@ -253,8 +253,7 @@ export default function ConversationScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-      <SafeAreaView style={{ flex: 0, backgroundColor: COLORS.systemBackground }} edges={['bottom']} />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -378,7 +377,8 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    padding: SPACING.md,
+    paddingHorizontal: SPACING.md,
+    paddingTop: SPACING.md,
     backgroundColor: COLORS.systemBackground,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: COLORS.separator,
