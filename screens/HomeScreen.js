@@ -1,6 +1,6 @@
 // HomeScreen - Central hub for quick actions and overview
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -55,7 +55,7 @@ export default function HomeScreen({ navigation }) {
               <Text style={styles.actionText}>New Project</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionCard} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); Alert.alert("Coming Soon", "Photo upload will be available soon"); }}>
+            <TouchableOpacity style={styles.actionCard} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); navigation.navigate("AddPhotos"); }}>
               <View style={[styles.actionIcon, { backgroundColor: COLORS.green + '20' }]}>
                 <Ionicons name="camera" size={28} color={COLORS.green} />
               </View>

@@ -1,7 +1,7 @@
 # Carben Connect Mobile 2.0 - Development Progress
 
 **Last Updated:** 2025-10-27
-**Current Status:** Phase 5 Week 3 - Priority 4 Item 1 Complete (Client Detail)
+**Current Status:** Phase 5 Week 3 - Priority 3 Complete (Quick Actions)
 
 ---
 
@@ -143,7 +143,7 @@ npx expo start
 - Proper back navigation throughout
 - Fixed ProjectsScreen header duplication issue
 
-### Phase 5 Week 3: Messages, Clients & Quick Actions (IN PROGRESS)
+### Phase 5 Week 3: Messages, Clients & Quick Actions (✅ COMPLETE)
 
 #### Priority 1: Messages/Inbox Integration (✅ COMPLETE)
 
@@ -214,7 +214,7 @@ npx expo start
 - ✅ Avatar with initials
 - ✅ Tap client → navigate to detail screen
 
-#### Priority 3: Quick Actions (✅ ITEM 1 COMPLETE)
+#### Priority 3: Quick Actions (✅ COMPLETE)
 
 **1. New Project Form (✅ COMPLETE)**
 
@@ -233,12 +233,6 @@ npx expo start
 - Haptic feedback throughout
 - **WIRED UP TO NAVIGATION**
 
-**Navigation Updates:**
-- Added NewProjectScreen import to navigation.js
-- Added NewProject to HomeStack and ProjectsStack
-- Updated HomeScreen Quick Action to navigate to NewProjectScreen
-- Create button functional with Firestore save
-
 **What's Working:**
 - ✅ Tap "New Project" Quick Action → navigate to form
 - ✅ Admin can select client from dropdown
@@ -248,10 +242,50 @@ npx expo start
 - ✅ Success feedback and navigation
 - ✅ Loading states throughout
 
-**2. Add Photos (⏳ PENDING)**
+**2. Add Photos (✅ COMPLETE)**
+
+**AddPhotosScreen** (screens/AddPhotosScreen.js)
+- Apple-styled photo upload screen
+- Project selection dropdown
+  - Loads all projects (admin sees all, clients see their own)
+  - Shows project title and client name
+  - Required field
 - Photo picker integration
-- Upload to Firebase Storage
-- Attach photos to projects
+  - Uses expo-image-picker
+  - Supports multiple photo selection (up to 10)
+  - Photo library permissions handling
+  - Image preview grid (3 columns)
+  - Remove photo capability
+- Firebase Storage upload
+  - Unique filename generation
+  - Upload progress handling
+  - Storage in `projects/{projectId}/` path
+- Firestore integration
+  - Updates project document with photo URLs
+  - Stores upload metadata (uploadedBy, uploadedAt, uploadedByName)
+  - Uses arrayUnion to append photos
+- Upload button in header with loading state
+- Success feedback with photo count
+- Haptic feedback throughout
+- **WIRED UP TO NAVIGATION**
+
+**What's Working:**
+- ✅ Tap "Add Photos" Quick Action → navigate to screen
+- ✅ Select project from dropdown
+- ✅ Pick multiple photos from library
+- ✅ Preview selected photos in grid
+- ✅ Remove photos before upload
+- ✅ Upload photos to Firebase Storage
+- ✅ Save photo URLs to project document
+- ✅ Success feedback and navigation
+- ✅ Loading states throughout
+- ✅ expo-image-picker installed (SDK 54 compatible)
+
+**Navigation Updates:**
+- Added AddPhotosScreen import to navigation.js
+- Added AddPhotos to HomeStack and ProjectsStack
+- Updated HomeScreen Quick Action to navigate to AddPhotosScreen
+- Upload button functional with Firebase Storage
 
 #### Priority 4: Detail Screens (✅ ITEM 1 COMPLETE)
 
@@ -274,12 +308,6 @@ npx expo start
 - Loading state with ActivityIndicator
 - Back button navigation
 - Haptic feedback on interactions
-
-**Navigation Updates:**
-- Added ClientDetailScreen import to navigation.js
-- Added ClientDetail to ClientsStack
-- Added ProjectDetail to ClientsStack (for navigation from client projects)
-- Updated ClientsScreen handleClientPress to navigate to ClientDetail
 
 **What's Working:**
 - ✅ Tap client → view full details
@@ -305,8 +333,9 @@ carben-connect-mobile-2.0/
 ├── App.js                      # Main entry with auth
 ├── theme.js                    # Apple design system
 ├── navigation.js               # Tab + Stack navigation (with detail screens)
+├── package.json                # Dependencies (includes expo-image-picker)
 ├── config/
-│   └── firebase.js            # Firebase config
+│   └── firebase.js            # Firebase config (auth, firestore, storage)
 ├── contexts/
 │   └── AuthContext.js         # Auth state
 ├── components/
@@ -320,6 +349,7 @@ carben-connect-mobile-2.0/
     ├── ProjectsScreen.js      # Projects list (Firestore)
     ├── ProjectDetailScreen.js # Project details + photos
     ├── NewProjectScreen.js    # Create new project form
+    ├── AddPhotosScreen.js     # Upload photos to projects
     ├── InboxScreen.js         # Messages list (Firestore)
     ├── ConversationScreen.js  # Message thread view
     ├── ClientsScreen.js       # Clients list (Firestore)
@@ -356,6 +386,11 @@ carben-connect-mobile-2.0/
 - ✅ **New Project Quick Action → form screen**
 - ✅ **Client selection dropdown (admin)**
 - ✅ **Create project and save to Firestore**
+- ✅ **Add Photos Quick Action → upload screen**
+- ✅ **Select project for photos**
+- ✅ **Pick multiple photos from library**
+- ✅ **Upload photos to Firebase Storage**
+- ✅ **Photos appear in project details**
 - ✅ **Profile icon → ProfileScreen (ALL SCREENS)**
 - ✅ **Calendar icon → CalendarScreen (ALL SCREENS)**
 - ✅ **Back navigation works everywhere**
@@ -367,10 +402,6 @@ carben-connect-mobile-2.0/
 ### Priority 4: Remaining Detail Screens
 1. ~~Client detail screen with project list~~ ✅ COMPLETE
 2. **Message sending functionality**
-
-### Priority 3: Remaining Quick Actions
-1. ~~New Project - Create project form~~ ✅ COMPLETE
-2. **Add Photos** - Photo picker and upload
 
 ### Priority 5: Search & Filtering
 1. Search projects by name/client
@@ -411,6 +442,7 @@ git push origin main
 
 - **users** - User profiles (email, role, name, etc.)
 - **projects** - Construction projects (real-time updates working!)
+  - **photos** - Array of photo objects with URLs from Firebase Storage
 - **estimates** - Project estimates
 - **messages** - Project messages (real-time updates working!)
 
@@ -421,11 +453,12 @@ git push origin main
 - **Theme**: theme.js
 - **Auth**: contexts/AuthContext.js
 - **Navigation**: navigation.js (with 5 stacks + detail screens)
-- **Firebase**: config/firebase.js
+- **Firebase**: config/firebase.js (auth, firestore, storage)
 - **Credentials**: CREDENTIALS.md (NOT in git)
 - **Components**: components/ProjectCard.js, MessageCard.js, ClientCard.js
 - **Project Details**: screens/ProjectDetailScreen.js
 - **New Project**: screens/NewProjectScreen.js
+- **Add Photos**: screens/AddPhotosScreen.js
 - **Messages**: screens/InboxScreen.js, ConversationScreen.js
 - **Clients**: screens/ClientsScreen.js, ClientDetailScreen.js
 - **Profile**: screens/ProfileScreen.js
@@ -452,7 +485,12 @@ git push origin main
 - Created ClientDetailScreen with client info and projects list
 - Added ClientDetailScreen to ClientsStack navigation
 - Connected client tap to navigate to detail screen
-- Added ProjectDetailScreen to ClientsStack for navigation from client projects
+- Created AddPhotosScreen with photo picker and Firebase Storage upload
+- Installed expo-image-picker (SDK 54 compatible)
+- Added AddPhotosScreen to navigation (HomeStack and ProjectsStack)
+- Connected Add Photos Quick Action to navigate to upload screen
+- Implemented multiple photo selection and preview
+- Photos upload to Firebase Storage and save URLs to Firestore
 
 ---
 
@@ -462,11 +500,11 @@ git push origin main
 **Phase 5 Week 2 Complete:** Project data integration + All icons functional
 **Phase 5 Week 3 - Priority 1 Complete:** Messages/Inbox with real-time data
 **Phase 5 Week 3 - Priority 2 Complete:** Client list with real-time data
-**Phase 5 Week 3 - Priority 3 Item 1 Complete:** New Project form and navigation
+**Phase 5 Week 3 - Priority 3 Complete:** Quick Actions (New Project + Add Photos)
 **Phase 5 Week 3 - Priority 4 Item 1 Complete:** Client detail screen with projects
 
-The app now has comprehensive client management! Users can browse clients, tap to view detailed information including contact details and QuickBooks info, and see all projects for that client. From the client detail screen, users can navigate to any project to view full details. The entire flow has real-time Firestore integration and proper navigation throughout.
+The app now has full Quick Actions functionality! Users can create new projects through a validated form and upload photos to any project. Photos are stored in Firebase Storage and displayed in the project detail view. The entire photo upload flow includes project selection, multiple photo picking, preview, and upload progress with success feedback.
 
-**Next up:** Photo upload functionality or message sending
+**Next up:** Message sending functionality
 
-**Next Task:** Implement photo picker and upload to Firebase Storage for "Add Photos" Quick Action OR implement message sending in ConversationScreen
+**Next Task:** Implement message input and send functionality in ConversationScreen
