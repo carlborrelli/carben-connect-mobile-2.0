@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   TextInput,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
@@ -30,7 +31,22 @@ export default function ConversationScreen({ route, navigation }) {
   const [messageText, setMessageText] = useState('');
   const [sending, setSending] = useState(false);
   const [inputHeight, setInputHeight] = useState(0);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const flatListRef = useRef(null);
+
+  // Track keyboard visibility
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showListener = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideListener = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+
+    return () => {
+      showListener.remove();
+      hideListener.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (!projectId) return;
@@ -166,6 +182,10 @@ export default function ConversationScreen({ route, navigation }) {
     );
   };
 
+  // Add tab bar height only when keyboard is hidden
+  const extraBottom = keyboardVisible ? 0 : tabBarHeight;
+  const inputPadBottom = SPACING.md + insets.bottom + extraBottom;
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
@@ -235,7 +255,7 @@ export default function ConversationScreen({ route, navigation }) {
         {/* Docked Input Bar */}
         <View
           onLayout={(e) => setInputHeight(e.nativeEvent.layout.height)}
-          style={[styles.inputContainer, { paddingBottom: SPACING.md + insets.bottom }]}
+          style={[styles.inputContainer, { paddingBottom: inputPadBottom }]}
         >
           <TextInput
             style={styles.input}
