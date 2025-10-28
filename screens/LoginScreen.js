@@ -65,15 +65,15 @@ export default function LoginScreen() {
               <Text style={styles.label}>Email</Text>
               <TextInput
                 style={styles.input}
-                placeholder=Enter your email
+                placeholder="Enter your email"
                 placeholderTextColor={COLORS.tertiaryLabel}
                 value={email}
                 onChangeText={setEmail}
-                autoCapitalize=none
+                autoCapitalize="none"
                 autoCorrect={false}
-                keyboardType=email-address
-                textContentType=emailAddress
-                returnKeyType=next
+                keyboardType="email-address"
+                textContentType="emailAddress"
+                returnKeyType="next"
                 editable={!isLoading}
               />
             </View>
@@ -83,15 +83,15 @@ export default function LoginScreen() {
               <Text style={styles.label}>Password</Text>
               <TextInput
                 style={styles.input}
-                placeholder=Enter your password
+                placeholder="Enter your password"
                 placeholderTextColor={COLORS.tertiaryLabel}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
-                autoCapitalize=none
+                autoCapitalize="none"
                 autoCorrect={false}
-                textContentType=password
-                returnKeyType=go
+                textContentType="password"
+                returnKeyType="go"
                 onSubmitEditing={handleLogin}
                 editable={!isLoading}
               />
