@@ -48,13 +48,13 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.actionsGrid}>
-            <TouchableOpacity style={styles.actionCard} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); Alert.alert("Coming Soon", "Project creation will be available soon"); }}>
+            <TouchableOpacity style={styles.actionCard} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); navigation.navigate("NewProject"); }}>
               <View style={[styles.actionIcon, { backgroundColor: COLORS.blue + '20' }]}>
                 <Ionicons name="add-circle" size={28} color={COLORS.blue} />
               </View>
               <Text style={styles.actionText}>New Project</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.actionCard} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); Alert.alert("Coming Soon", "Photo upload will be available soon"); }}>
               <View style={[styles.actionIcon, { backgroundColor: COLORS.green + '20' }]}>
                 <Ionicons name="camera" size={28} color={COLORS.green} />

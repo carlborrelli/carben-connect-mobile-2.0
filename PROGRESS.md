@@ -1,7 +1,7 @@
 # Carben Connect Mobile 2.0 - Development Progress
 
-**Last Updated:** 2025-10-27  
-**Current Status:** Phase 5 Week 2 COMPLETE - All Navigation & Icons Functional
+**Last Updated:** 2025-10-27
+**Current Status:** Phase 5 Week 3 - Priority 3 Complete (New Project)
 
 ---
 
@@ -143,6 +143,115 @@ npx expo start
 - Proper back navigation throughout
 - Fixed ProjectsScreen header duplication issue
 
+### Phase 5 Week 3: Messages, Clients & Quick Actions (IN PROGRESS)
+
+#### Priority 1: Messages/Inbox Integration (✅ COMPLETE)
+
+**Components:**
+
+1. **MessageCard** (components/MessageCard.js)
+   - Apple-styled message preview card
+   - Unread indicator badge
+   - Project title and sender info
+   - Message preview text
+   - Smart timestamp formatting (Today, Yesterday, weekday, or date)
+   - Haptic feedback on tap
+
+2. **InboxScreen with Data** (screens/InboxScreen.js)
+   - Real-time Firestore integration with onSnapshot
+   - Admin sees all messages, clients see only theirs
+   - Loading state with ActivityIndicator
+   - Pull-to-refresh functionality
+   - Empty state for no messages
+   - FlatList for efficient rendering
+   - Navigation to conversation view
+   - Consistent header with calendar/profile icons
+
+3. **ConversationScreen** (screens/ConversationScreen.js)
+   - Chat-style message bubbles
+   - Sent vs received message styling
+   - Date separators (Today, Yesterday, full date)
+   - Timestamp on each message
+   - Sender name on received messages
+   - Empty state for new conversations
+   - Message input placeholder (coming soon)
+   - KeyboardAvoidingView for iOS
+
+**What's Working:**
+- ✅ Messages load from Firestore in real-time
+- ✅ Unread message indicators
+- ✅ Tap message → view full conversation
+- ✅ Smart date/time formatting
+- ✅ Pull-to-refresh on inbox
+- ✅ Role-based message filtering
+
+#### Priority 2: Client List with Data (✅ COMPLETE)
+
+**Components:**
+
+1. **ClientCard** (components/ClientCard.js)
+   - Apple-styled client card
+   - Avatar with first letter initial
+   - Client name and contact info
+   - Email, phone, QuickBooks location display
+   - Haptic feedback on tap
+
+2. **ClientsScreen with Data** (screens/ClientsScreen.js)
+   - Real-time Firestore integration with onSnapshot
+   - Admin sees all clients (role='client'), clients see only themselves
+   - Loading state with ActivityIndicator
+   - Pull-to-refresh functionality
+   - Empty state for no clients
+   - FlatList for efficient rendering
+   - Client detail navigation (coming soon)
+   - Consistent header with calendar/profile icons
+
+**What's Working:**
+- ✅ Clients load from Firestore in real-time
+- ✅ Role-based client filtering
+- ✅ Contact information display
+- ✅ Pull-to-refresh functionality
+- ✅ Avatar with initials
+
+#### Priority 3: Quick Actions (✅ ITEM 1 COMPLETE)
+
+**1. New Project Form (✅ COMPLETE)**
+
+**NewProjectScreen** (screens/NewProjectScreen.js)
+- Apple-styled project creation form
+- Client selection dropdown (admin only)
+  - Loads all clients from Firestore
+  - Shows client name and email
+  - Required field for admin
+- Project title input (required)
+- Project description textarea (optional)
+- Create button in header with loading state
+- Validation for required fields
+- Firestore integration to save new projects
+- Success alert with navigation back
+- Haptic feedback throughout
+- **WIRED UP TO NAVIGATION**
+
+**Navigation Updates:**
+- Added NewProjectScreen import to navigation.js
+- Added NewProject to HomeStack and ProjectsStack
+- Updated HomeScreen Quick Action to navigate to NewProjectScreen
+- Create button functional with Firestore save
+
+**What's Working:**
+- ✅ Tap "New Project" Quick Action → navigate to form
+- ✅ Admin can select client from dropdown
+- ✅ Client automatically set for non-admin users
+- ✅ Form validation for title and client
+- ✅ New projects saved to Firestore
+- ✅ Success feedback and navigation
+- ✅ Loading states throughout
+
+**2. Add Photos (⏳ PENDING)**
+- Photo picker integration
+- Upload to Firebase Storage
+- Attach photos to projects
+
 ---
 
 ## Project Structure
@@ -151,24 +260,28 @@ npx expo start
 carben-connect-mobile-2.0/
 ├── App.js                      # Main entry with auth
 ├── theme.js                    # Apple design system
-├── navigation.js               # Tab + Stack navigation (5 stacks)
+├── navigation.js               # Tab + Stack navigation (5 stacks + NewProject)
 ├── config/
 │   └── firebase.js            # Firebase config
 ├── contexts/
 │   └── AuthContext.js         # Auth state
 ├── components/
 │   ├── CustomTabBar.js        # Circular tab bar
-│   └── ProjectCard.js         # Project list card
+│   ├── ProjectCard.js         # Project list card
+│   ├── MessageCard.js         # Message preview card
+│   └── ClientCard.js          # Client list card
 └── screens/
     ├── LoginScreen.js         # Authentication
     ├── HomeScreen.js          # Dashboard + Quick Actions
     ├── ProjectsScreen.js      # Projects list (Firestore)
     ├── ProjectDetailScreen.js # Project details + photos
-    ├── InboxScreen.js         # Messages
-    ├── ClientsScreen.js       # Clients
+    ├── NewProjectScreen.js    # Create new project form
+    ├── InboxScreen.js         # Messages list (Firestore)
+    ├── ConversationScreen.js  # Message thread view
+    ├── ClientsScreen.js       # Clients list (Firestore)
     ├── MoreScreen.js          # Settings menu
-    ├── ProfileScreen.js       # User profile (works everywhere!)
-    └── CalendarScreen.js      # Calendar view (works everywhere!)
+    ├── ProfileScreen.js       # User profile
+    └── CalendarScreen.js      # Calendar view
 ```
 
 ---
@@ -185,37 +298,38 @@ carben-connect-mobile-2.0/
 - ✅ **Tap project → view full details**
 - ✅ **Tap photo → full-screen viewer**
 - ✅ **Pull-to-refresh on projects list**
+- ✅ **Messages load from Firestore in real-time**
+- ✅ **Message cards with unread indicators**
+- ✅ **Tap message → view conversation**
+- ✅ **Chat-style message bubbles**
+- ✅ **Clients load from Firestore in real-time**
+- ✅ **Client cards with contact info**
+- ✅ **Role-based filtering (admin vs client)**
+- ✅ **New Project Quick Action → form screen**
+- ✅ **Client selection dropdown (admin)**
+- ✅ **Create project and save to Firestore**
 - ✅ **Profile icon → ProfileScreen (ALL SCREENS)**
 - ✅ **Calendar icon → CalendarScreen (ALL SCREENS)**
-- ✅ **Quick Actions show feedback alerts**
 - ✅ **Back navigation works everywhere**
 
 ---
 
-## What's Next - Week 3
+## What's Next
 
-### Priority 1: Messages/Inbox Integration
-1. Load messages from Firestore
-2. Display message threads by project
-3. Message detail view
-4. Real-time updates
-
-### Priority 2: Client List with Data
-1. Load clients from Firestore
-2. Display client cards
-3. Client detail view
-4. Filter by admin/client
-
-### Priority 3: Implement Quick Actions
-1. **New Project** - Create project form
+### Priority 3: Remaining Quick Actions
+1. ~~New Project - Create project form~~ ✅ COMPLETE
 2. **Add Photos** - Photo picker and upload
 
-### Priority 4: Search & Filtering
+### Priority 4: Detail Screens
+1. Client detail screen with project list
+2. Message sending functionality
+
+### Priority 5: Search & Filtering
 1. Search projects by name/client
 2. Filter by status
 3. Sort options
 
-### Priority 5: Admin Features
+### Priority 6: Admin Features
 1. User management
 2. QuickBooks integration screens
 3. Settings
@@ -250,7 +364,7 @@ git push origin main
 - **users** - User profiles (email, role, name, etc.)
 - **projects** - Construction projects (real-time updates working!)
 - **estimates** - Project estimates
-- **messages** - Project messages
+- **messages** - Project messages (real-time updates working!)
 
 ---
 
@@ -258,11 +372,14 @@ git push origin main
 
 - **Theme**: theme.js
 - **Auth**: contexts/AuthContext.js
-- **Navigation**: navigation.js (with 5 stacks)
+- **Navigation**: navigation.js (with 5 stacks + NewProject)
 - **Firebase**: config/firebase.js
 - **Credentials**: CREDENTIALS.md (NOT in git)
-- **Components**: components/ProjectCard.js
+- **Components**: components/ProjectCard.js, MessageCard.js, ClientCard.js
 - **Project Details**: screens/ProjectDetailScreen.js
+- **New Project**: screens/NewProjectScreen.js
+- **Messages**: screens/InboxScreen.js, ConversationScreen.js
+- **Clients**: screens/ClientsScreen.js
 - **Profile**: screens/ProfileScreen.js
 - **Calendar**: screens/CalendarScreen.js
 
@@ -279,17 +396,24 @@ git push origin main
 - Profile icons work from all screens
 - Quick Actions provide user feedback
 - ProjectsScreen refactored to use renderHeader() function
+- Implemented real-time messages with InboxScreen and ConversationScreen
+- Implemented real-time clients with ClientsScreen and ClientCard
+- Created NewProjectScreen with client selection and Firestore integration
+- Wired NewProject to navigation (HomeStack and ProjectsStack)
+- Connected New Project Quick Action to navigate to form
 
 ---
 
 ## Summary
 
-**Phase 5 Week 1 Complete:** Foundation with auth, navigation, and Apple design  
+**Phase 5 Week 1 Complete:** Foundation with auth, navigation, and Apple design
 **Phase 5 Week 2 Complete:** Project data integration + All icons functional
+**Phase 5 Week 3 - Priority 1 Complete:** Messages/Inbox with real-time data
+**Phase 5 Week 3 - Priority 2 Complete:** Client list with real-time data
+**Phase 5 Week 3 - Priority 3 Item 1 Complete:** New Project form and navigation
 
-The app now has full navigation functionality! All header icons work consistently across all screens. Projects load from Firestore with real-time updates. Users can view project details, browse photos in full-screen, check their profile, and view a calendar. Quick Actions provide feedback placeholders.
+The app now has full messaging, client management, and project creation! Users can view conversations with chat-style bubbles, browse clients with contact info, and create new projects through a validated form. Admin users can select clients from a dropdown, while regular clients have projects auto-assigned to them.
 
-**Next up:** Integrate Messages/Inbox with real data and implement Client list functionality.
+**Next up:** Photo upload functionality and client detail screens.
 
-**Last Commit:** 1dabd94  
-**Next Task:** Load and display messages from Firestore in InboxScreen
+**Next Task:** Implement photo picker and upload to Firebase Storage for "Add Photos" Quick Action

@@ -8,6 +8,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from './screens/HomeScreen';
 import ProjectsScreen from './screens/ProjectsScreen';
 import ProjectDetailScreen from './screens/ProjectDetailScreen';
+import NewProjectScreen from './screens/NewProjectScreen';
 import InboxScreen from './screens/InboxScreen';
 import ConversationScreen from './screens/ConversationScreen';
 import ClientsScreen from './screens/ClientsScreen';
@@ -27,6 +28,7 @@ function ProjectsStackScreen() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProjectsList" component={ProjectsScreen} />
       <Stack.Screen name="ProjectDetail" component={ProjectDetailScreen} />
+      <Stack.Screen name="NewProject" component={NewProjectScreen} />
       <Stack.Screen name="Calendar" component={CalendarScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
@@ -37,6 +39,7 @@ function HomeStackScreen() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="HomeMain" component={HomeScreen} />
+      <Stack.Screen name="NewProject" component={NewProjectScreen} />
       <Stack.Screen name="Calendar" component={CalendarScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
