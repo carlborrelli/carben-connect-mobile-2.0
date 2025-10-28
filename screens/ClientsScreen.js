@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -72,8 +73,8 @@ export default function ClientsScreen({ navigation }) {
   };
 
   const handleClientPress = (client) => {
-    // TODO: Navigate to client detail screen
-    console.log('Pressed client:', client.id);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    navigation.navigate('ClientDetail', { client });
   };
 
   const renderHeader = () => (
