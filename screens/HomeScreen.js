@@ -8,12 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 
 export default function HomeScreen() {
-  const { userProfile, signOut } = useAuth();
-
-  const handleSignOut = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await signOut();
-  };
+  const { userProfile } = useAuth();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -24,9 +19,6 @@ export default function HomeScreen() {
             <Text style={styles.greeting}>Welcome back,</Text>
             <Text style={styles.name}>{userProfile?.name || 'User'}</Text>
           </View>
-          <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
-            <Ionicons name="log-out-outline" size={24} color={COLORS.primary} />
-          </TouchableOpacity>
         </View>
 
         {/* Quick Stats */}
@@ -83,9 +75,6 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: SPACING.lg,
   },
   greeting: {
@@ -95,9 +84,6 @@ const styles = StyleSheet.create({
   name: {
     ...TYPOGRAPHY.title1,
     color: COLORS.label,
-  },
-  signOutButton: {
-    padding: SPACING.sm,
   },
   statsContainer: {
     flexDirection: 'row',

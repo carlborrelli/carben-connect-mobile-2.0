@@ -10,9 +10,14 @@ export default function ProjectsScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.title}>Projects</Text>
-        <TouchableOpacity style={styles.addButton}>
-          <Ionicons name="add" size={24} color={COLORS.primary} />
-        </TouchableOpacity>
+        <View style={styles.headerIcons}>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
+          </TouchableOpacity>
+        </View>
       </View>
       
       <ScrollView contentContainerStyle={styles.content}>
@@ -45,7 +50,11 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.largeTitle,
     color: COLORS.label,
   },
-  addButton: {
+  headerIcons: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+  },
+  iconButton: {
     width: 44,
     height: 44,
     alignItems: 'center',

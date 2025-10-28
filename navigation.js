@@ -23,6 +23,7 @@ export default function Navigation() {
         screenOptions={{
           headerShown: false,
         }}
+        initialRouteName="Home"
       >
         <Tab.Screen name="Projects" component={ProjectsScreen} />
         <Tab.Screen name="Inbox" component={InboxScreen} />
