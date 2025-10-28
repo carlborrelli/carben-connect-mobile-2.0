@@ -87,7 +87,7 @@ export default function ProjectsScreen({ navigation }) {
             <TouchableOpacity style={styles.iconButton}>
               <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}>
+            <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
               <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
             </TouchableOpacity>
           </View>

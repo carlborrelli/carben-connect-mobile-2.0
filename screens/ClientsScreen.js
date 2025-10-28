@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { COLORS, TYPOGRAPHY, SPACING } from '../theme';
 
-export default function ClientsScreen() {
+export default function ClientsScreen({ navigation }) {
   const { isAdmin } = useAuth();
 
   return (
@@ -17,7 +17,7 @@ export default function ClientsScreen() {
           <TouchableOpacity style={styles.iconButton}>
             <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
             <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
           </TouchableOpacity>
         </View>

@@ -7,7 +7,7 @@ import * as Haptics from 'expo-haptics';
 import { useAuth } from '../contexts/AuthContext';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
   const { userProfile } = useAuth();
 
   return (
@@ -16,10 +16,10 @@ export default function HomeScreen() {
       <View style={styles.headerBar}>
         <Text style={styles.headerTitle}>Home</Text>
         <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
             <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
             <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
           </TouchableOpacity>
         </View>

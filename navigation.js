@@ -11,24 +11,58 @@ import ProjectDetailScreen from './screens/ProjectDetailScreen';
 import InboxScreen from './screens/InboxScreen';
 import ClientsScreen from './screens/ClientsScreen';
 import MoreScreen from './screens/MoreScreen';
+import ProfileScreen from './screens/ProfileScreen';
 
 // Components
 import CustomTabBar from './components/CustomTabBar';
 
 const Tab = createBottomTabNavigator();
-const ProjectsStack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator();
 
-// Projects Stack Navigator (includes list and detail)
+// Create stack navigators for each tab that needs detail screens
 function ProjectsStackScreen() {
   return (
-    <ProjectsStack.Navigator
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <ProjectsStack.Screen name="ProjectsList" component={ProjectsScreen} />
-      <ProjectsStack.Screen name="ProjectDetail" component={ProjectDetailScreen} />
-    </ProjectsStack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="ProjectsList" component={ProjectsScreen} />
+      <Stack.Screen name="ProjectDetail" component={ProjectDetailScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+    </Stack.Navigator>
+  );
+}
+
+function HomeStackScreen() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="HomeMain" component={HomeScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+    </Stack.Navigator>
+  );
+}
+
+function InboxStackScreen() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="InboxMain" component={InboxScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+    </Stack.Navigator>
+  );
+}
+
+function ClientsStackScreen() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="ClientsMain" component={ClientsScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+    </Stack.Navigator>
+  );
+}
+
+function MoreStackScreen() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="MoreMain" component={MoreScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+    </Stack.Navigator>
   );
 }
 
@@ -43,10 +77,10 @@ export default function Navigation() {
         initialRouteName="Home"
       >
         <Tab.Screen name="Projects" component={ProjectsStackScreen} />
-        <Tab.Screen name="Inbox" component={InboxScreen} />
-        <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Clients" component={ClientsScreen} />
-        <Tab.Screen name="More" component={MoreScreen} />
+        <Tab.Screen name="Inbox" component={InboxStackScreen} />
+        <Tab.Screen name="Home" component={HomeStackScreen} />
+        <Tab.Screen name="Clients" component={ClientsStackScreen} />
+        <Tab.Screen name="More" component={MoreStackScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );

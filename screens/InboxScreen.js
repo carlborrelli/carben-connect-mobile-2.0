@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, TYPOGRAPHY, SPACING } from '../theme';
 
-export default function InboxScreen() {
+export default function InboxScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
@@ -14,7 +14,7 @@ export default function InboxScreen() {
           <TouchableOpacity style={styles.iconButton}>
             <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
             <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
           </TouchableOpacity>
         </View>

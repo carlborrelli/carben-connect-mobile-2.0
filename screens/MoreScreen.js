@@ -7,7 +7,7 @@ import * as Haptics from 'expo-haptics';
 import { useAuth } from '../contexts/AuthContext';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 
-export default function MoreScreen() {
+export default function MoreScreen({ navigation }) {
   const { userProfile, isAdmin, signOut } = useAuth();
 
   const handleSignOut = async () => {
@@ -33,7 +33,7 @@ export default function MoreScreen() {
           <TouchableOpacity style={styles.iconButton}>
             <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
             <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
           </TouchableOpacity>
         </View>
