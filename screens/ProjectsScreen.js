@@ -8,7 +8,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  TextInput
+  TextInput,
+  ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,6 +20,16 @@ import { useAuth } from '../contexts/AuthContext';
 import ProjectCard from '../components/ProjectCard';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../theme';
 
+const STATUS_FILTERS = [
+  { key: 'ALL', label: 'All' },
+  { key: 'NEW', label: 'New' },
+  { key: 'ESTIMATE_SENT', label: 'Estimate Sent' },
+  { key: 'APPROVED', label: 'Approved' },
+  { key: 'IN_PROGRESS', label: 'In Progress' },
+  { key: 'COMPLETE', label: 'Complete' },
+  { key: 'PAID', label: 'Paid' },
+];
+
 export default function ProjectsScreen({ navigation }) {
   const { userProfile, isAdmin } = useAuth();
   const [projects, setProjects] = useState([]);
@@ -26,6 +37,7 @@ export default function ProjectsScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('ALL');
 
   // Load projects from Firestore
   useEffect(() => {
@@ -73,28 +85,33 @@ export default function ProjectsScreen({ navigation }) {
     return () => unsubscribe();
   }, [userProfile]);
 
-  // Filter projects when search query changes
+  // Filter projects when search query or status changes
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredProjects(projects);
-      return;
+    let filtered = projects;
+
+    // Filter by status
+    if (selectedStatus !== 'ALL') {
+      filtered = filtered.filter(project => project.status === selectedStatus);
     }
 
-    const query = searchQuery.toLowerCase();
-    const filtered = projects.filter(project => {
-      const title = (project.title || '').toLowerCase();
-      const clientName = (project.clientName || '').toLowerCase();
-      const description = (project.description || '').toLowerCase();
-      const status = (project.status || '').toLowerCase();
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(project => {
+        const title = (project.title || '').toLowerCase();
+        const clientName = (project.clientName || '').toLowerCase();
+        const description = (project.description || '').toLowerCase();
+        const status = (project.status || '').toLowerCase();
 
-      return title.includes(query) ||
-             clientName.includes(query) ||
-             description.includes(query) ||
-             status.includes(query);
-    });
+        return title.includes(query) ||
+               clientName.includes(query) ||
+               description.includes(query) ||
+               status.includes(query);
+      });
+    }
 
     setFilteredProjects(filtered);
-  }, [searchQuery, projects]);
+  }, [searchQuery, selectedStatus, projects]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -109,6 +126,11 @@ export default function ProjectsScreen({ navigation }) {
   const handleClearSearch = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSearchQuery('');
+  };
+
+  const handleStatusFilter = (status) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedStatus(status);
   };
 
   const renderHeader = () => (
@@ -146,6 +168,31 @@ export default function ProjectsScreen({ navigation }) {
           )}
         </View>
       </View>
+
+      {/* Status Filters */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filtersContainer}
+      >
+        {STATUS_FILTERS.map(filter => (
+          <TouchableOpacity
+            key={filter.key}
+            style={[
+              styles.filterChip,
+              selectedStatus === filter.key && styles.filterChipActive
+            ]}
+            onPress={() => handleStatusFilter(filter.key)}
+          >
+            <Text style={[
+              styles.filterChipText,
+              selectedStatus === filter.key && styles.filterChipTextActive
+            ]}>
+              {filter.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
     </View>
   );
 
@@ -180,7 +227,7 @@ export default function ProjectsScreen({ navigation }) {
   }
 
   // No search results
-  if (filteredProjects.length === 0 && searchQuery.length > 0) {
+  if (filteredProjects.length === 0 && (searchQuery.length > 0 || selectedStatus !== 'ALL')) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         {renderHeader()}
@@ -189,7 +236,7 @@ export default function ProjectsScreen({ navigation }) {
             <Ionicons name="search-outline" size={64} color={COLORS.tertiaryLabel} />
             <Text style={styles.emptyTitle}>No Results Found</Text>
             <Text style={styles.emptyText}>
-              Try searching with different keywords
+              Try adjusting your search or filter
             </Text>
           </View>
         </View>
@@ -276,6 +323,30 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     padding: SPACING.xs,
+  },
+  filtersContainer: {
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.md,
+    gap: SPACING.sm,
+  },
+  filterChip: {
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    marginRight: SPACING.xs,
+  },
+  filterChipActive: {
+    backgroundColor: COLORS.primary,
+  },
+  filterChipText: {
+    ...TYPOGRAPHY.subheadline,
+    color: COLORS.label,
+    fontWeight: '500',
+  },
+  filterChipTextActive: {
+    color: COLORS.systemBackground,
+    fontWeight: '600',
   },
   loadingContainer: {
     flex: 1,
