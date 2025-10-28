@@ -77,21 +77,25 @@ export default function ProjectsScreen({ navigation }) {
     navigation.navigate('ProjectDetail', { projectId: project.id });
   };
 
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <Text style={styles.title}>Projects</Text>
+      <View style={styles.headerIcons}>
+        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Calendar")}>
+          <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
+          <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   // Loading state
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Projects</Text>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Calendar")}>
-              <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
-              <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
-            </TouchableOpacity>
-          </View>
-        </View>
+        {renderHeader()}
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
@@ -103,17 +107,7 @@ export default function ProjectsScreen({ navigation }) {
   if (projects.length === 0) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Projects</Text>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.iconButton}>
-              <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}>
-              <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
-            </TouchableOpacity>
-          </View>
-        </View>
+        {renderHeader()}
         <View style={styles.emptyContainer}>
           <View style={styles.emptyState}>
             <Ionicons name="folder-outline" size={64} color={COLORS.tertiaryLabel} />
@@ -130,17 +124,7 @@ export default function ProjectsScreen({ navigation }) {
   // Projects list
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Projects</Text>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
-          </TouchableOpacity>
-        </View>
-      </View>
+      {renderHeader()}
       
       <FlatList
         data={projects}
