@@ -18,7 +18,7 @@ import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestor
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import ProjectCard from '../components/ProjectCard';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../theme';
+import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 
 const STATUS_FILTERS = [
   { key: 'ALL', label: 'All' },
