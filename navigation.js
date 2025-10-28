@@ -3,6 +3,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { StackActions } from '@react-navigation/native';
 
 // Screens
 import HomeScreen from './screens/HomeScreen';
@@ -26,14 +27,7 @@ const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 // Create stack navigators for each tab that needs detail screens
-function ProjectsStackScreen({ navigation, route }) {
-  React.useEffect(() => {
-    const unsubscribe = navigation.addListener('blur', () => {
-      navigation.navigate('ProjectsList');
-    });
-    return unsubscribe;
-  }, [navigation]);
-
+function ProjectsStackScreen() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProjectsList" component={ProjectsScreen} />
@@ -46,14 +40,7 @@ function ProjectsStackScreen({ navigation, route }) {
   );
 }
 
-function HomeStackScreen({ navigation, route }) {
-  React.useEffect(() => {
-    const unsubscribe = navigation.addListener('blur', () => {
-      navigation.navigate('HomeMain');
-    });
-    return unsubscribe;
-  }, [navigation]);
-
+function HomeStackScreen() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="HomeMain" component={HomeScreen} />
@@ -65,14 +52,7 @@ function HomeStackScreen({ navigation, route }) {
   );
 }
 
-function InboxStackScreen({ navigation, route }) {
-  React.useEffect(() => {
-    const unsubscribe = navigation.addListener('blur', () => {
-      navigation.navigate('InboxMain');
-    });
-    return unsubscribe;
-  }, [navigation]);
-
+function InboxStackScreen() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="InboxMain" component={InboxScreen} />
@@ -83,14 +63,7 @@ function InboxStackScreen({ navigation, route }) {
   );
 }
 
-function ClientsStackScreen({ navigation, route }) {
-  React.useEffect(() => {
-    const unsubscribe = navigation.addListener('blur', () => {
-      navigation.navigate('ClientsMain');
-    });
-    return unsubscribe;
-  }, [navigation]);
-
+function ClientsStackScreen() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ClientsMain" component={ClientsScreen} />
@@ -102,14 +75,7 @@ function ClientsStackScreen({ navigation, route }) {
   );
 }
 
-function MoreStackScreen({ navigation, route }) {
-  React.useEffect(() => {
-    const unsubscribe = navigation.addListener('blur', () => {
-      navigation.navigate('MoreMain');
-    });
-    return unsubscribe;
-  }, [navigation]);
-
+function MoreStackScreen() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MoreMain" component={MoreScreen} />
@@ -128,6 +94,18 @@ export default function Navigation() {
         screenOptions={{
           headerShown: false,
         }}
+        screenListeners={({ navigation, route }) => ({
+          blur: () => {
+            // Only pop if we're in a nested screen (optional guard)
+            const state = route.state;
+            if (state?.type === 'stack' && state?.index > 0) {
+              navigation.dispatch({
+                ...StackActions.popToTop(),
+                target: route.key, // Target the child stack
+              });
+            }
+          },
+        })}
         initialRouteName="Home"
       >
         <Tab.Screen name="Projects" component={ProjectsStackScreen} />
