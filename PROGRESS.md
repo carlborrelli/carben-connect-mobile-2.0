@@ -555,3 +555,41 @@ The app now has complete messaging functionality! Users can view conversations a
 **Next up:** Search & filtering for projects, then admin features
 
 **Next Task:** Implement search functionality in ProjectsScreen to filter by name/client and status
+
+---
+
+## Advanced Implementation Notes
+
+### iOS Keyboard Handling for ConversationScreen
+
+Successfully implemented production-ready keyboard handling for the messaging interface. This was a complex implementation that required careful coordination between multiple React Native components.
+
+**Key Features Implemented:**
+- iOS Messages-style input behavior (grows from 1-6 lines, then scrolls)
+- Smooth keyboard appearance/dismissal with no jittery behavior
+- Custom tab bar hiding when keyboard appears
+- Proper safe area handling on iPhone notch/Dynamic Island
+- Input stays visible (not covered by keyboard or tab bar)
+- Messages scroll smoothly without being covered by input
+
+**Technical Approach:**
+- SafeAreaView with only top edge (manual bottom spacing control)
+- KeyboardAvoidingView with padding behavior and zero offset
+- Keyboard visibility tracking for dynamic UI adjustments
+- Native TextInput multiline (no state-driven height changes)
+- Dynamic padding based on keyboard state and measured layouts
+
+**Documentation:**
+Complete implementation details, architecture, principles, and future reference guide available in:
+- **docs/KEYBOARD_HANDLING_NOTES.md**
+
+This document includes:
+- Final working solution with code examples
+- Critical implementation details
+- DO/DONT principles for future keyboard UIs
+- Common pitfalls and solutions
+- Testing checklist
+- Performance considerations
+
+**Key Lesson:**
+Simpler is better - avoid complex state-driven height changes. Let native components handle what they're designed for, use state only for truly dynamic aspects like keyboard visibility and measured heights.
