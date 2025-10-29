@@ -32,15 +32,7 @@ export default function ConversationScreen({ route, navigation }) {
   const [sending, setSending] = useState(false);
   const [inputHeight, setInputHeight] = useState(0);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-  const [inputContentHeight, setInputContentHeight] = useState(44);
   const flatListRef = useRef(null);
-
-  // Auto-grow wrapper: min 44px, max ~6 lines (140px)
-  const MIN_INPUT = 44;
-  const MAX_INPUT = 140;
-  const VERTICAL_TEXT_PADDING = SPACING.sm * 2; // paddingVertical + paddingTop
-  const wrapperHeight = Math.min(MAX_INPUT, Math.max(MIN_INPUT, inputContentHeight + VERTICAL_TEXT_PADDING));
-  const inputShouldScroll = wrapperHeight >= MAX_INPUT;
 
   // Track keyboard visibility
   useEffect(() => {
@@ -265,23 +257,19 @@ export default function ConversationScreen({ route, navigation }) {
           onLayout={(e) => setInputHeight(e.nativeEvent.layout.height)}
           style={[styles.inputContainer, { paddingBottom: inputPadBottom }]}
         >
-          <View style={{ minHeight: MIN_INPUT, maxHeight: MAX_INPUT, height: wrapperHeight }}>
-            <TextInput
-              style={styles.input}
-              placeholder="Type a message..."
-              placeholderTextColor={COLORS.tertiaryLabel}
-              value={messageText}
-              onChangeText={setMessageText}
-              onContentSizeChange={(e) => setInputContentHeight(e.nativeEvent.contentSize.height || MIN_INPUT)}
-              multiline
-              maxLength={1000}
-              editable={!sending}
-              scrollEnabled={inputShouldScroll}
-              textAlignVertical="top"
-              blurOnSubmit={false}
-              underlineColorAndroid="transparent"
-            />
-          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Type a message..."
+            placeholderTextColor={COLORS.tertiaryLabel}
+            value={messageText}
+            onChangeText={setMessageText}
+            multiline
+            maxLength={1000}
+            editable={!sending}
+            textAlignVertical="center"
+            blurOnSubmit={false}
+            underlineColorAndroid="transparent"
+          />
           <TouchableOpacity
             style={[
               styles.sendButton,
@@ -438,8 +426,9 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.lg,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    paddingTop: SPACING.sm,
     color: COLORS.label,
+    minHeight: 44,
+    maxHeight: 120,
   },
   sendButton: {
     width: 44,
