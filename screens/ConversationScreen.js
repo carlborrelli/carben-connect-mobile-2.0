@@ -265,7 +265,7 @@ export default function ConversationScreen({ route, navigation }) {
           onLayout={(e) => setInputHeight(e.nativeEvent.layout.height)}
           style={[styles.inputContainer, { paddingBottom: inputPadBottom }]}
         >
-          <View style={{ minHeight: MIN_INPUT, maxHeight: MAX_INPUT, height: wrapperHeight, flex: 1 }}>
+          <View style={{ minHeight: MIN_INPUT, maxHeight: MAX_INPUT, height: wrapperHeight }}>
             <TextInput
               style={styles.input}
               placeholder="Type a message..."
