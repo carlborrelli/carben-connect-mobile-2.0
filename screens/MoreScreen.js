@@ -70,9 +70,9 @@ export default function MoreScreen({ navigation }) {
           <View style={styles.menuSection}>
             <Text style={styles.sectionLabel}>ADMIN</Text>
             <View style={styles.menuCard}>
-              <MenuItem icon="people-outline" title="User Management" onPress={() => {}} />
+              <MenuItem icon="people-outline" title="User Management" onPress={() => navigation.navigate("UserManagement")} />
               <View style={styles.separator} />
-              <MenuItem icon="business-outline" title="QuickBooks" onPress={() => {}} />
+              <MenuItem icon="business-outline" title="QuickBooks" onPress={() => navigation.navigate("QuickBooks")} />
             </View>
           </View>
         )}
