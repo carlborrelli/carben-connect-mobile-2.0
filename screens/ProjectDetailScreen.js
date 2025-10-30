@@ -43,12 +43,12 @@ const STATUS_LABELS = {
 
 export default function ProjectDetailScreen({ route, navigation }) {
   const { projectId } = route.params;
-  const { user } = useAuth();
+  const { userProfile } = useAuth();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = userProfile?.role === 'admin';
 
   useEffect(() => {
     loadProject();
