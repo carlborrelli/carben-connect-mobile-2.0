@@ -125,24 +125,25 @@ const CalculatorSection = ({
       {isExpanded && (
         <View style={styles.sectionContent}>
           <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderText, { flex: 3 }]}>Item</Text>
-            <Text style={[styles.tableHeaderText, { flex: 1 }]}>QTY</Text>
-            <Text style={[styles.tableHeaderText, { flex: 1.2 }]}>Cost</Text>
-            <Text style={[styles.tableHeaderText, { width: 80 }]}>Total</Text>
+            <Text style={[styles.tableHeaderText, { flex: 2 }]}>Item</Text>
+            <Text style={[styles.tableHeaderText, { flex: 0.5 }]}>QTY</Text>
+            <Text style={[styles.tableHeaderText, { flex: 1.75 }]}>Cost</Text>
+            <Text style={[styles.tableHeaderText, { flex: 1.75 }]}>Total</Text>
             <View style={{ width: 32 }} />
           </View>
 
           {items.map((item) => (
             <View key={item.id} style={styles.tableRow}>
               <TextInput
-                style={[styles.tableInput, { flex: 3 }]}
+                style={[styles.tableInput, { flex: 2 }]}
                 value={item.item}
                 onChangeText={(text) => updateItem(item.id, 'item', text)}
                 placeholder="Item name"
                 placeholderTextColor={COLORS.quaternaryLabel}
+                multiline={true}
               />
               <TextInput
-                style={[styles.tableInput, { flex: 1 }]}
+                style={[styles.tableInput, { flex: 0.5 }]}
                 value={item.qty}
                 onChangeText={(text) => updateItem(item.id, 'qty', text)}
                 placeholder="1"
@@ -150,14 +151,14 @@ const CalculatorSection = ({
                 keyboardType="decimal-pad"
               />
               <TextInput
-                style={[styles.tableInput, { flex: 1.2 }]}
+                style={[styles.tableInput, { flex: 1.75 }]}
                 value={item.cost}
                 onChangeText={(text) => updateItem(item.id, 'cost', text)}
                 placeholder="0.00"
                 placeholderTextColor={COLORS.quaternaryLabel}
                 keyboardType="decimal-pad"
               />
-              <View style={[styles.totalCell, { width: 80 }]}>
+              <View style={[styles.totalCell, { flex: 1.75 }]}>
                 <Text style={styles.totalText}>${item.total.toFixed(2)}</Text>
               </View>
               <TouchableOpacity
