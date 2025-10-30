@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { useAuth } from '../contexts/AuthContext';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 
 const { width, height } = Dimensions.get('window');
@@ -42,9 +43,12 @@ const STATUS_LABELS = {
 
 export default function ProjectDetailScreen({ route, navigation }) {
   const { projectId } = route.params;
+  const { user } = useAuth();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
+
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     loadProject();
@@ -71,6 +75,11 @@ export default function ProjectDetailScreen({ route, navigation }) {
   const closePhotoViewer = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedPhoto(null);
+  };
+
+  const handleCreateEstimate = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    navigation.navigate('EstimateWorkspace', { projectId: project.id });
   };
 
   if (loading) {
@@ -118,7 +127,16 @@ export default function ProjectDetailScreen({ route, navigation }) {
           <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Project Details</Text>
-        <View style={{ width: 44 }} />
+        {/* Add Estimate Button in Header for Admins */}
+        {isAdmin && (
+          <TouchableOpacity 
+            onPress={handleCreateEstimate}
+            style={styles.headerEstimateButton}
+          >
+            <Ionicons name="calculator" size={24} color={COLORS.primary} />
+          </TouchableOpacity>
+        )}
+        {!isAdmin && <View style={{ width: 44 }} />}
       </View>
 
       <ScrollView style={styles.content}>
@@ -133,6 +151,30 @@ export default function ProjectDetailScreen({ route, navigation }) {
             </View>
           </View>
         </View>
+
+        {/* Admin Actions - Create/Edit Estimate - MORE PROMINENT */}
+        {isAdmin && (
+          <TouchableOpacity 
+            style={styles.estimateCard}
+            onPress={handleCreateEstimate}
+            activeOpacity={0.7}
+          >
+            <View style={styles.estimateCardLeft}>
+              <View style={styles.estimateIconContainer}>
+                <Ionicons name="calculator" size={32} color={COLORS.systemBackground} />
+              </View>
+              <View style={styles.estimateCardContent}>
+                <Text style={styles.estimateCardTitle}>
+                  {project.status === 'NEW' ? 'Create Estimate' : 'View/Edit Estimate'}
+                </Text>
+                <Text style={styles.estimateCardSubtitle}>
+                  Draft description, calculate pricing, and send to QuickBooks
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={28} color={COLORS.primary} />
+          </TouchableOpacity>
+        )}
 
         {/* Client Info */}
         {project.clientName && (
@@ -190,6 +232,8 @@ export default function ProjectDetailScreen({ route, navigation }) {
             </View>
           </View>
         )}
+
+        <View style={{ height: SPACING.xl }} />
       </ScrollView>
 
       {/* Photo Viewer Modal */}
@@ -248,6 +292,14 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...TYPOGRAPHY.headline,
     color: COLORS.label,
+    flex: 1,
+    textAlign: 'center',
+  },
+  headerEstimateButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   loadingContainer: {
     flex: 1,
@@ -283,6 +335,45 @@ const styles = StyleSheet.create({
   statusText: {
     ...TYPOGRAPHY.caption1,
     fontWeight: '600',
+  },
+  estimateCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.primary,
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.lg,
+    padding: SPACING.lg,
+    borderRadius: RADIUS.xl,
+    ...SHADOWS.medium,
+  },
+  estimateCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: SPACING.md,
+  },
+  estimateIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: RADIUS.lg,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  estimateCardContent: {
+    flex: 1,
+  },
+  estimateCardTitle: {
+    ...TYPOGRAPHY.title3,
+    color: COLORS.systemBackground,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  estimateCardSubtitle: {
+    ...TYPOGRAPHY.caption1,
+    color: 'rgba(255, 255, 255, 0.85)',
+    lineHeight: 16,
   },
   infoCard: {
     backgroundColor: COLORS.secondarySystemGroupedBackground,
