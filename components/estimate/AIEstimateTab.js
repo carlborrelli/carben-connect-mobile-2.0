@@ -271,6 +271,33 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
           </Text>
         )}
 
+        {/* Finalize/Edit Toggle Button */}
+        {hasText && (
+          <TouchableOpacity
+            style={[
+              isFinalized ? styles.editButton : styles.finalizeButton,
+              saving && styles.buttonDisabled
+            ]}
+            onPress={handleToggleFinalize}
+            disabled={saving}
+          >
+            {saving ? (
+              <ActivityIndicator size="small" color={COLORS.systemBackground} />
+            ) : (
+              <>
+                <Ionicons
+                  name={isFinalized ? "create-outline" : "checkmark-circle"}
+                  size={20}
+                  color={COLORS.systemBackground}
+                />
+                <Text style={styles.finalizeButtonText}>
+                  {isFinalized ? 'Edit Estimate' : 'Finalize Estimate'}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+
         <View style={styles.estimateSection}>
           <View style={styles.estimateLabelRow}>
             <Text style={styles.sectionLabel}>ESTIMATE DESCRIPTION</Text>
@@ -308,35 +335,6 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
 
         <View style={{ height: SPACING.xl }} />
       </ScrollView>
-
-      {/* Finalize/Edit Toggle Button */}
-      {hasText && (
-        <View style={styles.bottomBar}>
-          <TouchableOpacity
-            style={[
-              isFinalized ? styles.editButton : styles.finalizeButton,
-              saving && styles.buttonDisabled
-            ]}
-            onPress={handleToggleFinalize}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator size="small" color={COLORS.systemBackground} />
-            ) : (
-              <>
-                <Ionicons
-                  name={isFinalized ? "create-outline" : "checkmark-circle"}
-                  size={20}
-                  color={COLORS.systemBackground}
-                />
-                <Text style={styles.finalizeButtonText}>
-                  {isFinalized ? 'Edit Estimate' : 'Finalize Estimate'}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
     </View>
   );
 }
@@ -412,6 +410,26 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
     lineHeight: 16,
   },
+  finalizeButton: { 
+    backgroundColor: COLORS.green, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    paddingVertical: SPACING.md, 
+    borderRadius: RADIUS.md, 
+    gap: SPACING.sm,
+    marginBottom: SPACING.md,
+  },
+  editButton: { 
+    backgroundColor: COLORS.blue, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    paddingVertical: SPACING.md, 
+    borderRadius: RADIUS.md, 
+    gap: SPACING.sm,
+    marginBottom: SPACING.md,
+  },
   estimateSection: { 
     flex: 1,
   },
@@ -446,30 +464,6 @@ const styles = StyleSheet.create({
     minHeight: 300, 
     borderWidth: 1, 
     borderColor: COLORS.separator,
-  },
-  bottomBar: { 
-    backgroundColor: COLORS.systemBackground, 
-    borderTopWidth: StyleSheet.hairlineWidth, 
-    borderTopColor: COLORS.separator, 
-    padding: SPACING.md,
-  },
-  finalizeButton: { 
-    backgroundColor: COLORS.green, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    paddingVertical: SPACING.md, 
-    borderRadius: RADIUS.md, 
-    gap: SPACING.sm,
-  },
-  editButton: { 
-    backgroundColor: COLORS.blue, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    paddingVertical: SPACING.md, 
-    borderRadius: RADIUS.md, 
-    gap: SPACING.sm,
   },
   buttonDisabled: { 
     opacity: 0.5,
