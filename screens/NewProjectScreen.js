@@ -1,4 +1,4 @@
-// NewProjectScreen - Create a new project
+// NewProjectScreen - Create a new project (FIXED to match website data structure)
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -25,44 +25,69 @@ export default function NewProjectScreen({ navigation }) {
   const [clientId, setClientId] = useState('');
   const [clientName, setClientName] = useState('');
   const [clients, setClients] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [showClientPicker, setShowClientPicker] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [selectedQbCustomerId, setSelectedQbCustomerId] = useState('');
+  const [selectedQbCustomerName, setSelectedQbCustomerName] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingClients, setLoadingClients] = useState(true);
 
-  // Load clients for admin
+  // Load clients and admins
   useEffect(() => {
-    if (!isAdmin()) {
-      setLoadingClients(false);
-      return;
-    }
-
-    const loadClients = async () => {
+    const loadUsersAndClients = async () => {
       try {
-        const clientsQuery = query(
-          collection(db, 'users'),
-          where('role', '==', 'client')
-        );
-        const snapshot = await getDocs(clientsQuery);
-        const clientsData = snapshot.docs.map(doc => ({
+        // Load all users
+        const usersQuery = query(collection(db, 'users'));
+        const snapshot = await getDocs(usersQuery);
+        const usersData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
         }));
+
+        setAllUsers(usersData);
+
+        // Filter clients
+        const clientsData = usersData.filter(u => u.role === 'client');
         setClients(clientsData);
+
+        // Auto-select current user if client
+        if (!isAdmin()) {
+          setClientId(userProfile.id);
+          setClientName(userProfile.name);
+        }
       } catch (error) {
-        console.error('Error loading clients:', error);
+        console.error('Error loading users:', error);
       } finally {
         setLoadingClients(false);
       }
     };
 
-    loadClients();
-  }, []);
+    loadUsersAndClients();
+  }, [userProfile, isAdmin]);
 
   const handleSelectClient = (client) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setClientId(client.id);
     setClientName(client.name);
     setShowClientPicker(false);
+
+    // Reset location selection when client changes
+    setSelectedQbCustomerId('');
+    setSelectedQbCustomerName('');
+
+    // If client has only one location, auto-select it
+    if (client.qbCustomers && client.qbCustomers.length === 1) {
+      setSelectedQbCustomerId(client.qbCustomers[0].id);
+      setSelectedQbCustomerName(client.qbCustomers[0].name);
+    }
+  };
+
+  const handleSelectLocation = (qbCustomer) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedQbCustomerId(qbCustomer.id);
+    setSelectedQbCustomerName(qbCustomer.name);
+    setShowLocationPicker(false);
   };
 
   const handleCreate = async () => {
@@ -79,29 +104,46 @@ export default function NewProjectScreen({ navigation }) {
       return;
     }
 
+    // Check if location is required (client has multiple locations)
+    const selectedClient = clients.find(c => c.id === clientId) ||
+                          allUsers.find(u => u.id === clientId);
+    const hasMultipleLocations = selectedClient?.qbCustomers &&
+                                 selectedClient.qbCustomers.length > 1;
+
+    if (hasMultipleLocations && !selectedQbCustomerId) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert('Error', 'Please select a location for this client');
+      return;
+    }
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLoading(true);
 
     try {
+      // Get all admin users for contractorIds (CRITICAL - this is why projects don't show on website!)
+      const adminUsers = allUsers.filter(u => u.role === 'admin');
+      const contractorIds = adminUsers.map(u => u.id);
+
       const projectData = {
         title: title.trim(),
         description: description.trim(),
         status: 'NEW',
+        clientId: clientId,
+        contractorIds: contractorIds, // REQUIRED for website
+        photos: [],
         createdAt: new Date(),
         updatedAt: new Date(),
-        photos: [],
       };
 
-      if (isAdmin()) {
-        projectData.clientId = clientId;
-        projectData.clientName = clientName;
-        projectData.createdBy = userProfile.id;
-      } else {
-        projectData.clientId = userProfile.id;
-        projectData.clientName = userProfile.name;
+      // Add QB customer info if selected or auto-selected
+      if (selectedQbCustomerId) {
+        projectData.qbCustomerId = selectedQbCustomerId;
+      }
+      if (selectedQbCustomerName) {
+        projectData.qbCustomerName = selectedQbCustomerName;
       }
 
-      await addDoc(collection(db, 'projects'), projectData);
+      const docRef = await addDoc(collection(db, 'projects'), projectData);
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert('Success', 'Project created successfully', [
@@ -133,6 +175,11 @@ export default function NewProjectScreen({ navigation }) {
     );
   }
 
+  const selectedClient = clients.find(c => c.id === clientId) ||
+                        allUsers.find(u => u.id === clientId);
+  const hasMultipleLocations = selectedClient?.qbCustomers &&
+                               selectedClient.qbCustomers.length > 1;
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
@@ -141,8 +188,8 @@ export default function NewProjectScreen({ navigation }) {
           <Ionicons name="close" size={28} color={COLORS.label} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>New Project</Text>
-        <TouchableOpacity 
-          onPress={handleCreate} 
+        <TouchableOpacity
+          onPress={handleCreate}
           style={styles.createButton}
           disabled={loading}
         >
@@ -159,7 +206,7 @@ export default function NewProjectScreen({ navigation }) {
         {isAdmin() && (
           <View style={styles.section}>
             <Text style={styles.label}>Client *</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.selectButton}
               onPress={() => setShowClientPicker(!showClientPicker)}
             >
@@ -171,20 +218,73 @@ export default function NewProjectScreen({ navigation }) {
 
             {showClientPicker && (
               <View style={styles.picker}>
-                {clients.map(client => (
-                  <TouchableOpacity
-                    key={client.id}
-                    style={styles.pickerItem}
-                    onPress={() => handleSelectClient(client)}
-                  >
-                    <Text style={styles.pickerItemText}>{client.name}</Text>
-                    {client.email && (
-                      <Text style={styles.pickerItemSubtext}>{client.email}</Text>
-                    )}
-                  </TouchableOpacity>
-                ))}
+                <ScrollView style={styles.pickerScroll} nestedScrollEnabled>
+                  {clients.map(client => (
+                    <TouchableOpacity
+                      key={client.id}
+                      style={styles.pickerItem}
+                      onPress={() => handleSelectClient(client)}
+                    >
+                      <Text style={styles.pickerItemText}>{client.name}</Text>
+                      {client.email && (
+                        <Text style={styles.pickerItemSubtext}>{client.email}</Text>
+                      )}
+                      {client.qbCustomers && client.qbCustomers.length > 1 && (
+                        <Text style={styles.pickerItemNote}>
+                          {client.qbCustomers.length} locations
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
               </View>
             )}
+          </View>
+        )}
+
+        {/* Location Selection (if client has multiple locations) */}
+        {hasMultipleLocations && (
+          <View style={styles.section}>
+            <Text style={styles.label}>Location *</Text>
+            <TouchableOpacity
+              style={styles.selectButton}
+              onPress={() => setShowLocationPicker(!showLocationPicker)}
+            >
+              <Text style={selectedQbCustomerName ? styles.selectButtonTextFilled : styles.selectButtonText}>
+                {selectedQbCustomerName || 'Select a location'}
+              </Text>
+              <Ionicons name="chevron-down" size={20} color={COLORS.secondaryLabel} />
+            </TouchableOpacity>
+
+            {showLocationPicker && (
+              <View style={styles.picker}>
+                <ScrollView style={styles.pickerScroll} nestedScrollEnabled>
+                  {selectedClient?.qbCustomers?.map(qbCustomer => (
+                    <TouchableOpacity
+                      key={qbCustomer.id}
+                      style={styles.pickerItem}
+                      onPress={() => handleSelectLocation(qbCustomer)}
+                    >
+                      <View style={styles.locationPickerItem}>
+                        <Ionicons name="location" size={18} color={COLORS.primary} />
+                        <Text style={styles.pickerItemText}>{qbCustomer.name}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Show single location info (non-editable) */}
+        {selectedClient?.qbCustomers && selectedClient.qbCustomers.length === 1 && (
+          <View style={styles.section}>
+            <Text style={styles.label}>Location</Text>
+            <View style={styles.infoCard}>
+              <Ionicons name="location" size={18} color={COLORS.primary} />
+              <Text style={styles.infoText}>{selectedClient.qbCustomers[0].name}</Text>
+            </View>
           </View>
         )}
 
@@ -221,7 +321,7 @@ export default function NewProjectScreen({ navigation }) {
         {/* Info */}
         <View style={styles.infoCard}>
           <Ionicons name="information-circle-outline" size={20} color={COLORS.blue} />
-          <Text style={styles.infoText}>
+          <Text style={styles.infoCardText}>
             The project will be created with status "New". You can add photos and details after creation.
           </Text>
         </View>
@@ -319,7 +419,11 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
     marginTop: SPACING.xs,
+    maxHeight: 200,
     ...SHADOWS.small,
+  },
+  pickerScroll: {
+    maxHeight: 200,
   },
   pickerItem: {
     padding: SPACING.md,
@@ -335,14 +439,30 @@ const styles = StyleSheet.create({
     color: COLORS.secondaryLabel,
     marginTop: SPACING.xs / 2,
   },
+  pickerItemNote: {
+    ...TYPOGRAPHY.caption2,
+    color: COLORS.primary,
+    marginTop: SPACING.xs / 2,
+  },
+  locationPickerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+  },
   infoCard: {
     flexDirection: 'row',
     backgroundColor: COLORS.blue + '10',
     padding: SPACING.md,
     borderRadius: RADIUS.md,
     gap: SPACING.sm,
+    alignItems: 'center',
   },
   infoText: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.label,
+    flex: 1,
+  },
+  infoCardText: {
     ...TYPOGRAPHY.footnote,
     color: COLORS.blue,
     flex: 1,
