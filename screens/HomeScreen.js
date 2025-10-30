@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 
 export default function HomeScreen({ navigation }) {
-  const { userProfile } = useAuth();
+  const { userProfile, isAdmin } = useAuth();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -44,19 +44,56 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
 
+        {/* Admin Quick Access - Drafts & Estimates */}
+        {isAdmin() && (
+          <TouchableOpacity 
+            style={styles.draftsBanner}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              navigation.navigate("Drafts");
+            }}
+            activeOpacity={0.7}
+          >
+            <View style={styles.draftsBannerLeft}>
+              <View style={styles.draftsBannerIcon}>
+                <Ionicons name="document-text" size={28} color={COLORS.primary} />
+              </View>
+              <View style={styles.draftsBannerContent}>
+                <Text style={styles.draftsBannerTitle}>Drafts & Estimates</Text>
+                <Text style={styles.draftsBannerSubtitle}>
+                  Create and manage project estimates
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color={COLORS.gray2} />
+          </TouchableOpacity>
+        )}
+
         {/* Quick Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.actionsGrid}>
-            <TouchableOpacity style={styles.actionCard} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); navigation.navigate("NewProject"); }}>
-              <View style={[styles.actionIcon, { backgroundColor: COLORS.blue + '20' }]}>
+            <TouchableOpacity 
+              style={styles.actionCard} 
+              onPress={() => { 
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); 
+                navigation.navigate("NewProject"); 
+              }}
+            >
+              <View style={[styles.actionIcon, { backgroundColor: 'rgba(0, 122, 255, 0.2)' }]}>
                 <Ionicons name="add-circle" size={28} color={COLORS.blue} />
               </View>
               <Text style={styles.actionText}>New Project</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionCard} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); navigation.navigate("AddPhotos"); }}>
-              <View style={[styles.actionIcon, { backgroundColor: COLORS.green + '20' }]}>
+            <TouchableOpacity 
+              style={styles.actionCard} 
+              onPress={() => { 
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); 
+                navigation.navigate("AddPhotos"); 
+              }}
+            >
+              <View style={[styles.actionIcon, { backgroundColor: 'rgba(52, 199, 89, 0.2)' }]}>
                 <Ionicons name="camera" size={28} color={COLORS.green} />
               </View>
               <Text style={styles.actionText}>Add Photos</Text>
@@ -121,7 +158,7 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: 'row',
     gap: SPACING.md,
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.lg,
   },
   statCard: {
     flex: 1,
@@ -138,6 +175,45 @@ const styles = StyleSheet.create({
   statLabel: {
     ...TYPOGRAPHY.footnote,
     color: COLORS.secondaryLabel,
+  },
+  draftsBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    padding: SPACING.md,
+    borderRadius: RADIUS.lg,
+    marginBottom: SPACING.lg,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+    ...SHADOWS.small,
+  },
+  draftsBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: SPACING.sm,
+  },
+  draftsBannerIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(249, 115, 22, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  draftsBannerContent: {
+    flex: 1,
+  },
+  draftsBannerTitle: {
+    ...TYPOGRAPHY.headline,
+    color: COLORS.label,
+    marginBottom: 2,
+  },
+  draftsBannerSubtitle: {
+    ...TYPOGRAPHY.caption1,
+    color: COLORS.secondaryLabel,
+    lineHeight: 16,
   },
   section: {
     marginBottom: SPACING.xl,

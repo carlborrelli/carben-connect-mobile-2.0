@@ -15,11 +15,16 @@ export default function MoreScreen({ navigation }) {
     await signOut();
   };
 
-  const MenuItem = ({ icon, title, onPress, color = COLORS.label }) => (
+  const MenuItem = ({ icon, title, onPress, color = COLORS.label, badge }) => (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
       <View style={styles.menuLeft}>
         <Ionicons name={icon} size={24} color={color} />
         <Text style={[styles.menuTitle, { color }]}>{title}</Text>
+        {badge && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{badge}</Text>
+          </View>
+        )}
       </View>
       <Ionicons name="chevron-forward" size={20} color={COLORS.tertiaryLabel} />
     </TouchableOpacity>
@@ -70,6 +75,15 @@ export default function MoreScreen({ navigation }) {
           <View style={styles.menuSection}>
             <Text style={styles.sectionLabel}>ADMIN</Text>
             <View style={styles.menuCard}>
+              <MenuItem 
+                icon="document-text-outline" 
+                title="Drafts & Estimates" 
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  navigation.navigate("Drafts");
+                }} 
+              />
+              <View style={styles.separator} />
               <MenuItem icon="people-outline" title="User Management" onPress={() => navigation.navigate("UserManagement")} />
               <View style={styles.separator} />
               <MenuItem icon="business-outline" title="QuickBooks" onPress={() => navigation.navigate("QuickBooks")} />
@@ -158,7 +172,7 @@ const styles = StyleSheet.create({
     marginTop: SPACING.sm,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
-    backgroundColor: COLORS.primary + '20',
+    backgroundColor: 'rgba(249, 115, 22, 0.2)',
     borderRadius: RADIUS.sm,
   },
   adminText: {
@@ -197,13 +211,26 @@ const styles = StyleSheet.create({
   menuTitle: {
     ...TYPOGRAPHY.body,
   },
+  badge: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: SPACING.xs,
+    paddingVertical: 2,
+    borderRadius: RADIUS.sm,
+    minWidth: 20,
+    alignItems: 'center',
+  },
+  badgeText: {
+    ...TYPOGRAPHY.caption2,
+    color: COLORS.systemBackground,
+    fontWeight: '700',
+  },
   separator: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: COLORS.separator,
     marginLeft: SPACING.md + 24 + SPACING.md,
   },
   signOutButton: {
-    backgroundColor: COLORS.red + '10',
+    backgroundColor: 'rgba(255, 59, 48, 0.1)',
     borderRadius: RADIUS.md,
     padding: SPACING.md,
     alignItems: 'center',
