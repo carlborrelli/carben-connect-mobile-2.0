@@ -11,6 +11,8 @@ import ProjectsScreen from './screens/ProjectsScreen';
 import ProjectDetailScreen from './screens/ProjectDetailScreen';
 import NewProjectScreen from './screens/NewProjectScreen';
 import AddPhotosScreen from './screens/AddPhotosScreen';
+import DraftsScreen from './screens/DraftsScreen';
+import EstimateWorkspaceScreen from './screens/EstimateWorkspaceScreen';
 import InboxScreen from './screens/InboxScreen';
 import ConversationScreen from './screens/ConversationScreen';
 import ClientsScreen from './screens/ClientsScreen';
@@ -36,6 +38,8 @@ function ProjectsStackScreen() {
       <Stack.Screen name="ProjectDetail" component={ProjectDetailScreen} />
       <Stack.Screen name="NewProject" component={NewProjectScreen} />
       <Stack.Screen name="AddPhotos" component={AddPhotosScreen} />
+      <Stack.Screen name="Drafts" component={DraftsScreen} />
+      <Stack.Screen name="EstimateWorkspace" component={EstimateWorkspaceScreen} />
       <Stack.Screen name="Calendar" component={CalendarScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
@@ -48,6 +52,8 @@ function HomeStackScreen() {
       <Stack.Screen name="HomeMain" component={HomeScreen} />
       <Stack.Screen name="NewProject" component={NewProjectScreen} />
       <Stack.Screen name="AddPhotos" component={AddPhotosScreen} />
+      <Stack.Screen name="Drafts" component={DraftsScreen} />
+      <Stack.Screen name="EstimateWorkspace" component={EstimateWorkspaceScreen} />
       <Stack.Screen name="Calendar" component={CalendarScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
@@ -84,6 +90,8 @@ function MoreStackScreen() {
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="UserManagement" component={UserManagementScreen} />
       <Stack.Screen name="QuickBooks" component={QuickBooksScreen} />
+      <Stack.Screen name="Drafts" component={DraftsScreen} />
+      <Stack.Screen name="EstimateWorkspace" component={EstimateWorkspaceScreen} />
       <Stack.Screen name="Calendar" component={CalendarScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
