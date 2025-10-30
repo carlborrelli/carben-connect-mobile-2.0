@@ -30,6 +30,10 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
   const [estimateText, setEstimateText] = useState('');
   const [additionalInstructions, setAdditionalInstructions] = useState('');
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
@@ -173,6 +177,76 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
     setShowInstructions(!showInstructions);
   };
 
+  const toggleChat = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowChat(!showChat);
+  };
+
+  const sendChatMessage = async () => {
+    if (!chatInput.trim()) return;
+
+    const userMessage = chatInput.trim();
+    setChatInput('');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    // Add user message to chat
+    const newUserMessage = { role: 'user', content: userMessage };
+    setChatMessages(prev => [...prev, newUserMessage]);
+
+    setSendingMessage(true);
+
+    try {
+      // Build context for AI
+      let contextParts = [];
+      if (project?.description) {
+        contextParts.push(`Original Project: ${project.description}`);
+      }
+      if (estimateText) {
+        contextParts.push(`Current Estimate: ${estimateText}`);
+      }
+      if (additionalInstructions) {
+        contextParts.push(`Special Instructions: ${additionalInstructions}`);
+      }
+
+      const systemContext = contextParts.length > 0
+        ? `You are helping create a construction estimate. Context:\n${contextParts.join('\n\n')}\n\nProvide helpful, concise advice about the estimate.`
+        : 'You are helping create a construction estimate. Provide helpful, concise advice.';
+
+      const response = await fetch('https://www.carbenconnect.com/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          conversationHistory: chatMessages,
+          systemContext: systemContext,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.response) {
+        const assistantMessage = { role: 'assistant', content: data.response };
+        setChatMessages(prev => [...prev, assistantMessage]);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        throw new Error('No response from AI');
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert('Error', 'Failed to get AI response. Please try again.');
+      // Remove the user message if failed
+      setChatMessages(prev => prev.slice(0, -1));
+      // Restore the input
+      setChatInput(userMessage);
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
   const handleToggleFinalize = async () => {
     if (!estimateText.trim()) {
       Alert.alert('No Estimate', 'Please write an estimate first');
@@ -241,25 +315,46 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
           </View>
         )}
 
-        {/* AI Instructions Dropdown */}
-        <TouchableOpacity
-          style={styles.instructionsToggle}
-          onPress={toggleInstructions}
-          activeOpacity={0.7}
-        >
-          <View style={styles.instructionsToggleLeft}>
-            <Ionicons name="bulb-outline" size={20} color={COLORS.primary} />
-            <Text style={styles.instructionsToggleText}>AI Instructions</Text>
-          </View>
-          <Ionicons
-            name={showInstructions ? 'chevron-up' : 'chevron-down'}
-            size={20}
-            color={COLORS.gray2}
-          />
-        </TouchableOpacity>
+        {/* AI Tools Row - Instructions & Assistant */}
+        <View style={styles.aiToolsRow}>
+          {/* AI Instructions */}
+          <TouchableOpacity
+            style={styles.aiToolToggle}
+            onPress={toggleInstructions}
+            activeOpacity={0.7}
+          >
+            <View style={styles.aiToolToggleLeft}>
+              <Ionicons name="bulb-outline" size={18} color={COLORS.primary} />
+              <Text style={styles.aiToolToggleText}>AI Instructions</Text>
+            </View>
+            <Ionicons
+              name={showInstructions ? 'chevron-up' : 'chevron-down'}
+              size={18}
+              color={COLORS.gray2}
+            />
+          </TouchableOpacity>
 
+          {/* AI Assistant */}
+          <TouchableOpacity
+            style={styles.aiToolToggle}
+            onPress={toggleChat}
+            activeOpacity={0.7}
+          >
+            <View style={styles.aiToolToggleLeft}>
+              <Ionicons name="chatbubbles-outline" size={18} color={COLORS.primary} />
+              <Text style={styles.aiToolToggleText}>AI Assistant</Text>
+            </View>
+            <Ionicons
+              name={showChat ? 'chevron-up' : 'chevron-down'}
+              size={18}
+              color={COLORS.gray2}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* AI Instructions Content */}
         {showInstructions && (
-          <View style={styles.instructionsContainer}>
+          <View style={styles.aiToolContainer}>
             <TextInput
               style={styles.instructionsInput}
               value={additionalInstructions}
@@ -269,6 +364,66 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
               multiline
               textAlignVertical="top"
             />
+          </View>
+        )}
+
+        {/* AI Assistant Content */}
+        {showChat && (
+          <View style={styles.aiToolContainer}>
+            <ScrollView
+              style={styles.chatMessages}
+              contentContainerStyle={styles.chatMessagesContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {chatMessages.length === 0 ? (
+                <View style={styles.chatEmpty}>
+                  <Ionicons name="chatbubbles-outline" size={48} color={COLORS.quaternaryLabel} />
+                  <Text style={styles.chatEmptyText}>Ask me anything about your estimate!</Text>
+                  <Text style={styles.chatEmptySubtext}>I have context about your project</Text>
+                </View>
+              ) : (
+                chatMessages.map((msg, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.chatBubble,
+                      msg.role === 'user' ? styles.chatBubbleUser : styles.chatBubbleAssistant
+                    ]}
+                  >
+                    <Text style={[
+                      styles.chatBubbleText,
+                      msg.role === 'user' && { color: COLORS.systemBackground }
+                    ]}>
+                      {msg.content}
+                    </Text>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+
+            <View style={styles.chatInputContainer}>
+              <TextInput
+                style={styles.chatInput}
+                value={chatInput}
+                onChangeText={setChatInput}
+                placeholder="Ask a question..."
+                placeholderTextColor={COLORS.quaternaryLabel}
+                multiline
+                maxLength={500}
+                onSubmitEditing={sendChatMessage}
+              />
+              <TouchableOpacity
+                style={[styles.chatSendButton, (!chatInput.trim() || sendingMessage) && styles.buttonDisabled]}
+                onPress={sendChatMessage}
+                disabled={!chatInput.trim() || sendingMessage}
+              >
+                {sendingMessage ? (
+                  <ActivityIndicator size="small" color={COLORS.systemBackground} />
+                ) : (
+                  <Ionicons name="send" size={20} color={COLORS.systemBackground} />
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -411,38 +566,114 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.green,
   },
-  instructionsToggle: {
+  aiToolsRow: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    marginBottom: SPACING.sm,
+  },
+  aiToolToggle: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: COLORS.systemBackground,
     borderRadius: RADIUS.md,
-    padding: SPACING.md,
-    marginBottom: SPACING.sm,
+    padding: SPACING.sm,
+    paddingHorizontal: SPACING.md,
     borderWidth: 1,
     borderColor: COLORS.separator,
   },
-  instructionsToggleLeft: {
+  aiToolToggleLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.sm,
+    gap: SPACING.xs,
   },
-  instructionsToggleText: {
-    ...TYPOGRAPHY.body,
+  aiToolToggleText: {
+    ...TYPOGRAPHY.footnote,
     color: COLORS.label,
+    fontWeight: '600',
   },
-  instructionsContainer: {
+  aiToolContainer: {
     marginBottom: SPACING.md,
+    backgroundColor: COLORS.systemBackground,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.separator,
+    overflow: 'hidden',
   },
   instructionsInput: {
     ...TYPOGRAPHY.body,
     color: COLORS.label,
-    backgroundColor: COLORS.systemBackground,
-    borderRadius: RADIUS.md,
     padding: SPACING.md,
     minHeight: 100,
+  },
+  chatMessages: {
+    maxHeight: 300,
+    minHeight: 150,
+  },
+  chatMessagesContent: {
+    padding: SPACING.md,
+    gap: SPACING.sm,
+  },
+  chatEmpty: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.xl,
+    gap: SPACING.sm,
+  },
+  chatEmptyText: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.secondaryLabel,
+    fontWeight: '600',
+  },
+  chatEmptySubtext: {
+    ...TYPOGRAPHY.caption1,
+    color: COLORS.quaternaryLabel,
+  },
+  chatBubble: {
+    padding: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    borderRadius: RADIUS.md,
+    maxWidth: '80%',
+  },
+  chatBubbleUser: {
+    backgroundColor: COLORS.primary,
+    alignSelf: 'flex-end',
+  },
+  chatBubbleAssistant: {
+    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    alignSelf: 'flex-start',
+  },
+  chatBubbleText: {
+    ...TYPOGRAPHY.body,
+  },
+  chatInputContainer: {
+    flexDirection: 'row',
+    padding: SPACING.sm,
+    gap: SPACING.sm,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.separator,
+    backgroundColor: COLORS.systemGroupedBackground,
+  },
+  chatInput: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.label,
+    backgroundColor: COLORS.systemBackground,
+    borderRadius: RADIUS.md,
+    padding: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    flex: 1,
+    maxHeight: 80,
     borderWidth: 1,
     borderColor: COLORS.separator,
+  },
+  chatSendButton: {
+    backgroundColor: COLORS.primary,
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   importButtonsRow: {
     flexDirection: 'row',
