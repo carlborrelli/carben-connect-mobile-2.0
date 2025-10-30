@@ -365,36 +365,33 @@ export default function SendToQuickBooksTab({ projectId, project, estimateProgre
           </View>
         )}
 
+        {/* Send Button */}
+      <TouchableOpacity
+        style={[
+          styles.sendButton,
+          (!allPassed || sending) && styles.buttonDisabled
+        ]}
+        onPress={handleSendToQuickBooks}
+        disabled={!allPassed || sending}
+        activeOpacity={0.8}
+      >
+        {sending ? (
+          <>
+            <ActivityIndicator size="small" color={COLORS.systemBackground} />
+            <Text style={styles.sendButtonText}>Sending...</Text>
+          </>
+        ) : (
+          <>
+            <Ionicons name="cloud-upload" size={24} color={COLORS.systemBackground} />
+            <Text style={styles.sendButtonText}>
+              {alreadySent ? 'Update in QuickBooks' : 'Send to QuickBooks'}
+            </Text>
+          </>
+        )}
+      </TouchableOpacity>
+
         <View style={{ height: SPACING.xl }} />
       </ScrollView>
-
-      {/* Send Button */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity
-          style={[
-            styles.sendButton,
-            (!allPassed || sending) && styles.buttonDisabled
-          ]}
-          onPress={handleSendToQuickBooks}
-          disabled={!allPassed || sending}
-          activeOpacity={0.8}
-        >
-          {sending ? (
-            <>
-              <ActivityIndicator size="small" color={COLORS.systemBackground} />
-              <Text style={styles.sendButtonText}>Sending...</Text>
-            </>
-          ) : (
-            <>
-              <Ionicons name="cloud-upload" size={24} color={COLORS.systemBackground} />
-              <Text style={styles.sendButtonText}>
-                {alreadySent ? 'Update in QuickBooks' : 'Send to QuickBooks'}
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
-
       {/* Customer Picker Modal */}
       <Modal
         visible={showCustomerPicker}
@@ -627,14 +624,10 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 16,
   },
-  bottomBar: {
-    backgroundColor: COLORS.systemBackground,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COLORS.separator,
-    padding: SPACING.md,
-  },
   sendButton: {
     backgroundColor: COLORS.primary,
+    marginTop: SPACING.md,
+    marginBottom: SPACING.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
