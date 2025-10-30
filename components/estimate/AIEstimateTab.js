@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  LayoutAnimation,
   Platform,
   UIManager,
 } from 'react-native';
@@ -27,6 +28,8 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
   const { user } = useAuth();
   const [description, setDescription] = useState(null);
   const [estimateText, setEstimateText] = useState('');
+  const [additionalInstructions, setAdditionalInstructions] = useState('');
+  const [showInstructions, setShowInstructions] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
@@ -126,7 +129,7 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
     setImporting(true);
 
     try {
-      const result = await generateEstimate(project.description, '');
+      const result = await generateEstimate(project.description, additionalInstructions);
 
       if (result.success) {
         setEstimateText(result.estimate);
@@ -162,6 +165,12 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
     } finally {
       setImporting(false);
     }
+  };
+
+  const toggleInstructions = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowInstructions(!showInstructions);
   };
 
   const handleToggleFinalize = async () => {
@@ -229,6 +238,37 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
           <View style={styles.statusBadge}>
             <Ionicons name="checkmark-circle" size={16} color={COLORS.green} />
             <Text style={styles.statusText}>Finalized</Text>
+          </View>
+        )}
+
+        {/* AI Instructions Dropdown */}
+        <TouchableOpacity
+          style={styles.instructionsToggle}
+          onPress={toggleInstructions}
+          activeOpacity={0.7}
+        >
+          <View style={styles.instructionsToggleLeft}>
+            <Ionicons name="bulb-outline" size={20} color={COLORS.primary} />
+            <Text style={styles.instructionsToggleText}>AI Instructions</Text>
+          </View>
+          <Ionicons
+            name={showInstructions ? 'chevron-up' : 'chevron-down'}
+            size={20}
+            color={COLORS.gray2}
+          />
+        </TouchableOpacity>
+
+        {showInstructions && (
+          <View style={styles.instructionsContainer}>
+            <TextInput
+              style={styles.instructionsInput}
+              value={additionalInstructions}
+              onChangeText={setAdditionalInstructions}
+              placeholder="Add specific instructions for AI (e.g., 'Include 2-year warranty', 'Use premium materials')..."
+              placeholderTextColor={COLORS.quaternaryLabel}
+              multiline
+              textAlignVertical="top"
+            />
           </View>
         )}
 
@@ -366,10 +406,43 @@ const styles = StyleSheet.create({
     gap: 6, 
     marginBottom: SPACING.md,
   },
-  statusText: { 
-    ...TYPOGRAPHY.caption1, 
-    fontWeight: '600', 
+  statusText: {
+    ...TYPOGRAPHY.caption1,
+    fontWeight: '600',
     color: COLORS.green,
+  },
+  instructionsToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.systemBackground,
+    borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    marginBottom: SPACING.sm,
+    borderWidth: 1,
+    borderColor: COLORS.separator,
+  },
+  instructionsToggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  instructionsToggleText: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.label,
+  },
+  instructionsContainer: {
+    marginBottom: SPACING.md,
+  },
+  instructionsInput: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.label,
+    backgroundColor: COLORS.systemBackground,
+    borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    minHeight: 100,
+    borderWidth: 1,
+    borderColor: COLORS.separator,
   },
   importButtonsRow: {
     flexDirection: 'row',
