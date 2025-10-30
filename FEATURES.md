@@ -30,6 +30,29 @@
 - **Photo Gallery** - Horizontal scrollable photo gallery
 
 ### Estimates & Pricing
+
+### Drafts & Estimates
+- **Drafts Screen** - Central hub for all projects needing estimates
+- **Progress Tracking** - 5-stage visual progress (0% to 100%)
+- **Status Indicators** - Color-coded badges (Draft Needed, Review Draft, Pricing Needed, Ready to Send, Sent to QB)
+- **Real-Time Updates** - Live progress across all admins
+- **Estimate Workspace** - 5-tab interface for complete workflow:
+  * Project Overview - Client info, location, photos
+  * Description - AI generation with **finalize button**
+  * AI Estimate - AI-powered drafting (placeholder)
+  * Calculator - Line items, subtotal, tax, total
+  * Send to QuickBooks - Pre-flight checks and QB integration
+- **Auto-Save** - 2-second debounce on all inputs
+- **QuickBooks Send** - Real API integration to create estimates
+- **Customer Assignment** - Pick QB customer with location support
+
+### Multi-Location Client Support
+- **Location Picker** - Select specific QB location when creating projects
+- **Client + Location Display** - Show both client name and location in listings
+- **Location Count Badge** - Badge showing location count on client cards
+- **Conditional Display** - Location only shown for multi-location clients
+- **qbCustomers Array** - Support for clients with multiple QB locations
+- **Project Location Tracking** - qbCustomerId and qbCustomerName on projects
 - **Estimate Creation** - 4-tab workspace for creating estimates:
   1. **Project Info Tab** - Select client, view project photos
   2. **Description Tab** - AI-powered estimate description generation with auto-save
@@ -203,5 +226,5 @@
 
 ---
 
-Total Features: 50+ major features across 8 categories
-Last Updated: 2025-10-27
+Total Features: 60+ major features across 8 categories
+Last Updated: 2024-10-30
