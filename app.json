@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "carben-connect-mobile-2.0",
-    "slug": "carben-connect-mobile-20",
+    "name": "Carben Connect",
+    "slug": "carben-connect",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,17 +13,29 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.carbenconnect.mobile",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.carbenconnect.mobile"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "owner": "carben-connect",
+    "extra": {
+      "eas": {
+        "projectId": "f0319be5-6c87-4175-b795-15d014c8217d"
+      }
     }
   }
 }
