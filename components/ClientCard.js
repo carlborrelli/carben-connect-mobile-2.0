@@ -11,9 +11,13 @@ export default function ClientCard({ client, onPress }) {
     onPress?.(client);
   };
 
+  // Determine location display
+  const hasMultipleLocations = client.qbCustomers && client.qbCustomers.length > 1;
+  const hasSingleLocation = client.qbCustomers && client.qbCustomers.length === 1;
+
   return (
-    <TouchableOpacity 
-      style={styles.card} 
+    <TouchableOpacity
+      style={styles.card}
       onPress={handlePress}
       activeOpacity={0.7}
     >
@@ -29,14 +33,14 @@ export default function ClientCard({ client, onPress }) {
         <Text style={styles.name} numberOfLines={1}>
           {client.name || 'Unnamed Client'}
         </Text>
-        
+
         {client.email && (
           <View style={styles.infoRow}>
             <Ionicons name="mail-outline" size={14} color={COLORS.secondaryLabel} />
             <Text style={styles.infoText} numberOfLines={1}>{client.email}</Text>
           </View>
         )}
-        
+
         {client.phone && (
           <View style={styles.infoRow}>
             <Ionicons name="call-outline" size={14} color={COLORS.secondaryLabel} />
@@ -44,7 +48,26 @@ export default function ClientCard({ client, onPress }) {
           </View>
         )}
 
-        {client.qbLocationName && (
+        {/* Show single location */}
+        {hasSingleLocation && (
+          <View style={styles.infoRow}>
+            <Ionicons name="location-outline" size={14} color={COLORS.secondaryLabel} />
+            <Text style={styles.infoText} numberOfLines={1}>{client.qbCustomers[0].name}</Text>
+          </View>
+        )}
+
+        {/* Show multiple locations count */}
+        {hasMultipleLocations && (
+          <View style={styles.infoRow}>
+            <Ionicons name="location-outline" size={14} color={COLORS.primary} />
+            <Text style={[styles.infoText, { color: COLORS.primary, fontWeight: '600' }]}>
+              {client.qbCustomers.length} locations
+            </Text>
+          </View>
+        )}
+
+        {/* Legacy: Show qbLocationName if no qbCustomers */}
+        {!client.qbCustomers && client.qbLocationName && (
           <View style={styles.infoRow}>
             <Ionicons name="location-outline" size={14} color={COLORS.secondaryLabel} />
             <Text style={styles.infoText} numberOfLines={1}>{client.qbLocationName}</Text>

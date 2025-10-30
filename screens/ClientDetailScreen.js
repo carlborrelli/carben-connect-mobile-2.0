@@ -135,21 +135,44 @@ export default function ClientDetailScreen({ route, navigation }) {
           </View>
 
           {/* QuickBooks Information */}
-          {(client.qbCustomerId || client.qbLocationName) && (
+          {(client.qbCustomers || client.qbCustomerId || client.qbLocationName) && (
             <View style={styles.qbSection}>
               <View style={styles.sectionHeader}>
                 <Ionicons name="business" size={16} color={COLORS.secondaryLabel} />
                 <Text style={styles.sectionTitle}>QuickBooks Info</Text>
               </View>
 
-              {client.qbCustomerId && (
+              {/* Multiple Locations */}
+              {client.qbCustomers && client.qbCustomers.length > 1 && (
+                <View style={styles.locationsContainer}>
+                  <Text style={styles.qbLabel}>Locations:</Text>
+                  {client.qbCustomers.map((qbCustomer, index) => (
+                    <View key={qbCustomer.id || index} style={styles.locationItem}>
+                      <Ionicons name="location" size={14} color={COLORS.primary} />
+                      <Text style={styles.locationText}>{qbCustomer.name}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Single Location from qbCustomers array */}
+              {client.qbCustomers && client.qbCustomers.length === 1 && (
+                <View style={styles.qbRow}>
+                  <Text style={styles.qbLabel}>Location:</Text>
+                  <Text style={styles.qbValue}>{client.qbCustomers[0].name}</Text>
+                </View>
+              )}
+
+              {/* Legacy: qbCustomerId */}
+              {!client.qbCustomers && client.qbCustomerId && (
                 <View style={styles.qbRow}>
                   <Text style={styles.qbLabel}>Customer ID:</Text>
                   <Text style={styles.qbValue}>{client.qbCustomerId}</Text>
                 </View>
               )}
 
-              {client.qbLocationName && (
+              {/* Legacy: qbLocationName */}
+              {!client.qbCustomers && client.qbLocationName && (
                 <View style={styles.qbRow}>
                   <Text style={styles.qbLabel}>Location:</Text>
                   <Text style={styles.qbValue}>{client.qbLocationName}</Text>
@@ -183,6 +206,8 @@ export default function ClientDetailScreen({ route, navigation }) {
                   key={project.id}
                   project={project}
                   onPress={handleProjectPress}
+                  client={client}
+                  isAdmin={false}
                 />
               ))}
             </View>
@@ -300,6 +325,22 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.body,
     color: COLORS.label,
     fontWeight: '500',
+  },
+  locationsContainer: {
+    width: '100%',
+    marginTop: SPACING.xs,
+  },
+  locationItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+    paddingVertical: SPACING.xs / 2,
+    paddingLeft: SPACING.md,
+  },
+  locationText: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.label,
+    flex: 1,
   },
   projectsSection: {
     marginHorizontal: SPACING.lg,

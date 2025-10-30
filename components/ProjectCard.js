@@ -1,4 +1,4 @@
-// ProjectCard - Display project information in a card
+// ProjectCard - Display project information in a card (WITH CLIENT NAME AND LOCATION)
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,7 +23,7 @@ const STATUS_LABELS = {
   'PAID': 'Paid',
 };
 
-export default function ProjectCard({ project, onPress }) {
+export default function ProjectCard({ project, onPress, client, isAdmin }) {
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onPress?.(project);
@@ -32,23 +32,56 @@ export default function ProjectCard({ project, onPress }) {
   const statusColor = STATUS_COLORS[project.status] || COLORS.gray;
   const statusLabel = STATUS_LABELS[project.status] || project.status;
 
+  // Get client name and location
+  const getClientInfo = () => {
+    if (!client) return { clientName: null, location: null };
+
+    const hasMultipleLocations = client.qbCustomers && client.qbCustomers.length > 1;
+    const clientName = client.name || client.company;
+
+    // Only show location if client has multiple locations
+    let location = null;
+    if (hasMultipleLocations) {
+      location = project.qbCustomerName;
+    }
+
+    return { clientName, location };
+  };
+
+  const { clientName, location } = getClientInfo();
+
   return (
-    <TouchableOpacity 
-      style={styles.card} 
+    <TouchableOpacity
+      style={styles.card}
       onPress={handlePress}
       activeOpacity={0.7}
     >
+      {/* Client Name - Always show */}
+      {clientName && (
+        <View style={styles.clientRow}>
+          <Ionicons name="person-outline" size={12} color={COLORS.secondaryLabel} />
+          <Text style={styles.clientText} numberOfLines={1}>
+            {clientName}
+          </Text>
+        </View>
+      )}
+
+      {/* Location - Only if multiple locations */}
+      {location && (
+        <View style={styles.locationRow}>
+          <Ionicons name="location-outline" size={12} color={COLORS.secondaryLabel} />
+          <Text style={styles.locationText} numberOfLines={1}>
+            {location}
+          </Text>
+        </View>
+      )}
+
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={styles.title} numberOfLines={2}>
             {project.title || 'Untitled Project'}
           </Text>
-          {project.clientName && (
-            <Text style={styles.client} numberOfLines={1}>
-              {project.clientName}
-            </Text>
-          )}
         </View>
         <View style={[styles.statusBadge, { backgroundColor: statusColor + '20' }]}>
           <Text style={[styles.statusText, { color: statusColor }]}>
@@ -100,6 +133,30 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
     ...SHADOWS.small,
   },
+  clientRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: SPACING.xs / 2,
+  },
+  clientText: {
+    ...TYPOGRAPHY.caption2,
+    color: COLORS.secondaryLabel,
+    fontWeight: '600',
+    flex: 1,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: SPACING.xs / 2,
+  },
+  locationText: {
+    ...TYPOGRAPHY.caption2,
+    color: COLORS.secondaryLabel,
+    fontWeight: '500',
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -113,11 +170,6 @@ const styles = StyleSheet.create({
   title: {
     ...TYPOGRAPHY.headline,
     color: COLORS.label,
-    marginBottom: SPACING.xs / 2,
-  },
-  client: {
-    ...TYPOGRAPHY.subheadline,
-    color: COLORS.secondaryLabel,
   },
   statusBadge: {
     paddingHorizontal: SPACING.sm,

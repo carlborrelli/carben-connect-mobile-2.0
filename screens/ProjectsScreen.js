@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, where, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import ProjectCard from '../components/ProjectCard';
@@ -41,6 +41,7 @@ export default function ProjectsScreen({ navigation }) {
   const { userProfile, isAdmin } = useAuth();
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
+  const [clients, setClients] = useState({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -93,6 +94,31 @@ export default function ProjectsScreen({ navigation }) {
 
     return () => unsubscribe();
   }, [userProfile]);
+
+  // Fetch clients
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const clientsQuery = query(
+          collection(db, 'users'),
+          where('role', '==', 'client')
+        );
+        const snapshot = await getDocs(clientsQuery);
+        const clientsMap = {};
+        snapshot.docs.forEach(doc => {
+          clientsMap[doc.id] = {
+            id: doc.id,
+            ...doc.data()
+          };
+        });
+        setClients(clientsMap);
+      } catch (error) {
+        console.error('Error fetching clients:', error);
+      }
+    };
+
+    fetchClients();
+  }, []);
 
   // Filter and sort projects when search query, status, or sort changes
   useEffect(() => {
@@ -327,7 +353,12 @@ export default function ProjectsScreen({ navigation }) {
         data={filteredProjects}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <ProjectCard project={item} onPress={handleProjectPress} />
+          <ProjectCard
+            project={item}
+            onPress={handleProjectPress}
+            client={clients[item.clientId]}
+            isAdmin={isAdmin()}
+          />
         )}
         contentContainerStyle={styles.listContent}
         refreshControl={
