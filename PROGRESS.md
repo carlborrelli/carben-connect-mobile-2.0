@@ -1,9 +1,124 @@
 # Carben Connect Mobile 2.0 - Development Progress
 
-**Last Updated:** 2025-10-27
+**Last Updated:** 2025-10-30
 **Current Status:** Phase 5 Week 3 - Priority 4 Complete (Detail Screens)
 
 ---
+
+---
+
+## Session Update: Oct 30, 2025 - UI Fixes & AI Enhancements
+
+### Fixed Button Visibility Issues
+
+**Problem:** Important action buttons were hidden behind the tab bar due to being positioned outside ScrollView.
+
+**Solutions:**
+
+1. **Estimate Tab - Finalize Button**
+   - Moved from bottomBar (fixed position) to inside ScrollView
+   - Now appears between import buttons and text input
+   - Always visible when description has text
+   - Smooth scrolling access
+
+2. **QuickBooks Tab - Send Button**
+   - Moved from bottomBar to inside ScrollView
+   - Positioned after checklist and summary
+   - No longer hidden by tab bar
+   - Added proper margins for spacing
+
+**Files Changed:**
+- components/estimate/AIEstimateTab.js
+- components/estimate/SendToQuickBooksTab.js
+
+### Calculator Improvements
+
+**Materials Section Column Width Adjustments:**
+- **QTY column**: Reduced from 4-digit to 2-digit width (flex 1 → 0.5)
+- **Item column**: Reduced from 13 to 9 digits (flex 3 → 2)
+- **Cost column**: Increased size (flex 1.2 → 1.75)
+- **Total column**: Now same size as Cost (width 80 → flex 1.75)
+- **Item field behavior**: Now multiline - expands vertically instead of horizontal scrolling
+- **Headers**: Perfectly aligned with input columns
+
+**Result:** Better use of space, easier data entry, more readable amounts
+
+**Files Changed:**
+- components/estimate/CalculatorTab.js
+
+### AI Features - Major Enhancement
+
+**1. AI Instructions Dropdown**
+- Added collapsible instructions section at top of estimate tab
+- Default closed for clean UI
+- Lightbulb icon for identification
+- Multiline text input for detailed instructions
+- Instructions passed to AI when using "Import with AI"
+- Examples: "Include 2-year warranty", "Use premium materials"
+
+**2. AI Assistant Chat Interface**
+- Added alongside AI Instructions in 50/50 side-by-side layout
+- Both on same row with individual expand/collapse
+- **Chat features:**
+  - Real-time conversation with ChatGPT
+  - User messages: Orange background, white text, right-aligned
+  - Assistant messages: Gray background, dark text, left-aligned
+  - Scrollable conversation (max 300px height)
+  - Input field with send button at bottom
+  - Empty state with helpful message
+  - Loading states and haptic feedback
+
+**Context-Aware AI:**
+The assistant has access to:
+1. Original project description (always, if available)
+2. Current estimate text (if imported or written)
+3. AI instructions (if entered)
+
+System automatically builds context prompt from all available data.
+
+**Use Cases:**
+- "Should I include permits in this estimate?"
+- "What's a reasonable timeline for this project?"
+- "Can you suggest what else I should include?"
+- "Make this description more professional"
+- "What materials would you recommend?"
+
+**API Integration:**
+- Calls existing /api/ai/chat endpoint
+- Sends message with conversation history
+- Includes project context in system prompt
+- Error handling with user message restoration
+
+**Files Changed:**
+- components/estimate/AIEstimateTab.js (major update)
+
+### Backend Fix - QuickBooks Mobile Support
+
+**Problem:** Mobile app couldn't send estimates to QuickBooks
+- Error: "Not connected to QuickBooks. Please reconnect."
+- Root cause: API only checked cookies (browser-only), mobile apps don't have cookies
+
+**Solution:** Updated tokenManager to be universal
+- Try Firestore tokens first (works for mobile/webhooks)
+- Fall back to cookies (works for web browser)
+- Auto-refresh tokens before expiry (5 min buffer)
+- No manual reconnection needed
+
+**How It Works:**
+1. Tokens stored in Firestore when QB connected via website
+2. Mobile app reads tokens from Firestore
+3. Tokens auto-refresh every hour (QuickBooks requirement)
+4. System checks expiry before every API call
+5. Seamless for both web and mobile
+
+**Files Changed (carben-connect repo):**
+- lib/quickbooks/tokenManager.ts
+
+**Result:** Mobile app can now send estimates to QuickBooks without errors!
+
+---
+
+
 
 ## Quick Start (Pick Up Here)
 
