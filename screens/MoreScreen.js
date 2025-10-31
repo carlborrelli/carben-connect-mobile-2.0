@@ -5,17 +5,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '../contexts/AuthContext';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 
 export default function MoreScreen({ navigation }) {
   const { userProfile, isAdmin, signOut } = useAuth();
+  const { colors, themeMode, setThemeMode } = useTheme();
+  const styles = createStyles(colors);
 
   const handleSignOut = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await signOut();
   };
 
-  const MenuItem = ({ icon, title, onPress, color = COLORS.label, badge }) => (
+  const MenuItem = ({ icon, title, onPress, color = colors.label, badge, showCheck }) => (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
       <View style={styles.menuLeft}>
         <Ionicons name={icon} size={24} color={color} />
@@ -26,7 +29,11 @@ export default function MoreScreen({ navigation }) {
           </View>
         )}
       </View>
-      <Ionicons name="chevron-forward" size={20} color={COLORS.tertiaryLabel} />
+      {showCheck ? (
+        <Ionicons name="checkmark" size={20} color={colors.primary} />
+      ) : (
+        <Ionicons name="chevron-forward" size={20} color={colors.tertiaryLabel} />
+      )}
     </TouchableOpacity>
   );
 
@@ -36,10 +43,10 @@ export default function MoreScreen({ navigation }) {
         <Text style={styles.title}>More</Text>
         <View style={styles.headerIcons}>
           <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Calendar")}>
-            <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
+            <Ionicons name="calendar-outline" size={24} color={colors.label} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
-            <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
+            <Ionicons name="person-circle-outline" size={24} color={colors.label} />
           </TouchableOpacity>
         </View>
       </View>
@@ -59,6 +66,42 @@ export default function MoreScreen({ navigation }) {
               <Text style={styles.adminText}>Admin</Text>
             </View>
           )}
+        </View>
+
+        {/* Appearance Section */}
+        <View style={styles.menuSection}>
+          <Text style={styles.sectionLabel}>APPEARANCE</Text>
+          <View style={styles.menuCard}>
+            <MenuItem
+              icon="phone-portrait-outline"
+              title="Automatic (System)"
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setThemeMode('automatic');
+              }}
+              showCheck={themeMode === 'automatic'}
+            />
+            <View style={styles.separator} />
+            <MenuItem
+              icon="sunny-outline"
+              title="Light Mode"
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setThemeMode('light');
+              }}
+              showCheck={themeMode === 'light'}
+            />
+            <View style={styles.separator} />
+            <MenuItem
+              icon="moon-outline"
+              title="Dark Mode"
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setThemeMode('dark');
+              }}
+              showCheck={themeMode === 'dark'}
+            />
+          </View>
         </View>
 
         {/* Menu Items */}
@@ -111,10 +154,10 @@ export default function MoreScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.systemGroupedBackground,
+    backgroundColor: colors.systemGroupedBackground,
   },
   header: {
     flexDirection: 'row',
@@ -122,11 +165,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
   },
   title: {
     ...TYPOGRAPHY.largeTitle,
-    color: COLORS.label,
+    color: colors.label,
   },
   headerIcons: {
     flexDirection: 'row',
@@ -149,24 +192,24 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.md,
   },
   avatarText: {
     ...TYPOGRAPHY.title1,
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
     fontWeight: '700',
   },
   profileName: {
     ...TYPOGRAPHY.title2,
-    color: COLORS.label,
+    color: colors.label,
     marginBottom: SPACING.xs,
   },
   profileEmail: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
   },
   adminBadge: {
     marginTop: SPACING.sm,
@@ -177,7 +220,7 @@ const styles = StyleSheet.create({
   },
   adminText: {
     ...TYPOGRAPHY.footnote,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   menuSection: {
@@ -185,13 +228,13 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     ...TYPOGRAPHY.footnote,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginBottom: SPACING.sm,
     marginLeft: SPACING.md,
     fontWeight: '600',
   },
   menuCard: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
     ...SHADOWS.small,
@@ -212,7 +255,7 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.body,
   },
   badge: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: SPACING.xs,
     paddingVertical: 2,
     borderRadius: RADIUS.sm,
@@ -221,12 +264,12 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     ...TYPOGRAPHY.caption2,
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
     fontWeight: '700',
   },
   separator: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: COLORS.separator,
+    backgroundColor: colors.separator,
     marginLeft: SPACING.md + 24 + SPACING.md,
   },
   signOutButton: {
@@ -238,12 +281,12 @@ const styles = StyleSheet.create({
   },
   signOutText: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.red,
+    color: colors.red,
     fontWeight: '600',
   },
   version: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.tertiaryLabel,
+    color: colors.tertiaryLabel,
     textAlign: 'center',
     marginTop: SPACING.lg,
   },

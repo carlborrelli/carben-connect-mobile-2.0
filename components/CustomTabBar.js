@@ -3,9 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { View, TouchableOpacity, StyleSheet, Platform, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { COLORS, SPACING, SHADOWS } from '../theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { SPACING, SHADOWS } from '../theme';
 
 export default function CustomTabBar({ state, descriptors, navigation }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   useEffect(() => {
@@ -86,10 +89,10 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
                   styles.centerButton,
                   isFocused && styles.centerButtonActive
                 ]}>
-                  <Ionicons 
-                    name={iconName} 
-                    size={28} 
-                    color={COLORS.systemBackground} 
+                  <Ionicons
+                    name={iconName}
+                    size={28}
+                    color={colors.systemBackground}
                   />
                 </View>
               </TouchableOpacity>
@@ -105,7 +108,7 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
               <Ionicons
                 name={iconName}
                 size={24}
-                color={isFocused ? COLORS.primary : COLORS.gray}
+                color={isFocused ? colors.primary : colors.gray}
               />
             </TouchableOpacity>
           );
@@ -115,7 +118,7 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     position: 'absolute',
     bottom: 0,
@@ -124,9 +127,9 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COLORS.separator,
+    borderTopColor: colors.separator,
     paddingBottom: Platform.OS === 'ios' ? 20 : 10,
     paddingTop: 10,
     ...SHADOWS.medium,
@@ -147,15 +150,15 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     ...SHADOWS.large,
-    shadowColor: COLORS.primary,
+    shadowColor: colors.primary,
     elevation: 8,
   },
   centerButtonActive: {
-    backgroundColor: COLORS.primaryDark,
+    backgroundColor: colors.primaryDark,
     transform: [{ scale: 0.95 }],
   },
 });

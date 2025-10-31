@@ -1,6 +1,7 @@
 // ThemeContext - Manages app theme with automatic dark mode support
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useColorScheme } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   TYPOGRAPHY,
   SPACING,
@@ -122,6 +123,8 @@ const DARK_COLORS = {
   gray6: '#1C1C1E',
 };
 
+const THEME_STORAGE_KEY = '@carben_theme_mode';
+
 const ThemeContext = createContext({});
 
 export const useTheme = () => {
@@ -133,9 +136,40 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  
+  const systemColorScheme = useColorScheme();
+  const [themeMode, setThemeMode] = useState('automatic');
+
+  // Load theme preference from storage on mount
+  useEffect(() => {
+    const loadThemePreference = async () => {
+      try {
+        const saved = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+        if (saved && ['automatic', 'light', 'dark'].includes(saved)) {
+          setThemeMode(saved);
+        }
+      } catch (error) {
+        console.error('Error loading theme preference:', error);
+      }
+    };
+
+    loadThemePreference();
+  }, []);
+
+  // Function to update theme mode
+  const setThemePreference = async (mode) => {
+    try {
+      await AsyncStorage.setItem(THEME_STORAGE_KEY, mode);
+      setThemeMode(mode);
+    } catch (error) {
+      console.error('Error saving theme preference:', error);
+    }
+  };
+
+  // Determine if dark mode should be active
+  const isDark = themeMode === 'automatic'
+    ? systemColorScheme === 'dark'
+    : themeMode === 'dark';
+
   const theme = {
     colors: isDark ? DARK_COLORS : LIGHT_COLORS,
     typography: TYPOGRAPHY,
@@ -145,6 +179,8 @@ export const ThemeProvider = ({ children }) => {
     animation: ANIMATION,
     touchTarget: TOUCH_TARGET,
     isDark,
+    themeMode,
+    setThemeMode: setThemePreference,
   };
 
   return (
