@@ -3,9 +3,13 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 
 export default function MessageCard({ message, onPress }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onPress?.(message);
@@ -17,7 +21,7 @@ export default function MessageCard({ message, onPress }) {
     const now = new Date();
     const diff = now - date;
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    
+
     if (days === 0) {
       // Today - show time
       return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -33,8 +37,11 @@ export default function MessageCard({ message, onPress }) {
   const isUnread = message.unread || false;
 
   return (
-    <TouchableOpacity 
-      style={[styles.card, isUnread && styles.unreadCard]} 
+    <TouchableOpacity
+      style={[
+        styles.card,
+        isUnread && styles.cardUnread
+      ]}
       onPress={handlePress}
       activeOpacity={0.7}
     >
@@ -61,10 +68,10 @@ export default function MessageCard({ message, onPress }) {
       {/* Footer */}
       <View style={styles.footer}>
         <View style={styles.footerLeft}>
-          <Ionicons 
-            name={message.senderRole === 'admin' ? 'person' : 'person-outline'} 
-            size={14} 
-            color={COLORS.secondaryLabel} 
+          <Ionicons
+            name={message.senderRole === 'admin' ? 'person' : 'person-outline'}
+            size={14}
+            color={colors.secondaryLabel}
           />
           <Text style={styles.senderName}>
             {message.senderName || 'Unknown'}
@@ -80,18 +87,21 @@ export default function MessageCard({ message, onPress }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   card: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
     borderRadius: RADIUS.lg,
     padding: SPACING.md,
     marginBottom: SPACING.md,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     ...SHADOWS.small,
   },
-  unreadCard: {
-    backgroundColor: COLORS.primary + '08',
+  cardUnread: {
+    backgroundColor: colors.primary + '08',
     borderLeftWidth: 3,
-    borderLeftColor: COLORS.primary,
+    borderLeftColor: colors.primary,
+  },
+  unreadText: {
+    fontWeight: '600',
   },
   header: {
     flexDirection: 'row',
@@ -105,24 +115,21 @@ const styles = StyleSheet.create({
   },
   projectTitle: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
     marginBottom: SPACING.xs / 2,
-  },
-  unreadText: {
-    fontWeight: '600',
+    color: colors.label,
   },
   clientName: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
   },
   time: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
   },
   preview: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
     marginBottom: SPACING.sm,
+    color: colors.secondaryLabel,
   },
   footer: {
     flexDirection: 'row',
@@ -136,7 +143,7 @@ const styles = StyleSheet.create({
   },
   senderName: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
   },
   unreadBadge: {
     width: 24,
@@ -148,6 +155,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
 });

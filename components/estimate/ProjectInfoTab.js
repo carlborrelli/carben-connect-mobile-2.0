@@ -1,13 +1,17 @@
 import React from 'react';
+import { useTheme } from '../../contexts/ThemeContext';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../../theme';
+import { TYPOGRAPHY, SPACING, RADIUS } from '../../theme';
 
 export default function ProjectInfoTab({ project }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   if (!project) {
     return (
       <View style={styles.emptyState}>
-        <Ionicons name="information-circle-outline" size={48} color={COLORS.gray3} />
+        <Ionicons name="information-circle-outline" size={48} color={colors.gray3} />
         <Text style={styles.emptyText}>No project information available</Text>
       </View>
     );
@@ -16,7 +20,7 @@ export default function ProjectInfoTab({ project }) {
   const InfoRow = ({ icon, label, value }) => (
     <View style={styles.infoRow}>
       <View style={styles.infoIconContainer}>
-        <Ionicons name={icon} size={20} color={COLORS.primary} />
+        <Ionicons name={icon} size={20} color={colors.primary} />
       </View>
       <View style={styles.infoContent}>
         <Text style={styles.infoLabel}>{label}</Text>
@@ -58,7 +62,7 @@ export default function ProjectInfoTab({ project }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     gap: SPACING.sm,
   },
@@ -68,7 +72,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.tertiaryLabel,
+    color: colors.tertiaryLabel,
     marginTop: SPACING.sm,
   },
   infoRow: {
@@ -76,7 +80,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: SPACING.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   infoIconContainer: {
     width: 32,
@@ -92,11 +96,11 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginBottom: 2,
   },
   infoValue: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
   },
 });

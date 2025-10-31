@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../../contexts/ThemeContext';
 import {
   View,
   Text,
@@ -14,9 +15,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { doc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useAuth } from '../../contexts/AuthContext';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../../theme';
+import { TYPOGRAPHY, SPACING, RADIUS } from '../../theme';
 
 export default function EstimateDescriptionTab({ projectId, project, estimateProgress }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   const { user } = useAuth();
   const [description, setDescription] = useState(null);
   const [editableText, setEditableText] = useState('');
@@ -167,7 +171,7 @@ export default function EstimateDescriptionTab({ projectId, project, estimatePro
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={COLORS.primary} />
+        <ActivityIndicator size="small" color={colors.primary} />
       </View>
     );
   }
@@ -184,7 +188,7 @@ export default function EstimateDescriptionTab({ projectId, project, estimatePro
       {/* Status indicator */}
       {isFinalized && (
         <View style={styles.statusBadge}>
-          <Ionicons name="checkmark-circle" size={16} color={COLORS.green} />
+          <Ionicons name="checkmark-circle" size={16} color={colors.green} />
           <Text style={styles.statusText}>Finalized</Text>
         </View>
       )}
@@ -195,7 +199,7 @@ export default function EstimateDescriptionTab({ projectId, project, estimatePro
         value={editableText}
         onChangeText={setEditableText}
         placeholder="Describe the project work to be done..."
-        placeholderTextColor={COLORS.tertiaryLabel}
+        placeholderTextColor={colors.tertiaryLabel}
         multiline
         textAlignVertical="top"
         editable={!generating && !saving}
@@ -211,10 +215,10 @@ export default function EstimateDescriptionTab({ projectId, project, estimatePro
             disabled={generating || !hasText}
           >
             {generating ? (
-              <ActivityIndicator size="small" color={COLORS.primary} />
+              <ActivityIndicator size="small" color={colors.primary} />
             ) : (
               <>
-                <Ionicons name="sparkles" size={20} color={COLORS.primary} />
+                <Ionicons name="sparkles" size={20} color={colors.primary} />
                 <Text style={styles.secondaryButtonText}>Generate with AI</Text>
               </>
             )}
@@ -231,10 +235,10 @@ export default function EstimateDescriptionTab({ projectId, project, estimatePro
               disabled={saving || !hasText}
             >
               {saving ? (
-                <ActivityIndicator size="small" color={COLORS.primary} />
+                <ActivityIndicator size="small" color={colors.primary} />
               ) : (
                 <>
-                  <Ionicons name="save-outline" size={20} color={COLORS.primary} />
+                  <Ionicons name="save-outline" size={20} color={colors.primary} />
                   <Text style={styles.secondaryButtonText}>Save</Text>
                 </>
               )}
@@ -248,7 +252,7 @@ export default function EstimateDescriptionTab({ projectId, project, estimatePro
               onPress={handleFinalize}
               disabled={!hasText}
             >
-              <Ionicons name="checkmark-circle" size={20} color={COLORS.systemBackground} />
+              <Ionicons name="checkmark-circle" size={20} color={colors.systemBackground} />
               <Text style={styles.primaryButtonText}>Finalize</Text>
             </TouchableOpacity>
           ) : (
@@ -256,8 +260,8 @@ export default function EstimateDescriptionTab({ projectId, project, estimatePro
               style={[styles.secondaryButton, styles.editButton, styles.flex1]}
               onPress={handleUnfinalize}
             >
-              <Ionicons name="create-outline" size={20} color={COLORS.blue} />
-              <Text style={[styles.secondaryButtonText, { color: COLORS.blue }]}>
+              <Ionicons name="create-outline" size={20} color={colors.blue} />
+              <Text style={[styles.secondaryButtonText, { color: colors.blue }]}>
                 Edit
               </Text>
             </TouchableOpacity>
@@ -279,7 +283,7 @@ export default function EstimateDescriptionTab({ projectId, project, estimatePro
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   scrollView: {
     flex: 1,
   },
@@ -304,18 +308,18 @@ const styles = StyleSheet.create({
   statusText: {
     ...TYPOGRAPHY.caption1,
     fontWeight: '600',
-    color: COLORS.green,
+    color: colors.green,
   },
   textInput: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    color: colors.label,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
     padding: SPACING.md,
     minHeight: 200,
     maxHeight: 400,
     borderWidth: 1,
-    borderColor: COLORS.separator,
+    borderColor: colors.separator,
   },
   actionButtons: {
     gap: SPACING.sm,
@@ -328,7 +332,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   primaryButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -338,12 +342,12 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
   },
   finalizeButton: {
-    backgroundColor: COLORS.green,
+    backgroundColor: colors.green,
   },
   secondaryButton: {
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -353,24 +357,24 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
   },
   editButton: {
-    borderColor: COLORS.blue,
+    borderColor: colors.blue,
   },
   buttonDisabled: {
     opacity: 0.5,
   },
   primaryButtonText: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
     fontWeight: '600',
   },
   secondaryButtonText: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   helpText: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     lineHeight: 16,
     textAlign: 'center',
   },

@@ -18,7 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { doc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useAuth } from '../../contexts/AuthContext';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../../theme';
+import { TYPOGRAPHY, SPACING, RADIUS } from '../../theme';
+import { useTheme } from '../../contexts/ThemeContext';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -117,7 +118,7 @@ const CalculatorSection = ({
           <Ionicons
             name={isExpanded ? 'chevron-up' : 'chevron-down'}
             size={20}
-            color={COLORS.gray2}
+            color={colors.gray2}
           />
         </View>
       </TouchableOpacity>
@@ -139,7 +140,7 @@ const CalculatorSection = ({
                 value={item.item}
                 onChangeText={(text) => updateItem(item.id, 'item', text)}
                 placeholder="Item name"
-                placeholderTextColor={COLORS.quaternaryLabel}
+                placeholderTextColor={colors.quaternaryLabel}
                 multiline={true}
               />
               <TextInput
@@ -147,7 +148,7 @@ const CalculatorSection = ({
                 value={item.qty}
                 onChangeText={(text) => updateItem(item.id, 'qty', text)}
                 placeholder="1"
-                placeholderTextColor={COLORS.quaternaryLabel}
+                placeholderTextColor={colors.quaternaryLabel}
                 keyboardType="decimal-pad"
               />
               <TextInput
@@ -155,7 +156,7 @@ const CalculatorSection = ({
                 value={item.cost}
                 onChangeText={(text) => updateItem(item.id, 'cost', text)}
                 placeholder="0.00"
-                placeholderTextColor={COLORS.quaternaryLabel}
+                placeholderTextColor={colors.quaternaryLabel}
                 keyboardType="decimal-pad"
               />
               <View style={[styles.totalCell, { flex: 1.75 }]}>
@@ -166,13 +167,13 @@ const CalculatorSection = ({
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 style={styles.removeButton}
               >
-                <Ionicons name="trash-outline" size={18} color={COLORS.red} />
+                <Ionicons name="trash-outline" size={18} color={colors.red} />
               </TouchableOpacity>
             </View>
           ))}
 
           <TouchableOpacity style={styles.addRowButton} onPress={addRow}>
-            <Ionicons name="add-circle-outline" size={20} color={COLORS.primary} />
+            <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
             <Text style={styles.addRowText}>Add Row</Text>
           </TouchableOpacity>
 
@@ -270,7 +271,7 @@ const LaborSection = ({
           <Ionicons
             name={isExpanded ? 'chevron-up' : 'chevron-down'}
             size={20}
-            color={COLORS.gray2}
+            color={colors.gray2}
           />
         </View>
       </TouchableOpacity>
@@ -288,7 +289,7 @@ const LaborSection = ({
                 }}
               >
                 <Text style={styles.laborRateSelectorText}>{displayRate}</Text>
-                <Ionicons name="chevron-down" size={16} color={COLORS.gray2} />
+                <Ionicons name="chevron-down" size={16} color={colors.gray2} />
               </TouchableOpacity>
             </View>
 
@@ -299,7 +300,7 @@ const LaborSection = ({
                 value={laborItem.days}
                 onChangeText={(text) => updateLabor('days', text)}
                 placeholder="1"
-                placeholderTextColor={COLORS.quaternaryLabel}
+                placeholderTextColor={colors.quaternaryLabel}
                 keyboardType="decimal-pad"
               />
             </View>
@@ -343,7 +344,7 @@ const LaborSection = ({
                 value={customRate}
                 onChangeText={setCustomRate}
                 placeholder="Enter custom rate"
-                placeholderTextColor={COLORS.quaternaryLabel}
+                placeholderTextColor={colors.quaternaryLabel}
                 keyboardType="decimal-pad"
               />
               <TouchableOpacity
@@ -361,6 +362,8 @@ const LaborSection = ({
 };
 
 export default function CalculatorTab({ projectId }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { user } = useAuth();
   const [materials, setMaterials] = useState([createEmptyLineItem()]);
   const [materialsMarkup, setMaterialsMarkup] = useState('30');
@@ -496,7 +499,7 @@ export default function CalculatorTab({ projectId }) {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -596,7 +599,7 @@ export default function CalculatorTab({ projectId }) {
         <View style={styles.saveInfo}>
           {lastSaved && (
             <View style={styles.autoSaveIndicator}>
-              <Ionicons name="checkmark-circle" size={14} color={COLORS.green} />
+              <Ionicons name="checkmark-circle" size={14} color={colors.green} />
               <Text style={styles.autoSaveText}>
                 Auto-saved {new Date(lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </Text>
@@ -609,10 +612,10 @@ export default function CalculatorTab({ projectId }) {
           disabled={saving}
         >
           {saving ? (
-            <ActivityIndicator size="small" color={COLORS.systemBackground} />
+            <ActivityIndicator size="small" color={colors.systemBackground} />
           ) : (
             <>
-              <Ionicons name="save-outline" size={20} color={COLORS.systemBackground} />
+              <Ionicons name="save-outline" size={20} color={colors.systemBackground} />
               <Text style={styles.saveButtonText}>Save Now</Text>
             </>
           )}
@@ -622,67 +625,67 @@ export default function CalculatorTab({ projectId }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: { flex: 1 },
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scrollView: { flex: 1 },
   content: { padding: SPACING.md },
-  section: { backgroundColor: COLORS.systemBackground, borderRadius: RADIUS.md, marginBottom: SPACING.sm, overflow: 'hidden' },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: SPACING.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.separator },
-  sectionTitle: { ...TYPOGRAPHY.headline, color: COLORS.label },
+  section: { backgroundColor: colors.systemBackground, borderRadius: RADIUS.md, marginBottom: SPACING.sm, overflow: 'hidden' },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: SPACING.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.separator },
+  sectionTitle: { ...TYPOGRAPHY.headline, color: colors.label },
   sectionHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
-  sectionTotal: { ...TYPOGRAPHY.headline, color: COLORS.primary, fontWeight: '700' },
+  sectionTotal: { ...TYPOGRAPHY.headline, color: colors.primary, fontWeight: '700' },
   sectionContent: { padding: SPACING.md },
   tableHeader: { flexDirection: 'row', gap: SPACING.xs, marginBottom: SPACING.xs },
-  tableHeaderText: { ...TYPOGRAPHY.caption1, color: COLORS.secondaryLabel, fontWeight: '700' },
+  tableHeaderText: { ...TYPOGRAPHY.caption1, color: colors.secondaryLabel, fontWeight: '700' },
   tableRow: { flexDirection: 'row', gap: SPACING.xs, marginBottom: SPACING.xs, alignItems: 'center' },
-  tableInput: { ...TYPOGRAPHY.body, color: COLORS.label, backgroundColor: COLORS.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.xs, borderWidth: 1, borderColor: COLORS.separator },
-  totalCell: { backgroundColor: COLORS.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.xs, borderWidth: 1, borderColor: COLORS.primary, alignItems: 'center', justifyContent: 'center' },
-  totalText: { ...TYPOGRAPHY.footnote, color: COLORS.primary, fontWeight: '600' },
+  tableInput: { ...TYPOGRAPHY.body, color: colors.label, backgroundColor: colors.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.xs, borderWidth: 1, borderColor: colors.separator },
+  totalCell: { backgroundColor: colors.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.xs, borderWidth: 1, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  totalText: { ...TYPOGRAPHY.footnote, color: colors.primary, fontWeight: '600' },
   removeButton: { width: 32, alignItems: 'center' },
   addRowButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: SPACING.sm, gap: SPACING.xs, marginTop: SPACING.xs, marginBottom: SPACING.md },
-  addRowText: { ...TYPOGRAPHY.body, color: COLORS.primary },
-  totalsContainer: { backgroundColor: COLORS.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.sm },
+  addRowText: { ...TYPOGRAPHY.body, color: colors.primary },
+  totalsContainer: { backgroundColor: colors.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.sm },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: SPACING.xs },
-  totalLabel: { ...TYPOGRAPHY.body, color: COLORS.secondaryLabel },
-  totalValue: { ...TYPOGRAPHY.body, color: COLORS.label, fontWeight: '600' },
+  totalLabel: { ...TYPOGRAPHY.body, color: colors.secondaryLabel },
+  totalValue: { ...TYPOGRAPHY.body, color: colors.label, fontWeight: '600' },
   markupInputContainer: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  markupInput: { ...TYPOGRAPHY.body, color: COLORS.label, backgroundColor: COLORS.systemBackground, borderRadius: RADIUS.sm, paddingVertical: 4, paddingHorizontal: SPACING.xs, borderWidth: 1, borderColor: COLORS.separator, minWidth: 50, textAlign: 'center', fontWeight: '600' },
-  markupPercent: { ...TYPOGRAPHY.body, color: COLORS.secondaryLabel },
-  grandTotalRow: { borderTopWidth: 2, borderTopColor: COLORS.separator, marginTop: SPACING.xs, paddingTop: SPACING.sm },
-  grandTotalLabel: { ...TYPOGRAPHY.headline, color: COLORS.label },
-  grandTotalValue: { ...TYPOGRAPHY.headline, color: COLORS.primary, fontSize: 20, fontWeight: '700' },
-  rateSelector: { backgroundColor: COLORS.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.xs, borderWidth: 1, borderColor: COLORS.separator, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  rateSelectorText: { ...TYPOGRAPHY.body, color: COLORS.label },
-  laborTotalContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: COLORS.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.sm, marginTop: SPACING.sm },
+  markupInput: { ...TYPOGRAPHY.body, color: colors.label, backgroundColor: colors.systemBackground, borderRadius: RADIUS.sm, paddingVertical: 4, paddingHorizontal: SPACING.xs, borderWidth: 1, borderColor: colors.separator, minWidth: 50, textAlign: 'center', fontWeight: '600' },
+  markupPercent: { ...TYPOGRAPHY.body, color: colors.secondaryLabel },
+  grandTotalRow: { borderTopWidth: 2, borderTopColor: colors.separator, marginTop: SPACING.xs, paddingTop: SPACING.sm },
+  grandTotalLabel: { ...TYPOGRAPHY.headline, color: colors.label },
+  grandTotalValue: { ...TYPOGRAPHY.headline, color: colors.primary, fontSize: 20, fontWeight: '700' },
+  rateSelector: { backgroundColor: colors.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.xs, borderWidth: 1, borderColor: colors.separator, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  rateSelectorText: { ...TYPOGRAPHY.body, color: colors.label },
+  laborTotalContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.sm, marginTop: SPACING.sm },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  ratePickerModal: { backgroundColor: COLORS.systemBackground, borderRadius: RADIUS.lg, padding: SPACING.lg, width: '80%', maxWidth: 300 },
-  ratePickerTitle: { ...TYPOGRAPHY.title3, color: COLORS.label, marginBottom: SPACING.md, textAlign: 'center' },
-  rateOption: { paddingVertical: SPACING.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.separator },
-  rateOptionText: { ...TYPOGRAPHY.body, color: COLORS.label, textAlign: 'center' },
+  ratePickerModal: { backgroundColor: colors.systemBackground, borderRadius: RADIUS.lg, padding: SPACING.lg, width: '80%', maxWidth: 300 },
+  ratePickerTitle: { ...TYPOGRAPHY.title3, color: colors.label, marginBottom: SPACING.md, textAlign: 'center' },
+  rateOption: { paddingVertical: SPACING.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.separator },
+  rateOptionText: { ...TYPOGRAPHY.body, color: colors.label, textAlign: 'center' },
   customRateInput: { marginTop: SPACING.md, gap: SPACING.sm },
-  customRateField: { ...TYPOGRAPHY.body, color: COLORS.label, backgroundColor: COLORS.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.sm, borderWidth: 1, borderColor: COLORS.separator },
-  applyButton: { backgroundColor: COLORS.primary, paddingVertical: SPACING.sm, borderRadius: RADIUS.sm, alignItems: 'center' },
-  applyButtonText: { ...TYPOGRAPHY.headline, color: COLORS.systemBackground },
-  profitSection: { backgroundColor: COLORS.systemBackground, borderRadius: RADIUS.md, padding: SPACING.md },
-  profitTitle: { ...TYPOGRAPHY.headline, color: COLORS.label, marginBottom: SPACING.sm },
-  profitContent: { backgroundColor: COLORS.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.sm },
+  customRateField: { ...TYPOGRAPHY.body, color: colors.label, backgroundColor: colors.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.sm, borderWidth: 1, borderColor: colors.separator },
+  applyButton: { backgroundColor: colors.primary, paddingVertical: SPACING.sm, borderRadius: RADIUS.sm, alignItems: 'center' },
+  applyButtonText: { ...TYPOGRAPHY.headline, color: colors.systemBackground },
+  profitSection: { backgroundColor: colors.systemBackground, borderRadius: RADIUS.md, padding: SPACING.md },
+  profitTitle: { ...TYPOGRAPHY.headline, color: colors.label, marginBottom: SPACING.sm },
+  profitContent: { backgroundColor: colors.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.sm },
   profitInputContainer: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  profitToggle: { backgroundColor: COLORS.primary, paddingVertical: 4, paddingHorizontal: SPACING.sm, borderRadius: RADIUS.sm, minWidth: 32, alignItems: 'center' },
-  profitToggleText: { ...TYPOGRAPHY.body, color: COLORS.systemBackground, fontWeight: '700' },
+  profitToggle: { backgroundColor: colors.primary, paddingVertical: 4, paddingHorizontal: SPACING.sm, borderRadius: RADIUS.sm, minWidth: 32, alignItems: 'center' },
+  profitToggleText: { ...TYPOGRAPHY.body, color: colors.systemBackground, fontWeight: '700' },
   laborRow: { flexDirection: 'row', gap: SPACING.md, alignItems: 'flex-end' },
   laborColumn: { flex: 1 },
-  laborLabel: { ...TYPOGRAPHY.caption1, color: COLORS.secondaryLabel, fontWeight: '700', marginBottom: SPACING.xs },
-  laborRateSelector: { backgroundColor: COLORS.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.sm, borderWidth: 1, borderColor: COLORS.separator, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 },
-  laborRateSelectorText: { ...TYPOGRAPHY.body, color: COLORS.label },
-  laborInput: { ...TYPOGRAPHY.body, color: COLORS.label, backgroundColor: COLORS.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.sm, borderWidth: 1, borderColor: COLORS.separator, textAlign: 'center', minHeight: 44 },
-  laborTotalDisplay: { backgroundColor: COLORS.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.sm, borderWidth: 1, borderColor: COLORS.primary, alignItems: 'center', minHeight: 44, justifyContent: 'center' },
-  laborTotalText: { ...TYPOGRAPHY.body, color: COLORS.primary, fontWeight: '700', fontSize: 16 },
-  bottomBar: { backgroundColor: COLORS.systemBackground, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: COLORS.separator, padding: SPACING.md },
+  laborLabel: { ...TYPOGRAPHY.caption1, color: colors.secondaryLabel, fontWeight: '700', marginBottom: SPACING.xs },
+  laborRateSelector: { backgroundColor: colors.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.sm, borderWidth: 1, borderColor: colors.separator, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 },
+  laborRateSelectorText: { ...TYPOGRAPHY.body, color: colors.label },
+  laborInput: { ...TYPOGRAPHY.body, color: colors.label, backgroundColor: colors.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.sm, borderWidth: 1, borderColor: colors.separator, textAlign: 'center', minHeight: 44 },
+  laborTotalDisplay: { backgroundColor: colors.secondarySystemGroupedBackground, borderRadius: RADIUS.sm, padding: SPACING.sm, borderWidth: 1, borderColor: colors.primary, alignItems: 'center', minHeight: 44, justifyContent: 'center' },
+  laborTotalText: { ...TYPOGRAPHY.body, color: colors.primary, fontWeight: '700', fontSize: 16 },
+  bottomBar: { backgroundColor: colors.systemBackground, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator, padding: SPACING.md },
   saveInfo: { marginBottom: SPACING.xs },
   autoSaveIndicator: { flexDirection: 'row', alignItems: 'center', gap: 4, justifyContent: 'center' },
-  autoSaveText: { ...TYPOGRAPHY.caption2, color: COLORS.secondaryLabel },
-  saveButton: { backgroundColor: COLORS.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: SPACING.md, borderRadius: RADIUS.md, gap: SPACING.sm },
+  autoSaveText: { ...TYPOGRAPHY.caption2, color: colors.secondaryLabel },
+  saveButton: { backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: SPACING.md, borderRadius: RADIUS.md, gap: SPACING.sm },
   buttonDisabled: { opacity: 0.5 },
-  saveButtonText: { ...TYPOGRAPHY.headline, color: COLORS.systemBackground },
+  saveButtonText: { ...TYPOGRAPHY.headline, color: colors.systemBackground },
 });

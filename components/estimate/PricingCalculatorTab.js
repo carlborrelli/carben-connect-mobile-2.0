@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../../contexts/ThemeContext';
 import {
   View,
   Text,
@@ -14,9 +15,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { doc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useAuth } from '../../contexts/AuthContext';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../../theme';
+import { TYPOGRAPHY, SPACING, RADIUS } from '../../theme';
 
 export default function PricingCalculatorTab({ projectId, estimateProgress }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   const { user } = useAuth();
   const [calculator, setCalculator] = useState(null);
   const [lineItems, setLineItems] = useState([]);
@@ -138,7 +142,7 @@ export default function PricingCalculatorTab({ projectId, estimateProgress }) {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color={COLORS.primary} />
+        <ActivityIndicator size="small" color={colors.primary} />
       </View>
     );
   }
@@ -159,7 +163,7 @@ export default function PricingCalculatorTab({ projectId, estimateProgress }) {
                   onPress={() => removeLineItem(item.id)}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  <Ionicons name="trash-outline" size={20} color={COLORS.red} />
+                  <Ionicons name="trash-outline" size={20} color={colors.red} />
                 </TouchableOpacity>
               )}
             </View>
@@ -167,7 +171,7 @@ export default function PricingCalculatorTab({ projectId, estimateProgress }) {
             <TextInput
               style={styles.input}
               placeholder="Description (e.g., Materials, Labor)"
-              placeholderTextColor={COLORS.tertiaryLabel}
+              placeholderTextColor={colors.tertiaryLabel}
               value={item.description}
               onChangeText={(text) => updateLineItem(item.id, 'description', text)}
             />
@@ -178,7 +182,7 @@ export default function PricingCalculatorTab({ projectId, estimateProgress }) {
                 <TextInput
                   style={styles.smallInput}
                   placeholder="0"
-                  placeholderTextColor={COLORS.tertiaryLabel}
+                  placeholderTextColor={colors.tertiaryLabel}
                   keyboardType="decimal-pad"
                   value={item.quantity}
                   onChangeText={(text) => updateLineItem(item.id, 'quantity', text)}
@@ -192,7 +196,7 @@ export default function PricingCalculatorTab({ projectId, estimateProgress }) {
                 <TextInput
                   style={styles.smallInput}
                   placeholder="0.00"
-                  placeholderTextColor={COLORS.tertiaryLabel}
+                  placeholderTextColor={colors.tertiaryLabel}
                   keyboardType="decimal-pad"
                   value={item.rate}
                   onChangeText={(text) => updateLineItem(item.id, 'rate', text)}
@@ -215,7 +219,7 @@ export default function PricingCalculatorTab({ projectId, estimateProgress }) {
 
         {/* Add Line Item Button */}
         <TouchableOpacity style={styles.addButton} onPress={addLineItem}>
-          <Ionicons name="add-circle-outline" size={24} color={COLORS.primary} />
+          <Ionicons name="add-circle-outline" size={24} color={colors.primary} />
           <Text style={styles.addButtonText}>Add Line Item</Text>
         </TouchableOpacity>
 
@@ -226,7 +230,7 @@ export default function PricingCalculatorTab({ projectId, estimateProgress }) {
           <TextInput
             style={styles.taxInput}
             placeholder="8.5"
-            placeholderTextColor={COLORS.tertiaryLabel}
+            placeholderTextColor={colors.tertiaryLabel}
             keyboardType="decimal-pad"
             value={taxRate}
             onChangeText={setTaxRate}
@@ -256,10 +260,10 @@ export default function PricingCalculatorTab({ projectId, estimateProgress }) {
           disabled={saving}
         >
           {saving ? (
-            <ActivityIndicator size="small" color={COLORS.systemBackground} />
+            <ActivityIndicator size="small" color={colors.systemBackground} />
           ) : (
             <>
-              <Ionicons name="save-outline" size={20} color={COLORS.systemBackground} />
+              <Ionicons name="save-outline" size={20} color={colors.systemBackground} />
               <Text style={styles.saveButtonText}>Save Calculator</Text>
             </>
           )}
@@ -271,7 +275,7 @@ export default function PricingCalculatorTab({ projectId, estimateProgress }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -285,17 +289,17 @@ const styles = StyleSheet.create({
   sectionLabel: {
     ...TYPOGRAPHY.caption1,
     fontWeight: '700',
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginBottom: SPACING.sm,
     letterSpacing: 0.5,
   },
   lineItem: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
     padding: SPACING.md,
     marginBottom: SPACING.sm,
     borderWidth: 1,
-    borderColor: COLORS.separator,
+    borderColor: colors.separator,
   },
   lineItemHeader: {
     flexDirection: 'row',
@@ -306,17 +310,17 @@ const styles = StyleSheet.create({
   lineItemNumber: {
     ...TYPOGRAPHY.footnote,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
   },
   input: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
-    backgroundColor: COLORS.systemBackground,
+    color: colors.label,
+    backgroundColor: colors.systemBackground,
     borderRadius: RADIUS.sm,
     padding: SPACING.sm,
     marginBottom: SPACING.sm,
     borderWidth: 1,
-    borderColor: COLORS.separator,
+    borderColor: colors.separator,
   },
   lineItemRow: {
     flexDirection: 'row',
@@ -328,41 +332,41 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     ...TYPOGRAPHY.caption2,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginBottom: 4,
   },
   smallInput: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
-    backgroundColor: COLORS.systemBackground,
+    color: colors.label,
+    backgroundColor: colors.systemBackground,
     borderRadius: RADIUS.sm,
     padding: SPACING.sm,
     borderWidth: 1,
-    borderColor: COLORS.separator,
+    borderColor: colors.separator,
     textAlign: 'center',
   },
   multiplier: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.tertiaryLabel,
+    color: colors.tertiaryLabel,
     marginBottom: SPACING.sm,
   },
   equals: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.tertiaryLabel,
+    color: colors.tertiaryLabel,
     marginBottom: SPACING.sm,
   },
   amountDisplay: {
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderRadius: RADIUS.sm,
     padding: SPACING.sm,
     borderWidth: 1,
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
     alignItems: 'center',
   },
   amountText: {
     ...TYPOGRAPHY.body,
     fontWeight: '600',
-    color: COLORS.primary,
+    color: colors.primary,
   },
   addButton: {
     flexDirection: 'row',
@@ -371,49 +375,49 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.md,
     gap: SPACING.sm,
     borderWidth: 1.5,
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
     borderRadius: RADIUS.md,
     borderStyle: 'dashed',
     marginTop: SPACING.xs,
   },
   addButtonText: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.primary,
+    color: colors.primary,
   },
   taxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
     padding: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.separator,
+    borderColor: colors.separator,
   },
   taxLabel: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
   },
   taxInput: {
     ...TYPOGRAPHY.body,
     fontWeight: '600',
-    color: COLORS.label,
-    backgroundColor: COLORS.systemBackground,
+    color: colors.label,
+    backgroundColor: colors.systemBackground,
     borderRadius: RADIUS.sm,
     paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.separator,
+    borderColor: colors.separator,
     minWidth: 80,
     textAlign: 'center',
   },
   totalsCard: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
     padding: SPACING.md,
     marginTop: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.separator,
+    borderColor: colors.separator,
   },
   totalRow: {
     flexDirection: 'row',
@@ -423,30 +427,30 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
   },
   totalValue: {
     ...TYPOGRAPHY.body,
     fontWeight: '600',
-    color: COLORS.label,
+    color: colors.label,
   },
   grandTotalRow: {
     borderTopWidth: 2,
-    borderTopColor: COLORS.separator,
+    borderTopColor: colors.separator,
     marginTop: SPACING.xs,
     paddingTop: SPACING.sm,
   },
   grandTotalLabel: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
   },
   grandTotalValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: COLORS.primary,
+    color: colors.primary,
   },
   saveButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -461,6 +465,6 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
   },
 });

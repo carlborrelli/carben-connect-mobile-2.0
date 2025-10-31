@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../../contexts/ThemeContext';
 import {
   View,
   Text,
@@ -14,11 +15,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { doc, setDoc, onSnapshot, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useAuth } from '../../contexts/AuthContext';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../../theme';
+import { TYPOGRAPHY, SPACING, RADIUS } from '../../theme';
 
 const API_BASE_URL = 'https://www.carbenconnect.com/api';
 
 export default function SendToQuickBooksTab({ projectId, project, estimateProgress }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   const { user } = useAuth();
   const [description, setDescription] = useState(null);
   const [calculator, setCalculator] = useState(null);
@@ -229,7 +233,7 @@ export default function SendToQuickBooksTab({ projectId, project, estimateProgre
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -247,7 +251,7 @@ export default function SendToQuickBooksTab({ projectId, project, estimateProgre
       >
         {alreadySent && (
           <View style={styles.statusBadge}>
-            <Ionicons name="checkmark-circle" size={16} color={COLORS.green} />
+            <Ionicons name="checkmark-circle" size={16} color={colors.green} />
             <Text style={styles.statusText}>Sent to QuickBooks</Text>
           </View>
         )}
@@ -264,7 +268,7 @@ export default function SendToQuickBooksTab({ projectId, project, estimateProgre
                 <Ionicons
                   name={item.passed ? 'checkmark' : 'close'}
                   size={16}
-                  color={item.passed ? COLORS.green : COLORS.red}
+                  color={item.passed ? colors.green : colors.red}
                 />
               </View>
               <Text style={[
@@ -289,9 +293,9 @@ export default function SendToQuickBooksTab({ projectId, project, estimateProgre
           >
             <View style={styles.assignCustomerContent}>
               {loadingCustomers ? (
-                <ActivityIndicator size="small" color={COLORS.primary} />
+                <ActivityIndicator size="small" color={colors.primary} />
               ) : (
-                <Ionicons name="person-add-outline" size={24} color={COLORS.primary} />
+                <Ionicons name="person-add-outline" size={24} color={colors.primary} />
               )}
               <View style={styles.assignCustomerText}>
                 <Text style={styles.assignCustomerTitle}>
@@ -302,18 +306,18 @@ export default function SendToQuickBooksTab({ projectId, project, estimateProgre
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={COLORS.gray3} />
+            <Ionicons name="chevron-forward" size={20} color={colors.gray3} />
           </TouchableOpacity>
         ) : (
           <View style={styles.currentCustomer}>
             <View style={styles.currentCustomerHeader}>
-              <Ionicons name="person-circle" size={28} color={COLORS.green} />
+              <Ionicons name="person-circle" size={28} color={colors.green} />
               <View style={styles.currentCustomerInfo}>
                 <Text style={styles.currentCustomerLabel}>Assigned Customer</Text>
                 <Text style={styles.currentCustomerName}>{project.qbCustomerName}</Text>
               </View>
               <TouchableOpacity onPress={handleAssignCustomer}>
-                <Ionicons name="create-outline" size={20} color={COLORS.blue} />
+                <Ionicons name="create-outline" size={20} color={colors.blue} />
               </TouchableOpacity>
             </View>
           </View>
@@ -358,7 +362,7 @@ export default function SendToQuickBooksTab({ projectId, project, estimateProgre
 
         {!allPassed && !alreadySent && (
           <View style={styles.helpContainer}>
-            <Ionicons name="information-circle-outline" size={20} color={COLORS.secondaryLabel} />
+            <Ionicons name="information-circle-outline" size={20} color={colors.secondaryLabel} />
             <Text style={styles.helpText}>
               Complete all checklist items above to enable sending to QuickBooks
             </Text>
@@ -377,12 +381,12 @@ export default function SendToQuickBooksTab({ projectId, project, estimateProgre
       >
         {sending ? (
           <>
-            <ActivityIndicator size="small" color={COLORS.systemBackground} />
+            <ActivityIndicator size="small" color={colors.systemBackground} />
             <Text style={styles.sendButtonText}>Sending...</Text>
           </>
         ) : (
           <>
-            <Ionicons name="cloud-upload" size={24} color={COLORS.systemBackground} />
+            <Ionicons name="cloud-upload" size={24} color={colors.systemBackground} />
             <Text style={styles.sendButtonText}>
               {alreadySent ? 'Update in QuickBooks' : 'Send to QuickBooks'}
             </Text>
@@ -417,7 +421,7 @@ export default function SendToQuickBooksTab({ projectId, project, estimateProgre
                 disabled={assigningCustomer}
               >
                 <View style={styles.customerIcon}>
-                  <Ionicons name="business" size={20} color={COLORS.primary} />
+                  <Ionicons name="business" size={20} color={colors.primary} />
                 </View>
                 <View style={styles.customerInfo}>
                   <Text style={styles.customerName}>
@@ -427,13 +431,13 @@ export default function SendToQuickBooksTab({ projectId, project, estimateProgre
                     <Text style={styles.customerCompany}>{customer.CompanyName}</Text>
                   )}
                 </View>
-                <Ionicons name="chevron-forward" size={20} color={COLORS.tertiaryLabel} />
+                <Ionicons name="chevron-forward" size={20} color={colors.tertiaryLabel} />
               </TouchableOpacity>
             ))}
 
             {qbCustomers.length === 0 && (
               <View style={styles.emptyCustomers}>
-                <Ionicons name="people-outline" size={48} color={COLORS.tertiaryLabel} />
+                <Ionicons name="people-outline" size={48} color={colors.tertiaryLabel} />
                 <Text style={styles.emptyText}>No QuickBooks customers found</Text>
               </View>
             )}
@@ -444,7 +448,7 @@ export default function SendToQuickBooksTab({ projectId, project, estimateProgre
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -473,23 +477,23 @@ const styles = StyleSheet.create({
   statusText: {
     ...TYPOGRAPHY.caption1,
     fontWeight: '600',
-    color: COLORS.green,
+    color: colors.green,
   },
   sectionLabel: {
     ...TYPOGRAPHY.caption1,
     fontWeight: '700',
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginBottom: SPACING.sm,
     marginTop: SPACING.md,
     letterSpacing: 0.5,
   },
   checklistCard: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
     padding: SPACING.md,
     gap: SPACING.sm,
     borderWidth: 1,
-    borderColor: COLORS.separator,
+    borderColor: colors.separator,
   },
   checklistItem: {
     flexDirection: 'row',
@@ -509,21 +513,21 @@ const styles = StyleSheet.create({
   },
   checklistLabel: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     flex: 1,
   },
   checklistLabelPassed: {
-    color: COLORS.label,
+    color: colors.label,
   },
   assignCustomerButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderRadius: RADIUS.md,
     padding: SPACING.md,
     borderWidth: 1.5,
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
   },
   assignCustomerContent: {
     flexDirection: 'row',
@@ -536,11 +540,11 @@ const styles = StyleSheet.create({
   },
   assignCustomerTitle: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
   },
   assignCustomerSubtitle: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginTop: 2,
   },
   currentCustomer: {
@@ -560,23 +564,23 @@ const styles = StyleSheet.create({
   },
   currentCustomerLabel: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginBottom: 2,
   },
   currentCustomerName: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
     fontWeight: '600',
   },
   summarySection: {
     marginTop: SPACING.md,
   },
   summaryCard: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
     padding: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.separator,
+    borderColor: colors.separator,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -588,25 +592,25 @@ const styles = StyleSheet.create({
     marginTop: SPACING.xs,
     paddingTop: SPACING.sm,
     borderTopWidth: 1,
-    borderTopColor: COLORS.separator,
+    borderTopColor: colors.separator,
   },
   summaryLabel: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
   },
   summaryValue: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
     fontWeight: '500',
   },
   summaryLabelTotal: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
     fontWeight: '700',
   },
   summaryValueTotal: {
     ...TYPOGRAPHY.title3,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   helpContainer: {
@@ -615,17 +619,17 @@ const styles = StyleSheet.create({
     gap: SPACING.xs,
     marginTop: SPACING.md,
     padding: SPACING.sm,
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
   },
   helpText: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     flex: 1,
     lineHeight: 16,
   },
   sendButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     marginTop: SPACING.md,
     marginBottom: SPACING.md,
     flexDirection: 'row',
@@ -640,12 +644,12 @@ const styles = StyleSheet.create({
   },
   sendButtonText: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
     fontWeight: '600',
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: COLORS.systemGroupedBackground,
+    backgroundColor: colors.systemGroupedBackground,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -653,17 +657,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: SPACING.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
-    backgroundColor: COLORS.systemBackground,
+    borderBottomColor: colors.separator,
+    backgroundColor: colors.systemBackground,
   },
   modalCancel: {
     ...TYPOGRAPHY.body,
-    color: COLORS.primary,
+    color: colors.primary,
     width: 60,
   },
   modalTitle: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
     fontWeight: '600',
   },
   customerList: {
@@ -673,9 +677,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: SPACING.md,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   customerIcon: {
     width: 40,
@@ -691,12 +695,12 @@ const styles = StyleSheet.create({
   },
   customerName: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
     fontWeight: '600',
   },
   customerCompany: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginTop: 2,
   },
   emptyCustomers: {
@@ -706,7 +710,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.tertiaryLabel,
+    color: colors.tertiaryLabel,
     marginTop: SPACING.sm,
   },
 });

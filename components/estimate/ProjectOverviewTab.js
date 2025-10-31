@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../../contexts/ThemeContext';
 import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../../theme';
+import { TYPOGRAPHY, SPACING, RADIUS } from '../../theme';
 
 const { width } = Dimensions.get('window');
 const PHOTO_SIZE = (width - (SPACING.lg * 3)) / 2;
 
 export default function ProjectOverviewTab({ project }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   const [clientDetails, setClientDetails] = useState(null);
   const [loadingClient, setLoadingClient] = useState(true);
 
@@ -38,7 +42,7 @@ export default function ProjectOverviewTab({ project }) {
   if (!project) {
     return (
       <View style={styles.emptyState}>
-        <Ionicons name="information-circle-outline" size={48} color={COLORS.gray3} />
+        <Ionicons name="information-circle-outline" size={48} color={colors.gray3} />
         <Text style={styles.emptyText}>No project information available</Text>
       </View>
     );
@@ -59,18 +63,18 @@ export default function ProjectOverviewTab({ project }) {
         <Text style={styles.sectionLabel}>CUSTOMER</Text>
         <View style={styles.infoCard}>
           <View style={styles.infoRow}>
-            <Ionicons name="business" size={22} color={COLORS.primary} />
+            <Ionicons name="business" size={22} color={colors.primary} />
             <View style={styles.infoTextContainer}>
               <Text style={styles.infoValue}>{clientDetails?.name || 'No client name'}</Text>
               {clientDetails?.email && (
                 <View style={styles.contactRow}>
-                  <Ionicons name="mail-outline" size={14} color={COLORS.secondaryLabel} />
+                  <Ionicons name="mail-outline" size={14} color={colors.secondaryLabel} />
                   <Text style={styles.contactText}>{clientDetails.email}</Text>
                 </View>
               )}
               {clientDetails?.phone && (
                 <View style={styles.contactRow}>
-                  <Ionicons name="call-outline" size={14} color={COLORS.secondaryLabel} />
+                  <Ionicons name="call-outline" size={14} color={colors.secondaryLabel} />
                   <Text style={styles.contactText}>{clientDetails.phone}</Text>
                 </View>
               )}
@@ -84,7 +88,7 @@ export default function ProjectOverviewTab({ project }) {
         <Text style={styles.sectionLabel}>PROJECT LOCATION</Text>
         <View style={styles.infoCard}>
           <View style={styles.infoRow}>
-            <Ionicons name="location" size={22} color={COLORS.blue} />
+            <Ionicons name="location" size={22} color={colors.blue} />
             <Text style={styles.infoValue}>
               {projectLocation || 'No location specified'}
             </Text>
@@ -114,7 +118,7 @@ export default function ProjectOverviewTab({ project }) {
                     <Ionicons
                       name={isProjectLocation ? "location" : "location-outline"}
                       size={18}
-                      color={isProjectLocation ? COLORS.primary : COLORS.secondaryLabel}
+                      color={isProjectLocation ? colors.primary : colors.secondaryLabel}
                     />
                     <Text style={[
                       styles.locationName,
@@ -141,7 +145,7 @@ export default function ProjectOverviewTab({ project }) {
           <Text style={styles.sectionLabel}>CLIENT LOCATION</Text>
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
-              <Ionicons name="map-outline" size={20} color={COLORS.secondaryLabel} />
+              <Ionicons name="map-outline" size={20} color={colors.secondaryLabel} />
               <Text style={styles.infoValue}>{clientDetails.qbCustomers[0].name}</Text>
             </View>
           </View>
@@ -154,7 +158,7 @@ export default function ProjectOverviewTab({ project }) {
           <Text style={styles.sectionLabel}>CLIENT LOCATION</Text>
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
-              <Ionicons name="map-outline" size={20} color={COLORS.secondaryLabel} />
+              <Ionicons name="map-outline" size={20} color={colors.secondaryLabel} />
               <Text style={styles.infoValue}>{clientDetails.qbLocationName}</Text>
             </View>
           </View>
@@ -194,7 +198,7 @@ export default function ProjectOverviewTab({ project }) {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>PHOTOS</Text>
           <View style={styles.emptyPhotosCard}>
-            <Ionicons name="images-outline" size={48} color={COLORS.tertiaryLabel} />
+            <Ionicons name="images-outline" size={48} color={colors.tertiaryLabel} />
             <Text style={styles.emptyPhotosText}>No photos added yet</Text>
           </View>
         </View>
@@ -205,7 +209,7 @@ export default function ProjectOverviewTab({ project }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -220,7 +224,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.tertiaryLabel,
+    color: colors.tertiaryLabel,
     marginTop: SPACING.sm,
   },
   section: {
@@ -229,12 +233,12 @@ const styles = StyleSheet.create({
   sectionLabel: {
     ...TYPOGRAPHY.caption1,
     fontWeight: '700',
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginBottom: SPACING.sm,
     letterSpacing: 0.5,
   },
   infoCard: {
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderRadius: RADIUS.md,
     padding: SPACING.md,
   },
@@ -248,7 +252,7 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
     fontWeight: '600',
     marginBottom: SPACING.xs / 2,
   },
@@ -260,20 +264,20 @@ const styles = StyleSheet.create({
   },
   contactText: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
   },
   locationsContainer: {
     gap: SPACING.sm,
   },
   locationCard: {
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderRadius: RADIUS.md,
     padding: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.separator,
+    borderColor: colors.separator,
   },
   locationCardActive: {
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
     borderWidth: 2,
     backgroundColor: 'rgba(0, 122, 255, 0.05)',
   },
@@ -285,46 +289,46 @@ const styles = StyleSheet.create({
   },
   locationName: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
     fontWeight: '600',
     flex: 1,
   },
   locationNameActive: {
-    color: COLORS.primary,
+    color: colors.primary,
   },
   currentBadge: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: SPACING.xs,
     paddingVertical: 2,
     borderRadius: RADIUS.sm,
   },
   currentBadgeText: {
     ...TYPOGRAPHY.caption2,
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
     fontWeight: '700',
     fontSize: 10,
   },
   locationAddress: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
     marginLeft: 24,
     lineHeight: 20,
   },
   locationNotes: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginLeft: 24,
     marginTop: SPACING.xs / 2,
     fontStyle: 'italic',
   },
   descriptionCard: {
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderRadius: RADIUS.md,
     padding: SPACING.md,
   },
   descriptionText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
     lineHeight: 22,
   },
   photoGrid: {
@@ -337,21 +341,21 @@ const styles = StyleSheet.create({
     height: PHOTO_SIZE,
     borderRadius: RADIUS.md,
     overflow: 'hidden',
-    backgroundColor: COLORS.tertiarySystemBackground,
+    backgroundColor: colors.tertiarySystemBackground,
   },
   photo: {
     width: '100%',
     height: '100%',
   },
   emptyPhotosCard: {
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderRadius: RADIUS.md,
     padding: SPACING.xxl,
     alignItems: 'center',
   },
   emptyPhotosText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.tertiaryLabel,
+    color: colors.tertiaryLabel,
     marginTop: SPACING.sm,
   },
 });

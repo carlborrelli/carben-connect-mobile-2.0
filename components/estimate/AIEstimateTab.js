@@ -17,14 +17,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { doc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useAuth } from '../../contexts/AuthContext';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS } from '../../theme';
+import { TYPOGRAPHY, SPACING, RADIUS } from '../../theme';
 import { generateEstimate } from '../../config/openai';
+import { useTheme } from '../../contexts/ThemeContext';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
 export default function AIEstimateTab({ projectId, project, estimateProgress }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { user } = useAuth();
   const [description, setDescription] = useState(null);
   const [estimateText, setEstimateText] = useState('');
@@ -292,7 +295,7 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -310,7 +313,7 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
       >
         {isFinalized && (
           <View style={styles.statusBadge}>
-            <Ionicons name="checkmark-circle" size={16} color={COLORS.green} />
+            <Ionicons name="checkmark-circle" size={16} color={colors.green} />
             <Text style={styles.statusText}>Finalized</Text>
           </View>
         )}
@@ -324,13 +327,13 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
             activeOpacity={0.7}
           >
             <View style={styles.aiToolToggleLeft}>
-              <Ionicons name="bulb-outline" size={18} color={COLORS.primary} />
+              <Ionicons name="bulb-outline" size={18} color={colors.primary} />
               <Text style={styles.aiToolToggleText}>AI Instructions</Text>
             </View>
             <Ionicons
               name={showInstructions ? 'chevron-up' : 'chevron-down'}
               size={18}
-              color={COLORS.gray2}
+              color={colors.gray2}
             />
           </TouchableOpacity>
 
@@ -341,13 +344,13 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
             activeOpacity={0.7}
           >
             <View style={styles.aiToolToggleLeft}>
-              <Ionicons name="chatbubbles-outline" size={18} color={COLORS.primary} />
+              <Ionicons name="chatbubbles-outline" size={18} color={colors.primary} />
               <Text style={styles.aiToolToggleText}>AI Assistant</Text>
             </View>
             <Ionicons
               name={showChat ? 'chevron-up' : 'chevron-down'}
               size={18}
-              color={COLORS.gray2}
+              color={colors.gray2}
             />
           </TouchableOpacity>
         </View>
@@ -360,7 +363,7 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
               value={additionalInstructions}
               onChangeText={setAdditionalInstructions}
               placeholder="Add specific instructions for AI (e.g., 'Include 2-year warranty', 'Use premium materials')..."
-              placeholderTextColor={COLORS.quaternaryLabel}
+              placeholderTextColor={colors.quaternaryLabel}
               multiline
               textAlignVertical="top"
             />
@@ -377,7 +380,7 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
             >
               {chatMessages.length === 0 ? (
                 <View style={styles.chatEmpty}>
-                  <Ionicons name="chatbubbles-outline" size={48} color={COLORS.quaternaryLabel} />
+                  <Ionicons name="chatbubbles-outline" size={48} color={colors.quaternaryLabel} />
                   <Text style={styles.chatEmptyText}>Ask me anything about your estimate!</Text>
                   <Text style={styles.chatEmptySubtext}>I have context about your project</Text>
                 </View>
@@ -392,7 +395,7 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
                   >
                     <Text style={[
                       styles.chatBubbleText,
-                      msg.role === 'user' && { color: COLORS.systemBackground }
+                      msg.role === 'user' && { color: colors.systemBackground }
                     ]}>
                       {msg.content}
                     </Text>
@@ -407,7 +410,7 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
                 value={chatInput}
                 onChangeText={setChatInput}
                 placeholder="Ask a question..."
-                placeholderTextColor={COLORS.quaternaryLabel}
+                placeholderTextColor={colors.quaternaryLabel}
                 multiline
                 maxLength={500}
                 onSubmitEditing={sendChatMessage}
@@ -418,9 +421,9 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
                 disabled={!chatInput.trim() || sendingMessage}
               >
                 {sendingMessage ? (
-                  <ActivityIndicator size="small" color={COLORS.systemBackground} />
+                  <ActivityIndicator size="small" color={colors.systemBackground} />
                 ) : (
-                  <Ionicons name="send" size={20} color={COLORS.systemBackground} />
+                  <Ionicons name="send" size={20} color={colors.systemBackground} />
                 )}
               </TouchableOpacity>
             </View>
@@ -435,10 +438,10 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
             disabled={importing || !hasProjectDescription}
           >
             {importing ? (
-              <ActivityIndicator size="small" color={COLORS.primary} />
+              <ActivityIndicator size="small" color={colors.primary} />
             ) : (
               <>
-                <Ionicons name="download-outline" size={20} color={COLORS.primary} />
+                <Ionicons name="download-outline" size={20} color={colors.primary} />
                 <Text style={styles.importButtonText}>Import Description</Text>
               </>
             )}
@@ -450,10 +453,10 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
             disabled={importing || !hasProjectDescription}
           >
             {importing ? (
-              <ActivityIndicator size="small" color={COLORS.systemBackground} />
+              <ActivityIndicator size="small" color={colors.systemBackground} />
             ) : (
               <>
-                <Ionicons name="sparkles" size={20} color={COLORS.systemBackground} />
+                <Ionicons name="sparkles" size={20} color={colors.systemBackground} />
                 <Text style={styles.importButtonTextPrimary}>Import with AI</Text>
               </>
             )}
@@ -477,13 +480,13 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
             disabled={saving}
           >
             {saving ? (
-              <ActivityIndicator size="small" color={COLORS.systemBackground} />
+              <ActivityIndicator size="small" color={colors.systemBackground} />
             ) : (
               <>
                 <Ionicons
                   name={isFinalized ? "create-outline" : "checkmark-circle"}
                   size={20}
-                  color={COLORS.systemBackground}
+                  color={colors.systemBackground}
                 />
                 <Text style={styles.finalizeButtonText}>
                   {isFinalized ? 'Edit Estimate' : 'Finalize Estimate'}
@@ -498,7 +501,7 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
             <Text style={styles.sectionLabel}>ESTIMATE DESCRIPTION</Text>
             {lastSaved && !isFinalized && (
               <View style={styles.autoSaveIndicator}>
-                <Ionicons name="checkmark-circle" size={12} color={COLORS.green} />
+                <Ionicons name="checkmark-circle" size={12} color={colors.green} />
                 <Text style={styles.autoSaveText}>
                   Saved {new Date(lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </Text>
@@ -522,7 +525,7 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
               }
             }}
             placeholder="Type or paste your estimate here, or use the import buttons above..."
-            placeholderTextColor={COLORS.quaternaryLabel}
+            placeholderTextColor={colors.quaternaryLabel}
             multiline
             textAlignVertical="top"
           />
@@ -534,10 +537,10 @@ export default function AIEstimateTab({ projectId, project, estimateProgress }) 
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: { 
     flex: 1,
-    backgroundColor: COLORS.systemGroupedBackground,
+    backgroundColor: colors.systemGroupedBackground,
   },
   loadingContainer: { 
     flex: 1, 
@@ -564,7 +567,7 @@ const styles = StyleSheet.create({
   statusText: {
     ...TYPOGRAPHY.caption1,
     fontWeight: '600',
-    color: COLORS.green,
+    color: colors.green,
   },
   aiToolsRow: {
     flexDirection: 'row',
@@ -576,12 +579,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderRadius: RADIUS.md,
     padding: SPACING.sm,
     paddingHorizontal: SPACING.md,
     borderWidth: 1,
-    borderColor: COLORS.separator,
+    borderColor: colors.separator,
   },
   aiToolToggleLeft: {
     flexDirection: 'row',
@@ -590,20 +593,20 @@ const styles = StyleSheet.create({
   },
   aiToolToggleText: {
     ...TYPOGRAPHY.footnote,
-    color: COLORS.label,
+    color: colors.label,
     fontWeight: '600',
   },
   aiToolContainer: {
     marginBottom: SPACING.md,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.separator,
+    borderColor: colors.separator,
     overflow: 'hidden',
   },
   instructionsInput: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
     padding: SPACING.md,
     minHeight: 100,
   },
@@ -623,12 +626,12 @@ const styles = StyleSheet.create({
   },
   chatEmptyText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     fontWeight: '600',
   },
   chatEmptySubtext: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.quaternaryLabel,
+    color: colors.quaternaryLabel,
   },
   chatBubble: {
     padding: SPACING.sm,
@@ -637,11 +640,11 @@ const styles = StyleSheet.create({
     maxWidth: '80%',
   },
   chatBubbleUser: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     alignSelf: 'flex-end',
   },
   chatBubbleAssistant: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     alignSelf: 'flex-start',
   },
   chatBubbleText: {
@@ -652,23 +655,23 @@ const styles = StyleSheet.create({
     padding: SPACING.sm,
     gap: SPACING.sm,
     borderTopWidth: 1,
-    borderTopColor: COLORS.separator,
-    backgroundColor: COLORS.systemGroupedBackground,
+    borderTopColor: colors.separator,
+    backgroundColor: colors.systemGroupedBackground,
   },
   chatInput: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
-    backgroundColor: COLORS.systemBackground,
+    color: colors.label,
+    backgroundColor: colors.systemBackground,
     borderRadius: RADIUS.md,
     padding: SPACING.sm,
     paddingHorizontal: SPACING.md,
     flex: 1,
     maxHeight: 80,
     borderWidth: 1,
-    borderColor: COLORS.separator,
+    borderColor: colors.separator,
   },
   chatSendButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     width: 44,
     height: 44,
     borderRadius: RADIUS.md,
@@ -692,30 +695,30 @@ const styles = StyleSheet.create({
   importButtonLeft: {
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: COLORS.primary,
+    borderColor: colors.primary,
   },
   importButtonRight: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   importButtonText: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.primary,
+    color: colors.primary,
     fontSize: 15,
   },
   importButtonTextPrimary: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
     fontSize: 15,
   },
   helpText: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     textAlign: 'center',
     marginBottom: SPACING.md,
     lineHeight: 16,
   },
   finalizeButton: { 
-    backgroundColor: COLORS.green, 
+    backgroundColor: colors.green, 
     flexDirection: 'row', 
     alignItems: 'center', 
     justifyContent: 'center', 
@@ -725,7 +728,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   editButton: { 
-    backgroundColor: COLORS.blue, 
+    backgroundColor: colors.blue, 
     flexDirection: 'row', 
     alignItems: 'center', 
     justifyContent: 'center', 
@@ -746,7 +749,7 @@ const styles = StyleSheet.create({
   sectionLabel: { 
     ...TYPOGRAPHY.caption1, 
     fontWeight: '700', 
-    color: COLORS.secondaryLabel, 
+    color: colors.secondaryLabel, 
     letterSpacing: 0.5,
   },
   autoSaveIndicator: { 
@@ -756,24 +759,24 @@ const styles = StyleSheet.create({
   },
   autoSaveText: { 
     ...TYPOGRAPHY.caption2, 
-    color: COLORS.secondaryLabel, 
+    color: colors.secondaryLabel, 
     fontSize: 11,
   },
   estimateTextInput: { 
     ...TYPOGRAPHY.body, 
-    color: COLORS.label, 
-    backgroundColor: COLORS.systemBackground, 
+    color: colors.label, 
+    backgroundColor: colors.systemBackground, 
     borderRadius: RADIUS.md, 
     padding: SPACING.md, 
     minHeight: 300, 
     borderWidth: 1, 
-    borderColor: COLORS.separator,
+    borderColor: colors.separator,
   },
   buttonDisabled: { 
     opacity: 0.5,
   },
   finalizeButtonText: { 
     ...TYPOGRAPHY.headline, 
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
   },
 });
