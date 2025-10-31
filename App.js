@@ -3,19 +3,20 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import Navigation from './navigation';
 import LoginScreen from './screens/LoginScreen';
-import { COLORS } from './theme';
 
 // Main app content (conditionally renders login or navigation)
 function AppContent() {
   const { user, loading } = useAuth();
+  const { colors } = useTheme();
 
   // Show loading spinner while checking auth state
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.systemBackground }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -32,17 +33,18 @@ function AppContent() {
 // Root app component
 export default function App() {
   return (
-    <AuthProvider>
-      <StatusBar style="auto" />
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <StatusBar style="auto" />
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    backgroundColor: COLORS.systemBackground,
     alignItems: 'center',
     justifyContent: 'center',
   },

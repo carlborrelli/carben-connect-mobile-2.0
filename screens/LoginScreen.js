@@ -14,13 +14,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '../contexts/AuthContext';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, TOUCH_TARGET } from '../theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { TYPOGRAPHY, SPACING, RADIUS, TOUCH_TARGET } from '../theme';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, error } = useAuth();
+  const { colors } = useTheme();
 
   const handleLogin = async () => {
     // Validate inputs
@@ -46,7 +48,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.systemBackground }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -54,19 +56,22 @@ export default function LoginScreen() {
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Carben Connect</Text>
-            <Text style={styles.subtitle}>Sign in to continue</Text>
+            <Text style={[styles.title, { color: colors.label }]}>Carben Connect</Text>
+            <Text style={[styles.subtitle, { color: colors.secondaryLabel }]}>Sign in to continue</Text>
           </View>
 
           {/* Form */}
           <View style={styles.form}>
             {/* Email Input */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={[styles.label, { color: colors.label }]}>Email</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { 
+                  backgroundColor: colors.secondarySystemBackground,
+                  color: colors.label 
+                }]}
                 placeholder="Enter your email"
-                placeholderTextColor={COLORS.tertiaryLabel}
+                placeholderTextColor={colors.tertiaryLabel}
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
@@ -80,11 +85,14 @@ export default function LoginScreen() {
 
             {/* Password Input */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={[styles.label, { color: colors.label }]}>Password</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { 
+                  backgroundColor: colors.secondarySystemBackground,
+                  color: colors.label 
+                }]}
                 placeholder="Enter your password"
-                placeholderTextColor={COLORS.tertiaryLabel}
+                placeholderTextColor={colors.tertiaryLabel}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -99,22 +107,29 @@ export default function LoginScreen() {
 
             {/* Sign In Button */}
             <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
+              style={[
+                styles.button,
+                { 
+                  backgroundColor: colors.primary,
+                  shadowColor: colors.primary 
+                },
+                isLoading && styles.buttonDisabled
+              ]}
               onPress={handleLogin}
               disabled={isLoading}
               activeOpacity={0.8}
             >
               {isLoading ? (
-                <ActivityIndicator color={COLORS.systemBackground} />
+                <ActivityIndicator color={colors.systemBackground} />
               ) : (
-                <Text style={styles.buttonText}>Sign In</Text>
+                <Text style={[styles.buttonText, { color: 'white' }]}>Sign In</Text>
               )}
             </TouchableOpacity>
           </View>
 
           {/* Footer */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>
+            <Text style={[styles.footerText, { color: colors.tertiaryLabel }]}>
               Construction project management
             </Text>
           </View>
@@ -127,7 +142,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.systemBackground,
   },
   keyboardView: {
     flex: 1,
@@ -143,12 +157,10 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TYPOGRAPHY.largeTitle,
-    color: COLORS.label,
     marginBottom: SPACING.xs,
   },
   subtitle: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
   },
   form: {
     width: '100%',
@@ -158,28 +170,23 @@ const styles = StyleSheet.create({
   },
   label: {
     ...TYPOGRAPHY.subheadline,
-    color: COLORS.label,
     marginBottom: SPACING.xs,
     fontWeight: '600',
   },
   input: {
     ...TYPOGRAPHY.body,
-    backgroundColor: COLORS.secondarySystemBackground,
     borderRadius: RADIUS.md,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
-    color: COLORS.label,
     minHeight: TOUCH_TARGET.min,
   },
   button: {
-    backgroundColor: COLORS.primary,
     borderRadius: RADIUS.md,
     paddingVertical: SPACING.md,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: SPACING.lg,
     minHeight: TOUCH_TARGET.comfortable,
-    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -190,7 +197,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.systemBackground,
     fontWeight: '600',
   },
   footer: {
@@ -199,6 +205,5 @@ const styles = StyleSheet.create({
   },
   footerText: {
     ...TYPOGRAPHY.footnote,
-    color: COLORS.tertiaryLabel,
   },
 });

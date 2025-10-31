@@ -5,22 +5,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '../contexts/AuthContext';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { useTheme } from '../contexts/ThemeContext';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 
 export default function HomeScreen({ navigation }) {
   const { userProfile, isAdmin } = useAuth();
+  const { colors } = useTheme();
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.systemGroupedBackground }]} edges={['top']}>
       {/* Header with icons */}
-      <View style={styles.headerBar}>
-        <Text style={styles.headerTitle}>Home</Text>
+      <View style={[styles.headerBar, { backgroundColor: colors.systemBackground }]}>
+        <Text style={[styles.headerTitle, { color: colors.label }]}>Home</Text>
         <View style={styles.headerIcons}>
           <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Calendar")}>
-            <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
+            <Ionicons name="calendar-outline" size={24} color={colors.label} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
-            <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
+            <Ionicons name="person-circle-outline" size={24} color={colors.label} />
           </TouchableOpacity>
         </View>
       </View>
@@ -28,26 +30,29 @@ export default function HomeScreen({ navigation }) {
       <ScrollView contentContainerStyle={styles.content}>
         {/* Greeting */}
         <View style={styles.greeting}>
-          <Text style={styles.greetingText}>Welcome back,</Text>
-          <Text style={styles.name}>{userProfile?.name || 'User'}</Text>
+          <Text style={[styles.greetingText, { color: colors.secondaryLabel }]}>Welcome back,</Text>
+          <Text style={[styles.name, { color: colors.label }]}>{userProfile?.name || 'User'}</Text>
         </View>
 
         {/* Quick Stats */}
         <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>0</Text>
-            <Text style={styles.statLabel}>Active Projects</Text>
+          <View style={[styles.statCard, { backgroundColor: colors.secondarySystemGroupedBackground }]}>
+            <Text style={[styles.statNumber, { color: colors.primary }]}>0</Text>
+            <Text style={[styles.statLabel, { color: colors.secondaryLabel }]}>Active Projects</Text>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>0</Text>
-            <Text style={styles.statLabel}>Unread Messages</Text>
+          <View style={[styles.statCard, { backgroundColor: colors.secondarySystemGroupedBackground }]}>
+            <Text style={[styles.statNumber, { color: colors.primary }]}>0</Text>
+            <Text style={[styles.statLabel, { color: colors.secondaryLabel }]}>Unread Messages</Text>
           </View>
         </View>
 
         {/* Admin Quick Access - Drafts & Estimates */}
         {isAdmin() && (
           <TouchableOpacity 
-            style={styles.draftsBanner}
+            style={[styles.draftsBanner, { 
+              backgroundColor: colors.secondarySystemGroupedBackground,
+              borderColor: colors.primary 
+            }]}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               navigation.navigate("Drafts");
@@ -56,57 +61,57 @@ export default function HomeScreen({ navigation }) {
           >
             <View style={styles.draftsBannerLeft}>
               <View style={styles.draftsBannerIcon}>
-                <Ionicons name="document-text" size={28} color={COLORS.primary} />
+                <Ionicons name="document-text" size={28} color={colors.primary} />
               </View>
               <View style={styles.draftsBannerContent}>
-                <Text style={styles.draftsBannerTitle}>Drafts & Estimates</Text>
-                <Text style={styles.draftsBannerSubtitle}>
+                <Text style={[styles.draftsBannerTitle, { color: colors.label }]}>Drafts & Estimates</Text>
+                <Text style={[styles.draftsBannerSubtitle, { color: colors.secondaryLabel }]}>
                   Create and manage project estimates
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={24} color={COLORS.gray2} />
+            <Ionicons name="chevron-forward" size={24} color={colors.gray2} />
           </TouchableOpacity>
         )}
 
         {/* Quick Actions */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={[styles.sectionTitle, { color: colors.label }]}>Quick Actions</Text>
           <View style={styles.actionsGrid}>
             <TouchableOpacity 
-              style={styles.actionCard} 
+              style={[styles.actionCard, { backgroundColor: colors.secondarySystemGroupedBackground }]} 
               onPress={() => { 
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); 
                 navigation.navigate("NewProject"); 
               }}
             >
               <View style={[styles.actionIcon, { backgroundColor: 'rgba(0, 122, 255, 0.2)' }]}>
-                <Ionicons name="add-circle" size={28} color={COLORS.blue} />
+                <Ionicons name="add-circle" size={28} color={colors.blue} />
               </View>
-              <Text style={styles.actionText}>New Project</Text>
+              <Text style={[styles.actionText, { color: colors.label }]}>New Project</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={styles.actionCard} 
+              style={[styles.actionCard, { backgroundColor: colors.secondarySystemGroupedBackground }]} 
               onPress={() => { 
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); 
                 navigation.navigate("AddPhotos"); 
               }}
             >
               <View style={[styles.actionIcon, { backgroundColor: 'rgba(52, 199, 89, 0.2)' }]}>
-                <Ionicons name="camera" size={28} color={COLORS.green} />
+                <Ionicons name="camera" size={28} color={colors.green} />
               </View>
-              <Text style={styles.actionText}>Add Photos</Text>
+              <Text style={[styles.actionText, { color: colors.label }]}>Add Photos</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Coming Soon */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Activity</Text>
-          <View style={styles.emptyState}>
-            <Ionicons name="time-outline" size={48} color={COLORS.tertiaryLabel} />
-            <Text style={styles.emptyText}>No recent activity</Text>
+          <Text style={[styles.sectionTitle, { color: colors.label }]}>Recent Activity</Text>
+          <View style={[styles.emptyState, { backgroundColor: colors.secondarySystemGroupedBackground }]}>
+            <Ionicons name="time-outline" size={48} color={colors.tertiaryLabel} />
+            <Text style={[styles.emptyText, { color: colors.tertiaryLabel }]}>No recent activity</Text>
           </View>
         </View>
       </ScrollView>
@@ -117,7 +122,6 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.systemGroupedBackground,
   },
   headerBar: {
     flexDirection: 'row',
@@ -125,11 +129,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
-    backgroundColor: COLORS.systemBackground,
   },
   headerTitle: {
     ...TYPOGRAPHY.largeTitle,
-    color: COLORS.label,
   },
   headerIcons: {
     flexDirection: 'row',
@@ -149,11 +151,9 @@ const styles = StyleSheet.create({
   },
   greetingText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
   },
   name: {
     ...TYPOGRAPHY.title1,
-    color: COLORS.label,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -162,30 +162,25 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
     padding: SPACING.lg,
     borderRadius: RADIUS.lg,
     ...SHADOWS.small,
   },
   statNumber: {
     ...TYPOGRAPHY.title1,
-    color: COLORS.primary,
     marginBottom: SPACING.xs,
   },
   statLabel: {
     ...TYPOGRAPHY.footnote,
-    color: COLORS.secondaryLabel,
   },
   draftsBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
     padding: SPACING.md,
     borderRadius: RADIUS.lg,
     marginBottom: SPACING.lg,
     borderWidth: 1.5,
-    borderColor: COLORS.primary,
     ...SHADOWS.small,
   },
   draftsBannerLeft: {
@@ -207,12 +202,10 @@ const styles = StyleSheet.create({
   },
   draftsBannerTitle: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
     marginBottom: 2,
   },
   draftsBannerSubtitle: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
     lineHeight: 16,
   },
   section: {
@@ -220,7 +213,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...TYPOGRAPHY.title3,
-    color: COLORS.label,
     marginBottom: SPACING.md,
   },
   actionsGrid: {
@@ -229,7 +221,6 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     flex: 1,
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
     padding: SPACING.lg,
     borderRadius: RADIUS.lg,
     alignItems: 'center',
@@ -245,18 +236,15 @@ const styles = StyleSheet.create({
   },
   actionText: {
     ...TYPOGRAPHY.footnote,
-    color: COLORS.label,
     textAlign: 'center',
   },
   emptyState: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
     padding: SPACING.xxl,
     borderRadius: RADIUS.lg,
     alignItems: 'center',
   },
   emptyText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.tertiaryLabel,
     marginTop: SPACING.sm,
   },
 });
