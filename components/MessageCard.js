@@ -98,6 +98,8 @@ const createStyles = (colors) => StyleSheet.create({
   cardUnread: {
     borderLeftWidth: 3,
     borderLeftColor: colors.primary,
+    borderBottomWidth: 3,
+    borderBottomColor: colors.primary,
   },
   unreadText: {
     fontWeight: '600',
