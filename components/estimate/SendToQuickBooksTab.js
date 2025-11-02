@@ -65,20 +65,27 @@ export default function SendToQuickBooksTab({ projectId, project, estimateProgre
   const fetchQBCustomers = async () => {
     setLoadingCustomers(true);
     try {
+      console.log('Fetching QB customers from:', `${API_BASE_URL}/quickbooks/customers`);
       const response = await fetch(`${API_BASE_URL}/quickbooks/customers`);
 
+      console.log('QB customers response status:', response.status);
+      console.log('QB customers response ok:', response.ok);
+
       if (!response.ok) {
-        throw new Error('Failed to fetch QB customers');
+        const errorText = await response.text();
+        console.error('QB customers API error:', errorText);
+        throw new Error(`Failed to fetch QB customers: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log('QB customers data:', data);
       setQbCustomers(data.customers || []);
       setShowCustomerPicker(true);
     } catch (error) {
       console.error('Error fetching QB customers:', error);
       Alert.alert(
-        'Error',
-        'Failed to load QuickBooks customers. Please ensure QuickBooks is connected.',
+        'QuickBooks Connection Error',
+        `Failed to load QuickBooks customers.\n\nError: ${error.message}\n\nPlease ensure:\n1. The backend API is running\n2. QuickBooks is connected\n3. You have proper permissions`,
         [{ text: 'OK' }]
       );
     } finally {
