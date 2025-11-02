@@ -96,7 +96,6 @@ const createStyles = (colors) => StyleSheet.create({
     ...SHADOWS.small,
   },
   cardUnread: {
-    backgroundColor: colors.primary + '08',
     borderLeftWidth: 3,
     borderLeftColor: colors.primary,
   },
