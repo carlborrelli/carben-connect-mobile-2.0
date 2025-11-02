@@ -1,5 +1,6 @@
 // ProjectDetailScreen - View full project details
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   View,
   Text,
@@ -18,18 +19,18 @@ import * as Haptics from 'expo-haptics';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
 
 const { width, height } = Dimensions.get('window');
 const PHOTO_SIZE = (width - (SPACING.lg * 3)) / 2;
 
 const STATUS_COLORS = {
-  'NEW': COLORS.blue,
-  'ESTIMATE_SENT': COLORS.purple,
-  'APPROVED': COLORS.green,
-  'IN_PROGRESS': COLORS.orange,
-  'COMPLETE': COLORS.teal,
-  'PAID': COLORS.green,
+  'NEW': colors.blue,
+  'ESTIMATE_SENT': colors.purple,
+  'APPROVED': colors.green,
+  'IN_PROGRESS': colors.orange,
+  'COMPLETE': colors.teal,
+  'PAID': colors.green,
 };
 
 const STATUS_LABELS = {
@@ -42,6 +43,8 @@ const STATUS_LABELS = {
 };
 
 export default function ProjectDetailScreen({ route, navigation }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { projectId } = route.params;
   const { userProfile } = useAuth();
   const [project, setProject] = useState(null);
@@ -87,13 +90,13 @@ export default function ProjectDetailScreen({ route, navigation }) {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
+            <Ionicons name="chevron-back" size={28} color={colors.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Project Details</Text>
           <View style={{ width: 44 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -104,7 +107,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
+            <Ionicons name="chevron-back" size={28} color={colors.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Project Details</Text>
           <View style={{ width: 44 }} />
@@ -116,7 +119,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
     );
   }
 
-  const statusColor = STATUS_COLORS[project.status] || COLORS.gray;
+  const statusColor = STATUS_COLORS[project.status] || colors.gray;
   const statusLabel = STATUS_LABELS[project.status] || project.status;
 
   return (
@@ -124,7 +127,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
+          <Ionicons name="chevron-back" size={28} color={colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Project Details</Text>
         {/* Add Estimate Button in Header for Admins */}
@@ -133,7 +136,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
             onPress={handleCreateEstimate}
             style={styles.headerEstimateButton}
           >
-            <Ionicons name="calculator" size={24} color={COLORS.primary} />
+            <Ionicons name="calculator" size={24} color={colors.primary} />
           </TouchableOpacity>
         )}
         {!isAdmin && <View style={{ width: 44 }} />}
@@ -161,7 +164,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
           >
             <View style={styles.estimateCardLeft}>
               <View style={styles.estimateIconContainer}>
-                <Ionicons name="calculator" size={32} color={COLORS.systemBackground} />
+                <Ionicons name="calculator" size={32} color={colors.systemBackground} />
               </View>
               <View style={styles.estimateCardContent}>
                 <Text style={styles.estimateCardTitle}>
@@ -172,7 +175,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={28} color={COLORS.primary} />
+            <Ionicons name="chevron-forward" size={28} color={colors.primary} />
           </TouchableOpacity>
         )}
 
@@ -180,7 +183,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
         {project.clientName && (
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
-              <Ionicons name="person-outline" size={20} color={COLORS.secondaryLabel} />
+              <Ionicons name="person-outline" size={20} color={colors.secondaryLabel} />
               <Text style={styles.infoLabel}>Client</Text>
             </View>
             <Text style={styles.infoValue}>{project.clientName}</Text>
@@ -191,7 +194,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
         {project.description && (
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
-              <Ionicons name="document-text-outline" size={20} color={COLORS.secondaryLabel} />
+              <Ionicons name="document-text-outline" size={20} color={colors.secondaryLabel} />
               <Text style={styles.infoLabel}>Description</Text>
             </View>
             <Text style={styles.infoValue}>{project.description}</Text>
@@ -202,7 +205,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
         {project.photos && project.photos.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="images-outline" size={20} color={COLORS.label} />
+              <Ionicons name="images-outline" size={20} color={colors.label} />
               <Text style={styles.sectionTitle}>Photos ({project.photos.length})</Text>
             </View>
             <View style={styles.photoGrid}>
@@ -227,7 +230,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
         {(!project.photos || project.photos.length === 0) && (
           <View style={styles.infoCard}>
             <View style={styles.emptyPhotos}>
-              <Ionicons name="images-outline" size={48} color={COLORS.tertiaryLabel} />
+              <Ionicons name="images-outline" size={48} color={colors.tertiaryLabel} />
               <Text style={styles.emptyPhotosText}>No photos yet</Text>
             </View>
           </View>
@@ -250,7 +253,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
               style={styles.closeButton}
               onPress={closePhotoViewer}
             >
-              <Ionicons name="close" size={32} color={COLORS.systemBackground} />
+              <Ionicons name="close" size={32} color={colors.systemBackground} />
             </TouchableOpacity>
 
             {/* Full Screen Photo */}
@@ -268,10 +271,10 @@ export default function ProjectDetailScreen({ route, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.systemGroupedBackground,
+    backgroundColor: colors.systemGroupedBackground,
   },
   header: {
     flexDirection: 'row',
@@ -279,9 +282,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   backButton: {
     width: 44,
@@ -291,7 +294,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
     flex: 1,
     textAlign: 'center',
   },
@@ -308,7 +311,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
   },
   content: {
     flex: 1,
@@ -323,7 +326,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TYPOGRAPHY.title1,
-    color: COLORS.label,
+    color: colors.label,
     flex: 1,
     marginRight: SPACING.md,
   },
@@ -340,7 +343,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     marginHorizontal: SPACING.lg,
     marginBottom: SPACING.lg,
     padding: SPACING.lg,
@@ -366,7 +369,7 @@ const styles = StyleSheet.create({
   },
   estimateCardTitle: {
     ...TYPOGRAPHY.title3,
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
     fontWeight: '700',
     marginBottom: 4,
   },
@@ -376,7 +379,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   infoCard: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     marginHorizontal: SPACING.lg,
     marginBottom: SPACING.md,
     padding: SPACING.md,
@@ -391,12 +394,12 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     ...TYPOGRAPHY.subheadline,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     fontWeight: '600',
   },
   infoValue: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -406,7 +409,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...TYPOGRAPHY.title3,
-    color: COLORS.label,
+    color: colors.label,
   },
   photoGrid: {
     flexDirection: 'row',
@@ -418,7 +421,7 @@ const styles = StyleSheet.create({
     height: PHOTO_SIZE,
     borderRadius: RADIUS.md,
     overflow: 'hidden',
-    backgroundColor: COLORS.tertiarySystemBackground,
+    backgroundColor: colors.tertiarySystemBackground,
   },
   photo: {
     width: '100%',
@@ -430,7 +433,7 @@ const styles = StyleSheet.create({
   },
   emptyPhotosText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.tertiaryLabel,
+    color: colors.tertiaryLabel,
     marginTop: SPACING.sm,
   },
   // Photo Viewer Modal

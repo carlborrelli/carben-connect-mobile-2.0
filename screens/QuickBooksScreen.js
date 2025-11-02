@@ -1,5 +1,6 @@
 // QuickBooksScreen - QuickBooks integration settings (Admin only)
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   View,
   Text,
@@ -17,9 +18,11 @@ import * as Haptics from 'expo-haptics';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
 
 export default function QuickBooksScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { userProfile, isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -179,13 +182,13 @@ export default function QuickBooksScreen({ navigation }) {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
+            <Ionicons name="chevron-back" size={28} color={colors.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>QuickBooks</Text>
           <View style={{ width: 44 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -196,7 +199,7 @@ export default function QuickBooksScreen({ navigation }) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
+          <Ionicons name="chevron-back" size={28} color={colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>QuickBooks</Text>
         <TouchableOpacity
@@ -205,7 +208,7 @@ export default function QuickBooksScreen({ navigation }) {
           disabled={saving}
         >
           {saving ? (
-            <ActivityIndicator size="small" color={COLORS.primary} />
+            <ActivityIndicator size="small" color={colors.primary} />
           ) : (
             <Text style={styles.saveButtonText}>Save</Text>
           )}
@@ -219,7 +222,7 @@ export default function QuickBooksScreen({ navigation }) {
             <Ionicons
               name={qbEnabled ? "checkmark-circle" : "alert-circle-outline"}
               size={32}
-              color={qbEnabled ? COLORS.green : COLORS.secondaryLabel}
+              color={qbEnabled ? colors.green : colors.secondaryLabel}
             />
             <View style={styles.statusText}>
               <Text style={styles.statusTitle}>
@@ -246,7 +249,7 @@ export default function QuickBooksScreen({ navigation }) {
                 style={[styles.actionButton, styles.actionButtonSecondary]}
                 onPress={handleTestConnection}
               >
-                <Ionicons name="settings-outline" size={20} color={COLORS.primary} />
+                <Ionicons name="settings-outline" size={20} color={colors.primary} />
                 <Text style={styles.actionButtonTextSecondary}>Test</Text>
               </TouchableOpacity>
 
@@ -254,7 +257,7 @@ export default function QuickBooksScreen({ navigation }) {
                 style={styles.actionButton}
                 onPress={handleSyncNow}
               >
-                <Ionicons name="sync-outline" size={20} color={COLORS.systemBackground} />
+                <Ionicons name="sync-outline" size={20} color={colors.systemBackground} />
                 <Text style={styles.actionButtonText}>Sync Now</Text>
               </TouchableOpacity>
             </View>
@@ -275,8 +278,8 @@ export default function QuickBooksScreen({ navigation }) {
               <Switch
                 value={qbEnabled}
                 onValueChange={() => handleToggle(setQbEnabled)}
-                trackColor={{ false: COLORS.tertiarySystemBackground, true: COLORS.primary + '80' }}
-                thumbColor={qbEnabled ? COLORS.primary : COLORS.systemBackground}
+                trackColor={{ false: colors.tertiarySystemBackground, true: colors.primary + '80' }}
+                thumbColor={qbEnabled ? colors.primary : colors.systemBackground}
               />
             </View>
 
@@ -292,8 +295,8 @@ export default function QuickBooksScreen({ navigation }) {
               <Switch
                 value={autoSyncEnabled}
                 onValueChange={() => handleToggle(setAutoSyncEnabled)}
-                trackColor={{ false: COLORS.tertiarySystemBackground, true: COLORS.primary + '80' }}
-                thumbColor={autoSyncEnabled ? COLORS.primary : COLORS.systemBackground}
+                trackColor={{ false: colors.tertiarySystemBackground, true: colors.primary + '80' }}
+                thumbColor={autoSyncEnabled ? colors.primary : colors.systemBackground}
                 disabled={!qbEnabled}
               />
             </View>
@@ -306,14 +309,14 @@ export default function QuickBooksScreen({ navigation }) {
           <View style={styles.settingsCard}>
             <View style={styles.settingItem}>
               <View style={styles.settingLeft}>
-                <Ionicons name="receipt-outline" size={24} color={COLORS.primary} />
+                <Ionicons name="receipt-outline" size={24} color={colors.primary} />
                 <Text style={styles.settingTitle}>Sync Invoices</Text>
               </View>
               <Switch
                 value={syncInvoices}
                 onValueChange={() => handleToggle(setSyncInvoices)}
-                trackColor={{ false: COLORS.tertiarySystemBackground, true: COLORS.primary + '80' }}
-                thumbColor={syncInvoices ? COLORS.primary : COLORS.systemBackground}
+                trackColor={{ false: colors.tertiarySystemBackground, true: colors.primary + '80' }}
+                thumbColor={syncInvoices ? colors.primary : colors.systemBackground}
                 disabled={!qbEnabled}
               />
             </View>
@@ -322,14 +325,14 @@ export default function QuickBooksScreen({ navigation }) {
 
             <View style={styles.settingItem}>
               <View style={styles.settingLeft}>
-                <Ionicons name="document-text-outline" size={24} color={COLORS.primary} />
+                <Ionicons name="document-text-outline" size={24} color={colors.primary} />
                 <Text style={styles.settingTitle}>Sync Estimates</Text>
               </View>
               <Switch
                 value={syncEstimates}
                 onValueChange={() => handleToggle(setSyncEstimates)}
-                trackColor={{ false: COLORS.tertiarySystemBackground, true: COLORS.primary + '80' }}
-                thumbColor={syncEstimates ? COLORS.primary : COLORS.systemBackground}
+                trackColor={{ false: colors.tertiarySystemBackground, true: colors.primary + '80' }}
+                thumbColor={syncEstimates ? colors.primary : colors.systemBackground}
                 disabled={!qbEnabled}
               />
             </View>
@@ -338,14 +341,14 @@ export default function QuickBooksScreen({ navigation }) {
 
             <View style={styles.settingItem}>
               <View style={styles.settingLeft}>
-                <Ionicons name="people-outline" size={24} color={COLORS.primary} />
+                <Ionicons name="people-outline" size={24} color={colors.primary} />
                 <Text style={styles.settingTitle}>Sync Customers</Text>
               </View>
               <Switch
                 value={syncCustomers}
                 onValueChange={() => handleToggle(setSyncCustomers)}
-                trackColor={{ false: COLORS.tertiarySystemBackground, true: COLORS.primary + '80' }}
-                thumbColor={syncCustomers ? COLORS.primary : COLORS.systemBackground}
+                trackColor={{ false: colors.tertiarySystemBackground, true: colors.primary + '80' }}
+                thumbColor={syncCustomers ? colors.primary : colors.systemBackground}
                 disabled={!qbEnabled}
               />
             </View>
@@ -363,7 +366,7 @@ export default function QuickBooksScreen({ navigation }) {
                 value={qbCompanyId}
                 onChangeText={setQbCompanyId}
                 placeholder="Enter company ID"
-                placeholderTextColor={COLORS.tertiaryLabel}
+                placeholderTextColor={colors.tertiaryLabel}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
@@ -378,7 +381,7 @@ export default function QuickBooksScreen({ navigation }) {
                 value={qbClientId}
                 onChangeText={setQbClientId}
                 placeholder="Enter client ID"
-                placeholderTextColor={COLORS.tertiaryLabel}
+                placeholderTextColor={colors.tertiaryLabel}
                 autoCapitalize="none"
                 autoCorrect={false}
               />
@@ -393,7 +396,7 @@ export default function QuickBooksScreen({ navigation }) {
                 value={qbClientSecret}
                 onChangeText={setQbClientSecret}
                 placeholder="Enter client secret"
-                placeholderTextColor={COLORS.tertiaryLabel}
+                placeholderTextColor={colors.tertiaryLabel}
                 autoCapitalize="none"
                 autoCorrect={false}
                 secureTextEntry
@@ -404,7 +407,7 @@ export default function QuickBooksScreen({ navigation }) {
 
         {/* Info */}
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle-outline" size={20} color={COLORS.blue} />
+          <Ionicons name="information-circle-outline" size={20} color={colors.blue} />
           <Text style={styles.infoText}>
             QuickBooks integration allows automatic syncing of customers, invoices, and estimates.
             Configure your API credentials above to get started.
@@ -421,10 +424,10 @@ export default function QuickBooksScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.systemGroupedBackground,
+    backgroundColor: colors.systemGroupedBackground,
   },
   header: {
     flexDirection: 'row',
@@ -432,9 +435,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   backButton: {
     width: 44,
@@ -444,7 +447,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
   },
   saveButton: {
     width: 60,
@@ -454,7 +457,7 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   loadingContainer: {
@@ -466,7 +469,7 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
   },
   statusCard: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.lg,
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
@@ -483,22 +486,22 @@ const styles = StyleSheet.create({
   },
   statusTitle: {
     ...TYPOGRAPHY.title3,
-    color: COLORS.label,
+    color: colors.label,
     marginBottom: SPACING.xs / 2,
   },
   statusSubtitle: {
     ...TYPOGRAPHY.subheadline,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
   },
   connectButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: RADIUS.md,
     padding: SPACING.md,
     alignItems: 'center',
   },
   connectButtonText: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
     fontWeight: '600',
   },
   actionButtons: {
@@ -511,21 +514,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: SPACING.xs,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: RADIUS.md,
     padding: SPACING.sm,
   },
   actionButtonSecondary: {
-    backgroundColor: COLORS.primary + '20',
+    backgroundColor: colors.primary + '20',
   },
   actionButtonText: {
     ...TYPOGRAPHY.subheadline,
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
     fontWeight: '600',
   },
   actionButtonTextSecondary: {
     ...TYPOGRAPHY.subheadline,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   section: {
@@ -533,13 +536,13 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     ...TYPOGRAPHY.footnote,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginBottom: SPACING.sm,
     marginLeft: SPACING.md,
     fontWeight: '600',
   },
   settingsCard: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
     ...SHADOWS.small,
@@ -559,16 +562,16 @@ const styles = StyleSheet.create({
   },
   settingTitle: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
   },
   settingSubtitle: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginTop: SPACING.xs / 2,
   },
   separator: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: COLORS.separator,
+    backgroundColor: colors.separator,
     marginLeft: SPACING.md,
   },
   inputItem: {
@@ -576,14 +579,14 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     ...TYPOGRAPHY.subheadline,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginBottom: SPACING.xs,
     fontWeight: '600',
   },
   input: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
-    backgroundColor: COLORS.tertiarySystemBackground,
+    color: colors.label,
+    backgroundColor: colors.tertiarySystemBackground,
     borderRadius: RADIUS.md,
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.sm,
@@ -592,14 +595,14 @@ const styles = StyleSheet.create({
   infoBox: {
     flexDirection: 'row',
     gap: SPACING.sm,
-    backgroundColor: COLORS.blue + '10',
+    backgroundColor: colors.blue + '10',
     borderRadius: RADIUS.md,
     padding: SPACING.md,
     marginBottom: SPACING.lg,
   },
   infoText: {
     ...TYPOGRAPHY.footnote,
-    color: COLORS.blue,
+    color: colors.blue,
     flex: 1,
   },
   footer: {
@@ -608,7 +611,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.tertiaryLabel,
+    color: colors.tertiaryLabel,
     textAlign: 'center',
   },
 });

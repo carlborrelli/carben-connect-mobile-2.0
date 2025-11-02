@@ -1,5 +1,6 @@
 // AddPhotosScreen - Add photos to a project
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   View,
   Text,
@@ -18,9 +19,11 @@ import { collection, query, where, getDocs, doc, updateDoc, arrayUnion } from 'f
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
 
 export default function AddPhotosScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { userProfile, isAdmin } = useAuth();
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
@@ -202,13 +205,13 @@ export default function AddPhotosScreen({ navigation }) {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="close" size={28} color={COLORS.label} />
+            <Ionicons name="close" size={28} color={colors.label} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Add Photos</Text>
           <View style={{ width: 44 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -219,7 +222,7 @@ export default function AddPhotosScreen({ navigation }) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="close" size={28} color={COLORS.label} />
+          <Ionicons name="close" size={28} color={colors.label} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Add Photos</Text>
         <TouchableOpacity
@@ -228,7 +231,7 @@ export default function AddPhotosScreen({ navigation }) {
           disabled={uploading}
         >
           {uploading ? (
-            <ActivityIndicator size="small" color={COLORS.primary} />
+            <ActivityIndicator size="small" color={colors.primary} />
           ) : (
             <Text style={styles.uploadButtonText}>Upload</Text>
           )}
@@ -246,7 +249,7 @@ export default function AddPhotosScreen({ navigation }) {
             <Text style={selectedProject ? styles.selectButtonTextFilled : styles.selectButtonText}>
               {selectedProject?.title || 'Select a project'}
             </Text>
-            <Ionicons name="chevron-down" size={20} color={COLORS.secondaryLabel} />
+            <Ionicons name="chevron-down" size={20} color={colors.secondaryLabel} />
           </TouchableOpacity>
 
           {showProjectPicker && (
@@ -275,7 +278,7 @@ export default function AddPhotosScreen({ navigation }) {
             onPress={takePhoto}
             disabled={uploading}
           >
-            <Ionicons name="camera" size={24} color={COLORS.primary} />
+            <Ionicons name="camera" size={24} color={colors.primary} />
             <Text style={styles.pickButtonText}>Take Photo</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -283,7 +286,7 @@ export default function AddPhotosScreen({ navigation }) {
             onPress={pickImages}
             disabled={uploading}
           >
-            <Ionicons name="images" size={24} color={COLORS.primary} />
+            <Ionicons name="images" size={24} color={colors.primary} />
             <Text style={styles.pickButtonText}>Select Photos</Text>
           </TouchableOpacity>
         </View>
@@ -301,7 +304,7 @@ export default function AddPhotosScreen({ navigation }) {
                     onPress={() => removeImage(index)}
                     disabled={uploading}
                   >
-                    <Ionicons name="close-circle" size={24} color={COLORS.systemBackground} />
+                    <Ionicons name="close-circle" size={24} color={colors.systemBackground} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -311,7 +314,7 @@ export default function AddPhotosScreen({ navigation }) {
 
         {/* Info */}
         <View style={styles.infoCard}>
-          <Ionicons name="information-circle-outline" size={20} color={COLORS.blue} />
+          <Ionicons name="information-circle-outline" size={20} color={colors.blue} />
           <Text style={styles.infoText}>
             You can select up to 10 photos at once. Photos will be added to the selected project.
           </Text>
@@ -321,10 +324,10 @@ export default function AddPhotosScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.systemGroupedBackground,
+    backgroundColor: colors.systemGroupedBackground,
   },
   header: {
     flexDirection: 'row',
@@ -332,9 +335,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   backButton: {
     width: 44,
@@ -344,7 +347,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
   },
   uploadButton: {
     paddingHorizontal: SPACING.sm,
@@ -354,7 +357,7 @@ const styles = StyleSheet.create({
   },
   uploadButtonText: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   loadingContainer: {
@@ -371,7 +374,7 @@ const styles = StyleSheet.create({
   },
   label: {
     ...TYPOGRAPHY.subheadline,
-    color: COLORS.label,
+    color: colors.label,
     fontWeight: '600',
     marginBottom: SPACING.xs,
   },
@@ -379,7 +382,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
@@ -387,14 +390,14 @@ const styles = StyleSheet.create({
   },
   selectButtonText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.tertiaryLabel,
+    color: colors.tertiaryLabel,
   },
   selectButtonTextFilled: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
   },
   picker: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
     marginTop: SPACING.xs,
     ...SHADOWS.small,
@@ -402,29 +405,29 @@ const styles = StyleSheet.create({
   pickerItem: {
     padding: SPACING.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   pickerItemText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
   },
   pickerItemSubtext: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginTop: SPACING.xs / 2,
   },
   pickButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
     paddingVertical: SPACING.md,
     gap: SPACING.sm,
   },
   pickButtonText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   imageGrid: {
@@ -441,7 +444,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: RADIUS.md,
-    backgroundColor: COLORS.tertiarySystemBackground,
+    backgroundColor: colors.tertiarySystemBackground,
   },
   removeButton: {
     position: 'absolute',
@@ -452,14 +455,14 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     flexDirection: 'row',
-    backgroundColor: COLORS.blue + '10',
+    backgroundColor: colors.blue + '10',
     padding: SPACING.md,
     borderRadius: RADIUS.md,
     gap: SPACING.sm,
   },
   infoText: {
     ...TYPOGRAPHY.footnote,
-    color: COLORS.blue,
+    color: colors.blue,
     flex: 1,
   },
 });

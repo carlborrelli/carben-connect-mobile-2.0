@@ -1,5 +1,6 @@
 // NewProjectScreen - Create a new project (FIXED to match website data structure)
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   View,
   Text,
@@ -16,9 +17,11 @@ import * as Haptics from 'expo-haptics';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
 
 export default function NewProjectScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { userProfile, isAdmin } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -163,13 +166,13 @@ export default function NewProjectScreen({ navigation }) {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="close" size={28} color={COLORS.label} />
+            <Ionicons name="close" size={28} color={colors.label} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>New Project</Text>
           <View style={{ width: 44 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -185,7 +188,7 @@ export default function NewProjectScreen({ navigation }) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="close" size={28} color={COLORS.label} />
+          <Ionicons name="close" size={28} color={colors.label} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>New Project</Text>
         <TouchableOpacity
@@ -194,7 +197,7 @@ export default function NewProjectScreen({ navigation }) {
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator size="small" color={COLORS.primary} />
+            <ActivityIndicator size="small" color={colors.primary} />
           ) : (
             <Text style={styles.createButtonText}>Create</Text>
           )}
@@ -213,7 +216,7 @@ export default function NewProjectScreen({ navigation }) {
               <Text style={clientName ? styles.selectButtonTextFilled : styles.selectButtonText}>
                 {clientName || 'Select a client'}
               </Text>
-              <Ionicons name="chevron-down" size={20} color={COLORS.secondaryLabel} />
+              <Ionicons name="chevron-down" size={20} color={colors.secondaryLabel} />
             </TouchableOpacity>
 
             {showClientPicker && (
@@ -253,7 +256,7 @@ export default function NewProjectScreen({ navigation }) {
               <Text style={selectedQbCustomerName ? styles.selectButtonTextFilled : styles.selectButtonText}>
                 {selectedQbCustomerName || 'Select a location'}
               </Text>
-              <Ionicons name="chevron-down" size={20} color={COLORS.secondaryLabel} />
+              <Ionicons name="chevron-down" size={20} color={colors.secondaryLabel} />
             </TouchableOpacity>
 
             {showLocationPicker && (
@@ -266,7 +269,7 @@ export default function NewProjectScreen({ navigation }) {
                       onPress={() => handleSelectLocation(qbCustomer)}
                     >
                       <View style={styles.locationPickerItem}>
-                        <Ionicons name="location" size={18} color={COLORS.primary} />
+                        <Ionicons name="location" size={18} color={colors.primary} />
                         <Text style={styles.pickerItemText}>{qbCustomer.name}</Text>
                       </View>
                     </TouchableOpacity>
@@ -282,7 +285,7 @@ export default function NewProjectScreen({ navigation }) {
           <View style={styles.section}>
             <Text style={styles.label}>Location</Text>
             <View style={styles.infoCard}>
-              <Ionicons name="location" size={18} color={COLORS.primary} />
+              <Ionicons name="location" size={18} color={colors.primary} />
               <Text style={styles.infoText}>{selectedClient.qbCustomers[0].name}</Text>
             </View>
           </View>
@@ -294,7 +297,7 @@ export default function NewProjectScreen({ navigation }) {
           <TextInput
             style={styles.input}
             placeholder="e.g., Kitchen Remodel"
-            placeholderTextColor={COLORS.tertiaryLabel}
+            placeholderTextColor={colors.tertiaryLabel}
             value={title}
             onChangeText={setTitle}
             editable={!loading}
@@ -308,7 +311,7 @@ export default function NewProjectScreen({ navigation }) {
           <TextInput
             style={[styles.input, styles.textArea]}
             placeholder="Enter project details..."
-            placeholderTextColor={COLORS.tertiaryLabel}
+            placeholderTextColor={colors.tertiaryLabel}
             value={description}
             onChangeText={setDescription}
             editable={!loading}
@@ -320,7 +323,7 @@ export default function NewProjectScreen({ navigation }) {
 
         {/* Info */}
         <View style={styles.infoCard}>
-          <Ionicons name="information-circle-outline" size={20} color={COLORS.blue} />
+          <Ionicons name="information-circle-outline" size={20} color={colors.blue} />
           <Text style={styles.infoCardText}>
             The project will be created with status "New". You can add photos and details after creation.
           </Text>
@@ -330,10 +333,10 @@ export default function NewProjectScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.systemGroupedBackground,
+    backgroundColor: colors.systemGroupedBackground,
   },
   header: {
     flexDirection: 'row',
@@ -341,9 +344,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   backButton: {
     width: 44,
@@ -353,7 +356,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
   },
   createButton: {
     paddingHorizontal: SPACING.sm,
@@ -363,7 +366,7 @@ const styles = StyleSheet.create({
   },
   createButtonText: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   loadingContainer: {
@@ -380,17 +383,17 @@ const styles = StyleSheet.create({
   },
   label: {
     ...TYPOGRAPHY.subheadline,
-    color: COLORS.label,
+    color: colors.label,
     fontWeight: '600',
     marginBottom: SPACING.xs,
   },
   input: {
     ...TYPOGRAPHY.body,
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    color: COLORS.label,
+    color: colors.label,
     minHeight: 44,
   },
   textArea: {
@@ -401,7 +404,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
@@ -409,14 +412,14 @@ const styles = StyleSheet.create({
   },
   selectButtonText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.tertiaryLabel,
+    color: colors.tertiaryLabel,
   },
   selectButtonTextFilled: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
   },
   picker: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
     marginTop: SPACING.xs,
     maxHeight: 200,
@@ -428,20 +431,20 @@ const styles = StyleSheet.create({
   pickerItem: {
     padding: SPACING.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   pickerItemText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
   },
   pickerItemSubtext: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginTop: SPACING.xs / 2,
   },
   pickerItemNote: {
     ...TYPOGRAPHY.caption2,
-    color: COLORS.primary,
+    color: colors.primary,
     marginTop: SPACING.xs / 2,
   },
   locationPickerItem: {
@@ -451,7 +454,7 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     flexDirection: 'row',
-    backgroundColor: COLORS.blue + '10',
+    backgroundColor: colors.blue + '10',
     padding: SPACING.md,
     borderRadius: RADIUS.md,
     gap: SPACING.sm,
@@ -459,12 +462,12 @@ const styles = StyleSheet.create({
   },
   infoText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
     flex: 1,
   },
   infoCardText: {
     ...TYPOGRAPHY.footnote,
-    color: COLORS.blue,
+    color: colors.blue,
     flex: 1,
   },
 });

@@ -1,5 +1,6 @@
 // ClientDetailScreen - View client details and projects
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   View,
   Text,
@@ -15,9 +16,11 @@ import * as Haptics from 'expo-haptics';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import ProjectCard from '../components/ProjectCard';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
 
 export default function ClientDetailScreen({ route, navigation }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { client } = route.params;
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -67,13 +70,13 @@ export default function ClientDetailScreen({ route, navigation }) {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
+            <Ionicons name="chevron-back" size={28} color={colors.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Client Details</Text>
           <View style={{ width: 44 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -84,7 +87,7 @@ export default function ClientDetailScreen({ route, navigation }) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
+          <Ionicons name="chevron-back" size={28} color={colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Client Details</Text>
         <View style={{ width: 44 }} />
@@ -96,7 +99,7 @@ export default function ClientDetailScreen({ route, navigation }) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={COLORS.primary}
+            tintColor={colors.primary}
           />
         }
       >
@@ -114,21 +117,21 @@ export default function ClientDetailScreen({ route, navigation }) {
           <View style={styles.infoSection}>
             {client.email && (
               <View style={styles.infoRow}>
-                <Ionicons name="mail" size={20} color={COLORS.secondaryLabel} />
+                <Ionicons name="mail" size={20} color={colors.secondaryLabel} />
                 <Text style={styles.infoText}>{client.email}</Text>
               </View>
             )}
 
             {client.phone && (
               <View style={styles.infoRow}>
-                <Ionicons name="call" size={20} color={COLORS.secondaryLabel} />
+                <Ionicons name="call" size={20} color={colors.secondaryLabel} />
                 <Text style={styles.infoText}>{client.phone}</Text>
               </View>
             )}
 
             {client.address && (
               <View style={styles.infoRow}>
-                <Ionicons name="location" size={20} color={COLORS.secondaryLabel} />
+                <Ionicons name="location" size={20} color={colors.secondaryLabel} />
                 <Text style={styles.infoText}>{client.address}</Text>
               </View>
             )}
@@ -138,7 +141,7 @@ export default function ClientDetailScreen({ route, navigation }) {
           {(client.qbCustomers || client.qbCustomerId || client.qbLocationName) && (
             <View style={styles.qbSection}>
               <View style={styles.sectionHeader}>
-                <Ionicons name="business" size={16} color={COLORS.secondaryLabel} />
+                <Ionicons name="business" size={16} color={colors.secondaryLabel} />
                 <Text style={styles.sectionTitle}>QuickBooks Info</Text>
               </View>
 
@@ -148,7 +151,7 @@ export default function ClientDetailScreen({ route, navigation }) {
                   <Text style={styles.qbLabel}>Locations:</Text>
                   {client.qbCustomers.map((qbCustomer, index) => (
                     <View key={qbCustomer.id || index} style={styles.locationItem}>
-                      <Ionicons name="location" size={14} color={COLORS.primary} />
+                      <Ionicons name="location" size={14} color={colors.primary} />
                       <Text style={styles.locationText}>{qbCustomer.name}</Text>
                     </View>
                   ))}
@@ -193,7 +196,7 @@ export default function ClientDetailScreen({ route, navigation }) {
 
           {projects.length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="folder-open-outline" size={48} color={COLORS.tertiaryLabel} />
+              <Ionicons name="folder-open-outline" size={48} color={colors.tertiaryLabel} />
               <Text style={styles.emptyText}>No projects yet</Text>
               <Text style={styles.emptySubtext}>
                 Projects for this client will appear here
@@ -218,10 +221,10 @@ export default function ClientDetailScreen({ route, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.systemGroupedBackground,
+    backgroundColor: colors.systemGroupedBackground,
   },
   header: {
     flexDirection: 'row',
@@ -229,9 +232,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   backButton: {
     width: 44,
@@ -241,7 +244,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
   },
   loadingContainer: {
     flex: 1,
@@ -252,7 +255,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   clientCard: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     margin: SPACING.lg,
     padding: SPACING.xl,
     borderRadius: RADIUS.lg,
@@ -263,19 +266,19 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.md,
   },
   avatarText: {
     ...TYPOGRAPHY.largeTitle,
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
     fontWeight: '700',
   },
   clientName: {
     ...TYPOGRAPHY.title1,
-    color: COLORS.label,
+    color: colors.label,
     marginBottom: SPACING.lg,
     textAlign: 'center',
   },
@@ -290,7 +293,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
     flex: 1,
   },
   qbSection: {
@@ -298,7 +301,7 @@ const styles = StyleSheet.create({
     marginTop: SPACING.lg,
     paddingTop: SPACING.lg,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COLORS.separator,
+    borderTopColor: colors.separator,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -308,7 +311,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...TYPOGRAPHY.subheadline,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     fontWeight: '600',
   },
   qbRow: {
@@ -319,11 +322,11 @@ const styles = StyleSheet.create({
   },
   qbLabel: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
   },
   qbValue: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
     fontWeight: '500',
   },
   locationsContainer: {
@@ -339,7 +342,7 @@ const styles = StyleSheet.create({
   },
   locationText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
     flex: 1,
   },
   projectsSection: {
@@ -354,36 +357,36 @@ const styles = StyleSheet.create({
   },
   projectsTitle: {
     ...TYPOGRAPHY.title2,
-    color: COLORS.label,
+    color: colors.label,
   },
   projectCount: {
-    backgroundColor: COLORS.primary + '20',
+    backgroundColor: colors.primary + '20',
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xs / 2,
     borderRadius: RADIUS.sm,
   },
   projectCountText: {
     ...TYPOGRAPHY.footnote,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   projectsList: {
     gap: SPACING.md,
   },
   emptyState: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     padding: SPACING.xxl,
     borderRadius: RADIUS.lg,
     alignItems: 'center',
   },
   emptyText: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
     marginTop: SPACING.md,
   },
   emptySubtext: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     textAlign: 'center',
     marginTop: SPACING.xs,
   },

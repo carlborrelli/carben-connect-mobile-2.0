@@ -1,5 +1,6 @@
 // SettingsScreen - App settings and preferences
 import React, { useState } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   View,
   Text,
@@ -13,9 +14,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '../contexts/AuthContext';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
 
 export default function SettingsScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { userProfile } = useAuth();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -34,7 +37,7 @@ export default function SettingsScreen({ navigation }) {
       disabled={type !== 'link'}
     >
       <View style={styles.settingLeft}>
-        <Ionicons name={icon} size={24} color={COLORS.primary} />
+        <Ionicons name={icon} size={24} color={colors.primary} />
         <View style={styles.settingText}>
           <Text style={styles.settingTitle}>{title}</Text>
           {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
@@ -46,12 +49,12 @@ export default function SettingsScreen({ navigation }) {
           onValueChange={() => {
             handleToggle(onValueChange);
           }}
-          trackColor={{ false: COLORS.tertiarySystemBackground, true: COLORS.primary + '80' }}
-          thumbColor={value ? COLORS.primary : COLORS.systemBackground}
+          trackColor={{ false: colors.tertiarySystemBackground, true: colors.primary + '80' }}
+          thumbColor={value ? colors.primary : colors.systemBackground}
         />
       )}
       {type === 'link' && (
-        <Ionicons name="chevron-forward" size={20} color={COLORS.tertiaryLabel} />
+        <Ionicons name="chevron-forward" size={20} color={colors.tertiaryLabel} />
       )}
     </TouchableOpacity>
   );
@@ -89,7 +92,7 @@ export default function SettingsScreen({ navigation }) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
+          <Ionicons name="chevron-back" size={28} color={colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Settings</Text>
         <View style={{ width: 44 }} />
@@ -206,10 +209,10 @@ export default function SettingsScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.systemGroupedBackground,
+    backgroundColor: colors.systemGroupedBackground,
   },
   header: {
     flexDirection: 'row',
@@ -217,9 +220,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   backButton: {
     width: 44,
@@ -229,7 +232,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
   },
   content: {
     padding: SPACING.lg,
@@ -239,13 +242,13 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     ...TYPOGRAPHY.footnote,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginBottom: SPACING.sm,
     marginLeft: SPACING.md,
     fontWeight: '600',
   },
   settingsCard: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
     ...SHADOWS.small,
@@ -268,21 +271,21 @@ const styles = StyleSheet.create({
   },
   settingTitle: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
   },
   settingSubtitle: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginTop: SPACING.xs / 2,
   },
   separator: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: COLORS.separator,
+    backgroundColor: colors.separator,
     marginLeft: SPACING.md + 24 + SPACING.md,
   },
   footer: {
     ...TYPOGRAPHY.caption2,
-    color: COLORS.tertiaryLabel,
+    color: colors.tertiaryLabel,
     textAlign: 'center',
     marginTop: SPACING.xxl,
   },

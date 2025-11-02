@@ -1,5 +1,6 @@
 // ProjectsScreen - List and manage projects
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   View,
   Text,
@@ -18,7 +19,7 @@ import { collection, query, orderBy, onSnapshot, where, getDocs } from 'firebase
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import ProjectCard from '../components/ProjectCard';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
 
 const STATUS_FILTERS = [
   { key: 'ALL', label: 'All' },
@@ -38,6 +39,8 @@ const SORT_OPTIONS = [
 ];
 
 export default function ProjectsScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { userProfile, isAdmin } = useAuth();
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
@@ -203,7 +206,7 @@ export default function ProjectsScreen({ navigation }) {
         <View style={styles.headerLeft}>
           <Text style={styles.title}>Projects</Text>
           <TouchableOpacity onPress={toggleSortMenu} style={styles.sortButton}>
-            <Ionicons name={showSortMenu ? "funnel" : "funnel-outline"} size={20} color={COLORS.primary} />
+            <Ionicons name={showSortMenu ? "funnel" : "funnel-outline"} size={20} color={colors.primary} />
             <Text style={styles.sortButtonText}>
               {SORT_OPTIONS.find(opt => opt.key === sortBy)?.label || 'Sort'}
             </Text>
@@ -211,10 +214,10 @@ export default function ProjectsScreen({ navigation }) {
         </View>
         <View style={styles.headerIcons}>
           <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Calendar")}>
-            <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
+            <Ionicons name="calendar-outline" size={24} color={colors.label} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
-            <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
+            <Ionicons name="person-circle-outline" size={24} color={colors.label} />
           </TouchableOpacity>
         </View>
       </View>
@@ -231,7 +234,7 @@ export default function ProjectsScreen({ navigation }) {
               <Ionicons
                 name={option.icon}
                 size={20}
-                color={sortBy === option.key ? COLORS.primary : COLORS.secondaryLabel}
+                color={sortBy === option.key ? colors.primary : colors.secondaryLabel}
               />
               <Text style={[
                 styles.sortMenuItemText,
@@ -240,7 +243,7 @@ export default function ProjectsScreen({ navigation }) {
                 {option.label}
               </Text>
               {sortBy === option.key && (
-                <Ionicons name="checkmark" size={20} color={COLORS.primary} />
+                <Ionicons name="checkmark" size={20} color={colors.primary} />
               )}
             </TouchableOpacity>
           ))}
@@ -250,11 +253,11 @@ export default function ProjectsScreen({ navigation }) {
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
-          <Ionicons name="search" size={20} color={COLORS.tertiaryLabel} style={styles.searchIcon} />
+          <Ionicons name="search" size={20} color={colors.tertiaryLabel} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search projects..."
-            placeholderTextColor={COLORS.tertiaryLabel}
+            placeholderTextColor={colors.tertiaryLabel}
             value={searchQuery}
             onChangeText={setSearchQuery}
             returnKeyType="search"
@@ -263,7 +266,7 @@ export default function ProjectsScreen({ navigation }) {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={handleClearSearch} style={styles.clearButton}>
-              <Ionicons name="close-circle" size={20} color={COLORS.tertiaryLabel} />
+              <Ionicons name="close-circle" size={20} color={colors.tertiaryLabel} />
             </TouchableOpacity>
           )}
         </View>
@@ -302,7 +305,7 @@ export default function ProjectsScreen({ navigation }) {
       <SafeAreaView style={styles.container} edges={['top']}>
         {renderHeader()}
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -315,7 +318,7 @@ export default function ProjectsScreen({ navigation }) {
         {renderHeader()}
         <View style={styles.emptyContainer}>
           <View style={styles.emptyState}>
-            <Ionicons name="folder-outline" size={64} color={COLORS.tertiaryLabel} />
+            <Ionicons name="folder-outline" size={64} color={colors.tertiaryLabel} />
             <Text style={styles.emptyTitle}>No Projects Yet</Text>
             <Text style={styles.emptyText}>
               {isAdmin() ? 'Start by creating your first project' : 'Projects will appear here when assigned to you'}
@@ -333,7 +336,7 @@ export default function ProjectsScreen({ navigation }) {
         {renderHeader()}
         <View style={styles.emptyContainer}>
           <View style={styles.emptyState}>
-            <Ionicons name="search-outline" size={64} color={COLORS.tertiaryLabel} />
+            <Ionicons name="search-outline" size={64} color={colors.tertiaryLabel} />
             <Text style={styles.emptyTitle}>No Results Found</Text>
             <Text style={styles.emptyText}>
               Try adjusting your search or filter
@@ -365,7 +368,7 @@ export default function ProjectsScreen({ navigation }) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={COLORS.primary}
+            tintColor={colors.primary}
           />
         }
       />
@@ -373,15 +376,15 @@ export default function ProjectsScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.systemGroupedBackground,
+    backgroundColor: colors.systemGroupedBackground,
   },
   headerContainer: {
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   header: {
     flexDirection: 'row',
@@ -396,7 +399,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TYPOGRAPHY.largeTitle,
-    color: COLORS.label,
+    color: colors.label,
     marginBottom: SPACING.xs / 2,
   },
   sortButton: {
@@ -406,11 +409,11 @@ const styles = StyleSheet.create({
   },
   sortButtonText: {
     ...TYPOGRAPHY.footnote,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   sortMenu: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     marginHorizontal: SPACING.lg,
     marginBottom: SPACING.sm,
     borderRadius: RADIUS.md,
@@ -423,15 +426,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     gap: SPACING.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   sortMenuItemText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
     flex: 1,
   },
   sortMenuItemTextActive: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   headerIcons: {
@@ -451,7 +454,7 @@ const styles = StyleSheet.create({
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
     paddingHorizontal: SPACING.sm,
     height: 44,
@@ -462,7 +465,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
     height: 44,
   },
   clearButton: {
@@ -477,19 +480,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     marginRight: SPACING.xs,
   },
   filterChipActive: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   filterChipText: {
     ...TYPOGRAPHY.subheadline,
-    color: COLORS.label,
+    color: colors.label,
     fontWeight: '500',
   },
   filterChipTextActive: {
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
     fontWeight: '600',
   },
   loadingContainer: {
@@ -509,13 +512,13 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...TYPOGRAPHY.title2,
-    color: COLORS.label,
+    color: colors.label,
     marginTop: SPACING.lg,
     marginBottom: SPACING.xs,
   },
   emptyText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     textAlign: 'center',
   },
   listContent: {

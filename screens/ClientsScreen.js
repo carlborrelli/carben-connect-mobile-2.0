@@ -1,5 +1,6 @@
 // ClientsScreen - Manage clients
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 import { 
   View, 
   Text, 
@@ -16,9 +17,11 @@ import { collection, query, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import ClientCard from '../components/ClientCard';
-import { COLORS, TYPOGRAPHY, SPACING } from '../theme';
+import { TYPOGRAPHY, SPACING  } from '../theme';
 
 export default function ClientsScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { userProfile, isAdmin } = useAuth();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,10 +90,10 @@ export default function ClientsScreen({ navigation }) {
       <Text style={styles.title}>Clients</Text>
       <View style={styles.headerIcons}>
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Calendar")}>
-          <Ionicons name="calendar-outline" size={24} color={COLORS.label} />
+          <Ionicons name="calendar-outline" size={24} color={colors.label} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
-          <Ionicons name="person-circle-outline" size={24} color={COLORS.label} />
+          <Ionicons name="person-circle-outline" size={24} color={colors.label} />
         </TouchableOpacity>
       </View>
     </View>
@@ -102,7 +105,7 @@ export default function ClientsScreen({ navigation }) {
       <SafeAreaView style={styles.container} edges={['top']}>
         {renderHeader()}
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -115,7 +118,7 @@ export default function ClientsScreen({ navigation }) {
         {renderHeader()}
         <View style={styles.emptyContainer}>
           <View style={styles.emptyState}>
-            <Ionicons name="people-outline" size={64} color={COLORS.tertiaryLabel} />
+            <Ionicons name="people-outline" size={64} color={colors.tertiaryLabel} />
             <Text style={styles.emptyTitle}>No Clients</Text>
             <Text style={styles.emptyText}>
               {isAdmin() ? 'Start by adding your first client' : 'Client list will appear here'}
@@ -142,7 +145,7 @@ export default function ClientsScreen({ navigation }) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={COLORS.primary}
+            tintColor={colors.primary}
           />
         }
       />
@@ -150,10 +153,10 @@ export default function ClientsScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.systemGroupedBackground,
+    backgroundColor: colors.systemGroupedBackground,
   },
   header: {
     flexDirection: 'row',
@@ -161,11 +164,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
   },
   title: {
     ...TYPOGRAPHY.largeTitle,
-    color: COLORS.label,
+    color: colors.label,
   },
   headerIcons: {
     flexDirection: 'row',
@@ -194,13 +197,13 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...TYPOGRAPHY.title2,
-    color: COLORS.label,
+    color: colors.label,
     marginTop: SPACING.lg,
     marginBottom: SPACING.xs,
   },
   emptyText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     textAlign: 'center',
   },
   listContent: {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   View,
   Text,
@@ -13,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
 
 // Tab components
 import ProjectOverviewTab from '../components/estimate/ProjectOverviewTab';
@@ -29,6 +30,8 @@ const TABS = [
 ];
 
 export default function EstimateWorkspaceScreen({ route, navigation }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { projectId } = route.params;
   const { user, isAdmin } = useAuth();
 
@@ -104,7 +107,7 @@ export default function EstimateWorkspaceScreen({ route, navigation }) {
       <View style={styles.centerContainer}>
         <View style={styles.errorCard}>
           <View style={styles.errorIconContainer}>
-            <Ionicons name="lock-closed" size={48} color={COLORS.red} />
+            <Ionicons name="lock-closed" size={48} color={colors.red} />
           </View>
           <Text style={styles.errorTitle}>Access Restricted</Text>
           <Text style={styles.errorText}>
@@ -127,7 +130,7 @@ export default function EstimateWorkspaceScreen({ route, navigation }) {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading estimate workspace...</Text>
       </View>
     );
@@ -194,7 +197,7 @@ export default function EstimateWorkspaceScreen({ route, navigation }) {
           }}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Ionicons name="arrow-back" size={24} color={COLORS.label} />
+          <Ionicons name="arrow-back" size={24} color={colors.label} />
         </TouchableOpacity>
         
         <View style={styles.headerTitleContainer}>
@@ -223,7 +226,7 @@ export default function EstimateWorkspaceScreen({ route, navigation }) {
                 <Ionicons
                   name={isComplete ? 'checkmark-circle' : tab.icon}
                   size={20}
-                  color={isActive ? COLORS.primary : isComplete ? COLORS.green : COLORS.gray3}
+                  color={isActive ? colors.primary : isComplete ? colors.green : colors.gray3}
                 />
               </View>
               <Text style={[
@@ -247,20 +250,20 @@ export default function EstimateWorkspaceScreen({ route, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.systemGroupedBackground,
+    backgroundColor: colors.systemGroupedBackground,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.systemGroupedBackground,
+    backgroundColor: colors.systemGroupedBackground,
     padding: SPACING.lg,
   },
   errorCard: {
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderRadius: RADIUS.xl,
     padding: SPACING.xl,
     alignItems: 'center',
@@ -278,18 +281,18 @@ const styles = StyleSheet.create({
   },
   errorTitle: {
     ...TYPOGRAPHY.title2,
-    color: COLORS.label,
+    color: colors.label,
     marginBottom: SPACING.sm,
     textAlign: 'center',
   },
   errorText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     textAlign: 'center',
     marginBottom: SPACING.lg,
   },
   primaryButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: SPACING.xl,
     paddingVertical: SPACING.md,
     borderRadius: RADIUS.md,
@@ -298,22 +301,22 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
   },
   loadingText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginTop: SPACING.md,
   },
   header: {
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     paddingTop: 60,
     paddingBottom: SPACING.sm,
     paddingHorizontal: SPACING.md,
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   backButton: {
     marginRight: SPACING.sm,
@@ -323,18 +326,18 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...TYPOGRAPHY.title2,
-    color: COLORS.label,
+    color: colors.label,
   },
   headerSubtitle: {
     ...TYPOGRAPHY.footnote,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginTop: 2,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   tabItem: {
     flex: 1,
@@ -350,15 +353,15 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     ...TYPOGRAPHY.caption2,
-    color: COLORS.tertiaryLabel,
+    color: colors.tertiaryLabel,
     fontWeight: '500',
   },
   tabLabelActive: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   tabLabelComplete: {
-    color: COLORS.green,
+    color: colors.green,
   },
   activeIndicator: {
     position: 'absolute',
@@ -366,7 +369,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 2,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   content: {
     flex: 1,

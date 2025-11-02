@@ -1,5 +1,6 @@
 // ConversationScreen - View conversation for a specific project
 import React, { useState, useEffect, useRef } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   View,
   Text,
@@ -19,9 +20,11 @@ import * as Haptics from 'expo-haptics';
 import { collection, query, where, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
 
 export default function ConversationScreen({ route, navigation }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { projectId, projectTitle } = route.params;
   const { userProfile } = useAuth();
   const insets = useSafeAreaInsets();
@@ -191,7 +194,7 @@ export default function ConversationScreen({ route, navigation }) {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
+            <Ionicons name="chevron-back" size={28} color={colors.primary} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.headerTitle} numberOfLines={1}>{projectTitle || 'Conversation'}</Text>
@@ -199,7 +202,7 @@ export default function ConversationScreen({ route, navigation }) {
           <View style={{ width: 44 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -210,7 +213,7 @@ export default function ConversationScreen({ route, navigation }) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
+          <Ionicons name="chevron-back" size={28} color={colors.primary} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle} numberOfLines={1}>{projectTitle || 'Conversation'}</Text>
@@ -228,7 +231,7 @@ export default function ConversationScreen({ route, navigation }) {
         {/* Messages */}
         {messages.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="chatbubbles-outline" size={64} color={COLORS.tertiaryLabel} />
+            <Ionicons name="chatbubbles-outline" size={64} color={colors.tertiaryLabel} />
             <Text style={styles.emptyText}>No messages yet</Text>
             <Text style={styles.emptySubtext}>
               Start a conversation about this project
@@ -260,7 +263,7 @@ export default function ConversationScreen({ route, navigation }) {
           <TextInput
             style={styles.input}
             placeholder="Type a message..."
-            placeholderTextColor={COLORS.tertiaryLabel}
+            placeholderTextColor={colors.tertiaryLabel}
             value={messageText}
             onChangeText={setMessageText}
             multiline
@@ -279,12 +282,12 @@ export default function ConversationScreen({ route, navigation }) {
             disabled={!messageText.trim() || sending}
           >
             {sending ? (
-              <ActivityIndicator size="small" color={COLORS.systemBackground} />
+              <ActivityIndicator size="small" color={colors.systemBackground} />
             ) : (
               <Ionicons
                 name="send"
                 size={20}
-                color={messageText.trim() ? COLORS.systemBackground : COLORS.tertiaryLabel}
+                color={messageText.trim() ? colors.systemBackground : colors.tertiaryLabel}
               />
             )}
           </TouchableOpacity>
@@ -294,10 +297,10 @@ export default function ConversationScreen({ route, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.systemGroupedBackground,
+    backgroundColor: colors.systemGroupedBackground,
   },
   flex1: {
     flex: 1,
@@ -308,9 +311,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   backButton: {
     width: 44,
@@ -324,11 +327,11 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
   },
   headerSubtitle: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
   },
   loadingContainer: {
     flex: 1,
@@ -344,8 +347,8 @@ const styles = StyleSheet.create({
   },
   dateText: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
-    backgroundColor: COLORS.tertiarySystemBackground,
+    color: colors.secondaryLabel,
+    backgroundColor: colors.tertiarySystemBackground,
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xs / 2,
     borderRadius: RADIUS.sm,
@@ -358,18 +361,18 @@ const styles = StyleSheet.create({
   },
   sentBubble: {
     alignSelf: 'flex-end',
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderBottomRightRadius: 4,
   },
   receivedBubble: {
     alignSelf: 'flex-start',
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderBottomLeftRadius: 4,
     ...SHADOWS.small,
   },
   senderName: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     fontWeight: '600',
     marginBottom: SPACING.xs / 2,
   },
@@ -378,20 +381,20 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs / 2,
   },
   sentText: {
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
   },
   receivedText: {
-    color: COLORS.label,
+    color: colors.label,
   },
   timeText: {
     ...TYPOGRAPHY.caption2,
   },
   sentTime: {
-    color: COLORS.systemBackground + 'CC',
+    color: colors.systemBackground + 'CC',
     textAlign: 'right',
   },
   receivedTime: {
-    color: COLORS.tertiaryLabel,
+    color: colors.tertiaryLabel,
   },
   emptyState: {
     flex: 1,
@@ -401,12 +404,12 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...TYPOGRAPHY.title2,
-    color: COLORS.label,
+    color: colors.label,
     marginTop: SPACING.lg,
   },
   emptySubtext: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     textAlign: 'center',
     marginTop: SPACING.xs,
   },
@@ -414,19 +417,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     padding: SPACING.md,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COLORS.separator,
+    borderTopColor: colors.separator,
     gap: SPACING.sm,
   },
   input: {
     flex: 1,
     ...TYPOGRAPHY.body,
-    backgroundColor: COLORS.secondarySystemBackground,
+    backgroundColor: colors.secondarySystemBackground,
     borderRadius: RADIUS.lg,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    color: COLORS.label,
+    color: colors.label,
     minHeight: 44,
     maxHeight: 120,
   },
@@ -434,11 +437,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   sendButtonDisabled: {
-    backgroundColor: COLORS.tertiarySystemBackground,
+    backgroundColor: colors.tertiarySystemBackground,
   },
 });

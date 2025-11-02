@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   View,
   Text,
@@ -14,9 +15,11 @@ import * as Haptics from 'expo-haptics';
 import { collection, query, where, onSnapshot, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
 
 export default function DraftsScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { isAdmin } = useAuth();
   const [projects, setProjects] = useState([]);
   const [estimateProgress, setEstimateProgress] = useState({});
@@ -103,17 +106,17 @@ export default function DraftsScreen({ navigation }) {
     const percentage = getProgressPercentage(projectId);
 
     if (!progress || percentage === 0) {
-      return { label: 'Not Started', color: COLORS.gray3 };
+      return { label: 'Not Started', color: colors.gray3 };
     } else if (progress.sentToQuickBooks) {
-      return { label: 'Sent to QB', color: COLORS.green };
+      return { label: 'Sent to QB', color: colors.green };
     } else if (progress.calculatorComplete) {
-      return { label: 'Ready to Send', color: COLORS.blue };
+      return { label: 'Ready to Send', color: colors.blue };
     } else if (progress.descriptionFinalized) {
-      return { label: 'Pricing Needed', color: COLORS.orange };
+      return { label: 'Pricing Needed', color: colors.orange };
     } else if (progress.descriptionGenerated) {
-      return { label: 'Review Draft', color: COLORS.purple };
+      return { label: 'Review Draft', color: colors.purple };
     } else {
-      return { label: 'Draft Needed', color: COLORS.primary };
+      return { label: 'Draft Needed', color: colors.primary };
     }
   };
 
@@ -171,7 +174,7 @@ export default function DraftsScreen({ navigation }) {
               )}
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={24} color={COLORS.gray2} />
+          <Ionicons name="chevron-forward" size={24} color={colors.gray2} />
         </View>
 
         {/* Progress Bar */}
@@ -206,13 +209,13 @@ export default function DraftsScreen({ navigation }) {
             onPress={() => navigation.goBack()} 
             style={styles.backButton}
           >
-            <Ionicons name="arrow-back" size={24} color={COLORS.label} />
+            <Ionicons name="arrow-back" size={24} color={colors.label} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Drafts & Estimates</Text>
           <View style={{ width: 44 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -232,7 +235,7 @@ export default function DraftsScreen({ navigation }) {
           onPress={() => navigation.goBack()} 
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color={COLORS.label} />
+          <Ionicons name="arrow-back" size={24} color={colors.label} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Drafts & Estimates</Text>
         <View style={{ width: 44 }} />
@@ -241,7 +244,7 @@ export default function DraftsScreen({ navigation }) {
       {draftProjects.length === 0 ? (
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIconContainer}>
-            <Ionicons name="document-text-outline" size={64} color={COLORS.gray3} />
+            <Ionicons name="document-text-outline" size={64} color={colors.gray3} />
           </View>
           <Text style={styles.emptyTitle}>No Drafts</Text>
           <Text style={styles.emptyText}>
@@ -261,10 +264,10 @@ export default function DraftsScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.systemGroupedBackground,
+    backgroundColor: colors.systemGroupedBackground,
   },
   header: {
     flexDirection: 'row',
@@ -272,9 +275,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   backButton: {
     width: 44,
@@ -284,7 +287,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...TYPOGRAPHY.title2,
-    color: COLORS.label,
+    color: colors.label,
   },
   loadingContainer: {
     flex: 1,
@@ -295,7 +298,7 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
   },
   projectCard: {
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderRadius: RADIUS.lg,
     padding: SPACING.md,
     marginBottom: SPACING.sm,
@@ -325,17 +328,17 @@ const styles = StyleSheet.create({
   },
   projectTitle: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
     marginBottom: 2,
   },
   projectClient: {
     ...TYPOGRAPHY.footnote,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     fontWeight: '600',
   },
   projectLocation: {
     ...TYPOGRAPHY.footnote,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginTop: 2,
   },
   progressSection: {
@@ -353,11 +356,11 @@ const styles = StyleSheet.create({
   progressPercentage: {
     ...TYPOGRAPHY.caption1,
     fontWeight: '700',
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
   },
   progressBarContainer: {
     height: 6,
-    backgroundColor: COLORS.systemFill,
+    backgroundColor: colors.systemFill,
     borderRadius: RADIUS.sm,
     overflow: 'hidden',
   },
@@ -375,19 +378,19 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.lg,
   },
   emptyTitle: {
     ...TYPOGRAPHY.title2,
-    color: COLORS.label,
+    color: colors.label,
     marginBottom: SPACING.sm,
   },
   emptyText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     textAlign: 'center',
   },
 });

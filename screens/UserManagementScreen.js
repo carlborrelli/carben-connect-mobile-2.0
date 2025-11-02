@@ -1,5 +1,6 @@
 // UserManagementScreen - Admin user management
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   View,
   Text,
@@ -17,9 +18,11 @@ import * as Haptics from 'expo-haptics';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
 
 export default function UserManagementScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { userProfile, isAdmin } = useAuth();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -205,20 +208,20 @@ export default function UserManagementScreen({ navigation }) {
 
           {user.phone && (
             <View style={styles.userDetail}>
-              <Ionicons name="call-outline" size={14} color={COLORS.secondaryLabel} />
+              <Ionicons name="call-outline" size={14} color={colors.secondaryLabel} />
               <Text style={styles.userDetailText}>{user.phone}</Text>
             </View>
           )}
 
           {user.quickbooksCustomerId && (
             <View style={styles.userDetail}>
-              <Ionicons name="business-outline" size={14} color={COLORS.secondaryLabel} />
+              <Ionicons name="business-outline" size={14} color={colors.secondaryLabel} />
               <Text style={styles.userDetailText}>QB: {user.quickbooksCustomerId}</Text>
             </View>
           )}
         </View>
 
-        <Ionicons name="chevron-forward" size={20} color={COLORS.tertiaryLabel} />
+        <Ionicons name="chevron-forward" size={20} color={colors.tertiaryLabel} />
       </TouchableOpacity>
     );
   };
@@ -228,13 +231,13 @@ export default function UserManagementScreen({ navigation }) {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
+            <Ionicons name="chevron-back" size={28} color={colors.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>User Management</Text>
           <View style={{ width: 44 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -245,7 +248,7 @@ export default function UserManagementScreen({ navigation }) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
+          <Ionicons name="chevron-back" size={28} color={colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>User Management</Text>
         <View style={{ width: 44 }} />
@@ -254,11 +257,11 @@ export default function UserManagementScreen({ navigation }) {
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
-          <Ionicons name="search" size={20} color={COLORS.tertiaryLabel} style={styles.searchIcon} />
+          <Ionicons name="search" size={20} color={colors.tertiaryLabel} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search users..."
-            placeholderTextColor={COLORS.tertiaryLabel}
+            placeholderTextColor={colors.tertiaryLabel}
             value={searchQuery}
             onChangeText={setSearchQuery}
             returnKeyType="search"
@@ -267,7 +270,7 @@ export default function UserManagementScreen({ navigation }) {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={handleClearSearch} style={styles.clearButton}>
-              <Ionicons name="close-circle" size={20} color={COLORS.tertiaryLabel} />
+              <Ionicons name="close-circle" size={20} color={colors.tertiaryLabel} />
             </TouchableOpacity>
           )}
         </View>
@@ -313,7 +316,7 @@ export default function UserManagementScreen({ navigation }) {
       {/* Users List */}
       {filteredUsers.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="people-outline" size={64} color={COLORS.tertiaryLabel} />
+          <Ionicons name="people-outline" size={64} color={colors.tertiaryLabel} />
           <Text style={styles.emptyTitle}>No Users Found</Text>
           <Text style={styles.emptyText}>
             {searchQuery ? 'Try adjusting your search' : 'No users match the selected filter'}
@@ -329,7 +332,7 @@ export default function UserManagementScreen({ navigation }) {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={COLORS.primary}
+              tintColor={colors.primary}
             />
           }
         />
@@ -338,10 +341,10 @@ export default function UserManagementScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.systemGroupedBackground,
+    backgroundColor: colors.systemGroupedBackground,
   },
   header: {
     flexDirection: 'row',
@@ -349,9 +352,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   backButton: {
     width: 44,
@@ -361,18 +364,18 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
   },
   searchContainer: {
     paddingHorizontal: SPACING.lg,
     paddingTop: SPACING.md,
     paddingBottom: SPACING.sm,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
   },
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
     paddingHorizontal: SPACING.sm,
     height: 44,
@@ -383,7 +386,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
     height: 44,
   },
   clearButton: {
@@ -394,24 +397,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingBottom: SPACING.md,
     gap: SPACING.xs,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
   },
   filterChip: {
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
   },
   filterChipActive: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
   },
   filterChipText: {
     ...TYPOGRAPHY.subheadline,
-    color: COLORS.label,
+    color: colors.label,
     fontWeight: '500',
   },
   filterChipTextActive: {
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
     fontWeight: '600',
   },
   statsContainer: {
@@ -419,25 +422,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
     gap: SPACING.sm,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   statBox: {
     flex: 1,
     alignItems: 'center',
     padding: SPACING.sm,
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
   },
   statNumber: {
     ...TYPOGRAPHY.title2,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '700',
   },
   statLabel: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginTop: SPACING.xs / 2,
   },
   loadingContainer: {
@@ -453,12 +456,12 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...TYPOGRAPHY.title2,
-    color: COLORS.label,
+    color: colors.label,
     marginTop: SPACING.lg,
   },
   emptyText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     textAlign: 'center',
     marginTop: SPACING.xs,
   },
@@ -468,7 +471,7 @@ const styles = StyleSheet.create({
   userCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     padding: SPACING.md,
     borderRadius: RADIUS.lg,
     marginBottom: SPACING.sm,
@@ -478,17 +481,17 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: SPACING.md,
   },
   avatarAdmin: {
-    backgroundColor: COLORS.orange,
+    backgroundColor: colors.orange,
   },
   avatarText: {
     ...TYPOGRAPHY.title3,
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
     fontWeight: '700',
   },
   userInfo: {
@@ -502,11 +505,11 @@ const styles = StyleSheet.create({
   },
   userName: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
   },
   userEmail: {
     ...TYPOGRAPHY.subheadline,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     marginBottom: SPACING.xs / 2,
   },
   userDetail: {
@@ -517,28 +520,28 @@ const styles = StyleSheet.create({
   },
   userDetailText: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
   },
   youBadge: {
     paddingHorizontal: SPACING.xs,
     paddingVertical: 2,
-    backgroundColor: COLORS.blue + '20',
+    backgroundColor: colors.blue + '20',
     borderRadius: RADIUS.xs,
   },
   youText: {
     ...TYPOGRAPHY.caption2,
-    color: COLORS.blue,
+    color: colors.blue,
     fontWeight: '700',
   },
   adminBadge: {
     paddingHorizontal: SPACING.xs,
     paddingVertical: 2,
-    backgroundColor: COLORS.orange + '20',
+    backgroundColor: colors.orange + '20',
     borderRadius: RADIUS.xs,
   },
   adminText: {
     ...TYPOGRAPHY.caption2,
-    color: COLORS.orange,
+    color: colors.orange,
     fontWeight: '700',
   },
 });

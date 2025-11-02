@@ -1,10 +1,11 @@
 // CalendarScreen - Calendar view for projects and events
 import React, { useState } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -14,6 +15,8 @@ const MONTHS = [
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function CalendarScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -99,7 +102,7 @@ export default function CalendarScreen({ navigation }) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color={COLORS.primary} />
+          <Ionicons name="chevron-back" size={28} color={colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Calendar</Text>
         <TouchableOpacity style={styles.todayButton}>
@@ -111,7 +114,7 @@ export default function CalendarScreen({ navigation }) {
         {/* Month/Year Selector */}
         <View style={styles.monthSelector}>
           <TouchableOpacity onPress={handlePreviousMonth} style={styles.monthButton}>
-            <Ionicons name="chevron-back" size={24} color={COLORS.primary} />
+            <Ionicons name="chevron-back" size={24} color={colors.primary} />
           </TouchableOpacity>
           
           <Text style={styles.monthYearText}>
@@ -119,7 +122,7 @@ export default function CalendarScreen({ navigation }) {
           </Text>
           
           <TouchableOpacity onPress={handleNextMonth} style={styles.monthButton}>
-            <Ionicons name="chevron-forward" size={24} color={COLORS.primary} />
+            <Ionicons name="chevron-forward" size={24} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
@@ -144,7 +147,7 @@ export default function CalendarScreen({ navigation }) {
         <View style={styles.eventsSection}>
           <Text style={styles.sectionTitle}>Events</Text>
           <View style={styles.emptyState}>
-            <Ionicons name="calendar-outline" size={48} color={COLORS.tertiaryLabel} />
+            <Ionicons name="calendar-outline" size={48} color={colors.tertiaryLabel} />
             <Text style={styles.emptyText}>No events scheduled</Text>
             <Text style={styles.emptySubtext}>
               Project milestones and deadlines will appear here
@@ -158,10 +161,10 @@ export default function CalendarScreen({ navigation }) {
 
 const DAY_CELL_WIDTH = 100 / 7;
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.systemGroupedBackground,
+    backgroundColor: colors.systemGroupedBackground,
   },
   header: {
     flexDirection: 'row',
@@ -169,9 +172,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.systemBackground,
+    backgroundColor: colors.systemBackground,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.separator,
+    borderBottomColor: colors.separator,
   },
   backButton: {
     width: 44,
@@ -181,7 +184,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...TYPOGRAPHY.headline,
-    color: COLORS.label,
+    color: colors.label,
   },
   todayButton: {
     paddingHorizontal: SPACING.sm,
@@ -189,7 +192,7 @@ const styles = StyleSheet.create({
   },
   todayButtonText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   content: {
@@ -210,10 +213,10 @@ const styles = StyleSheet.create({
   },
   monthYearText: {
     ...TYPOGRAPHY.title2,
-    color: COLORS.label,
+    color: colors.label,
   },
   calendarCard: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     marginHorizontal: SPACING.lg,
     borderRadius: RADIUS.lg,
     padding: SPACING.md,
@@ -230,7 +233,7 @@ const styles = StyleSheet.create({
   },
   dayHeaderText: {
     ...TYPOGRAPHY.caption1,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     fontWeight: '600',
   },
   daysGrid: {
@@ -245,23 +248,23 @@ const styles = StyleSheet.create({
     padding: SPACING.xs,
   },
   todayCell: {
-    backgroundColor: COLORS.primary + '20',
+    backgroundColor: colors.primary + '20',
     borderRadius: RADIUS.sm,
   },
   selectedCell: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: RADIUS.sm,
   },
   dayText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
   },
   todayText: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   selectedText: {
-    color: COLORS.systemBackground,
+    color: colors.systemBackground,
     fontWeight: '600',
   },
   eventsSection: {
@@ -270,11 +273,11 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...TYPOGRAPHY.title3,
-    color: COLORS.label,
+    color: colors.label,
     marginBottom: SPACING.md,
   },
   emptyState: {
-    backgroundColor: COLORS.secondarySystemGroupedBackground,
+    backgroundColor: colors.secondarySystemGroupedBackground,
     padding: SPACING.xxl,
     borderRadius: RADIUS.lg,
     alignItems: 'center',
@@ -282,12 +285,12 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...TYPOGRAPHY.body,
-    color: COLORS.label,
+    color: colors.label,
     marginTop: SPACING.sm,
   },
   emptySubtext: {
     ...TYPOGRAPHY.footnote,
-    color: COLORS.secondaryLabel,
+    color: colors.secondaryLabel,
     textAlign: 'center',
     marginTop: SPACING.xs,
   },
