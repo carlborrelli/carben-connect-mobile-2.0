@@ -1,9 +1,11 @@
 // HomeScreen - Central hub for quick actions and overview
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
@@ -11,6 +13,63 @@ import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 export default function HomeScreen({ navigation }) {
   const { userProfile, isAdmin } = useAuth();
   const { colors } = useTheme();
+  const [activeProjectsCount, setActiveProjectsCount] = useState(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+
+  // Fetch active projects count
+  useEffect(() => {
+    if (!userProfile) return;
+
+    let projectsQuery;
+    if (isAdmin()) {
+      // Admin sees all active projects
+      projectsQuery = query(collection(db, 'projects'));
+    } else {
+      // Client sees only their projects
+      projectsQuery = query(
+        collection(db, 'projects'),
+        where('clientId', '==', userProfile.id)
+      );
+    }
+
+    const unsubscribe = onSnapshot(projectsQuery, (snapshot) => {
+      // Count projects that are not COMPLETE or PAID
+      const activeCount = snapshot.docs.filter(doc => {
+        const status = doc.data().status;
+        return status !== 'COMPLETE' && status !== 'PAID';
+      }).length;
+      setActiveProjectsCount(activeCount);
+    });
+
+    return () => unsubscribe();
+  }, [userProfile, isAdmin]);
+
+  // Fetch unread messages count
+  useEffect(() => {
+    if (!userProfile) return;
+
+    let messagesQuery;
+    if (isAdmin()) {
+      // Admin sees all unread messages
+      messagesQuery = query(
+        collection(db, 'messages'),
+        where('unread', '==', true)
+      );
+    } else {
+      // Client sees only their unread messages
+      messagesQuery = query(
+        collection(db, 'messages'),
+        where('clientId', '==', userProfile.id),
+        where('unread', '==', true)
+      );
+    }
+
+    const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+      setUnreadMessagesCount(snapshot.size);
+    });
+
+    return () => unsubscribe();
+  }, [userProfile, isAdmin]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.systemGroupedBackground }]} edges={['top']}>
@@ -37,11 +96,11 @@ export default function HomeScreen({ navigation }) {
         {/* Quick Stats */}
         <View style={styles.statsContainer}>
           <View style={[styles.statCard, { backgroundColor: colors.secondarySystemGroupedBackground }]}>
-            <Text style={[styles.statNumber, { color: colors.primary }]}>0</Text>
+            <Text style={[styles.statNumber, { color: colors.primary }]}>{activeProjectsCount}</Text>
             <Text style={[styles.statLabel, { color: colors.secondaryLabel }]}>Active Projects</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.secondarySystemGroupedBackground }]}>
-            <Text style={[styles.statNumber, { color: colors.primary }]}>0</Text>
+            <Text style={[styles.statNumber, { color: colors.primary }]}>{unreadMessagesCount}</Text>
             <Text style={[styles.statLabel, { color: colors.secondaryLabel }]}>Unread Messages</Text>
           </View>
         </View>
