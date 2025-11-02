@@ -57,6 +57,7 @@ const CalculatorSection = ({
   onToggle,
   markup,
   onMarkupChange,
+  colors,
 }) => {
   const calculateSubtotal = () => {
     return items.reduce((sum, item) => sum + (item.total || 0), 0);
@@ -211,6 +212,7 @@ const LaborSection = ({
   onItemsChange,
   isExpanded,
   onToggle,
+  colors,
 }) => {
   const [showRatePicker, setShowRatePicker] = useState(false);
   const [customRate, setCustomRate] = useState('');
@@ -533,6 +535,7 @@ export default function CalculatorTab({ projectId }) {
           onToggle={() => toggleSection('materials')}
           markup={materialsMarkup}
           onMarkupChange={setMaterialsMarkup}
+          colors={colors}
         />
 
         <CalculatorSection
@@ -543,6 +546,7 @@ export default function CalculatorTab({ projectId }) {
           onToggle={() => toggleSection('subcontractors')}
           markup={subcontractorsMarkup}
           onMarkupChange={setSubcontractorsMarkup}
+          colors={colors}
         />
 
         <LaborSection
@@ -550,6 +554,7 @@ export default function CalculatorTab({ projectId }) {
           onItemsChange={setLabor}
           isExpanded={expandedSections.labor}
           onToggle={() => toggleSection('labor')}
+          colors={colors}
         />
 
         <View style={styles.profitSection}>
