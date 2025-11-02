@@ -1,8 +1,8 @@
 # Carben Connect Mobile 2.0 - Dark Mode Implementation - Complete Memory
 
-**Last Updated:** 2025-11-01
+**Last Updated:** 2025-11-02
 **Repository:** https://github.com/carlborrelli/carben-connect-mobile-2.0
-**Latest Commit:** 0db470a
+**Latest Commit:** 7c1bb8b
 
 ---
 
@@ -21,6 +21,39 @@ This session completed a comprehensive dark mode implementation for the Carben C
 5. **cbf4e20** - Fix unread message background in dark mode
 6. **987ec73** - Add L-shaped orange border for unread messages
 7. **0db470a** - Add real-time counts for active projects and unread messages on Home
+8. **7c1bb8b** - Add comprehensive dark mode implementation documentation
+
+---
+
+## TestFlight Deployment
+
+**Build #4 - Latest Production Build**
+- **Build Date:** November 2, 2025, 10:41 AM
+- **Build Number:** 4
+- **App Version:** 1.0.0
+- **Build ID:** 51c1df4c-3f55-43ef-98c7-e0fe240b92ad
+- **Status:** ✅ Submitted to Apple App Store Connect
+- **TestFlight URL:** https://appstoreconnect.apple.com/apps/6754711210/testflight/ios
+- **Download Link:** https://expo.dev/artifacts/eas/b6y5kFnSKLfZ3wtze7tMKB.ipa
+
+**What's Included in Build #4:**
+- Complete dark mode implementation across all screens
+- Automatic system detection + manual override
+- Theme persistence with AsyncStorage
+- L-shaped orange borders on unread messages
+- Real-time Firebase counts for active projects and unread messages
+- All bug fixes and UI improvements
+
+**Deployment Command:**
+```bash
+npx eas build --platform ios --profile production --auto-submit --non-interactive
+```
+
+**Processing Time:** Apple typically processes builds in 5-10 minutes. Users will receive an email when the build is available for testing in the TestFlight app.
+
+**Previous Builds:**
+- Build #3 (Oct 30, 2025) - Pre-dark mode implementation
+- Build #2 (Oct 30, 2025) - Earlier version
 
 ---
 
@@ -375,6 +408,8 @@ def fix_screen(filepath):
 - **Project Path:** ~/carben-connect-mobile-2.0
 
 ### Common Commands
+
+**Development Commands:**
 ```bash
 # SSH to server
 sshpass -p 'Cb136479' ssh carlborrelli@10.30.82.252
@@ -390,6 +425,27 @@ git push
 
 # Check git status
 git status
+```
+
+**Build & Deploy Commands:**
+```bash
+# Build for iOS production and auto-submit to TestFlight
+npx eas build --platform ios --profile production --auto-submit --non-interactive
+
+# Build only (no submission)
+npx eas build --platform ios --profile production --non-interactive
+
+# Submit existing build to TestFlight
+npx eas submit --platform ios --latest --non-interactive
+
+# Check build status
+npx eas build:list --platform ios --limit 5
+```
+
+**Environment Variables Required:**
+```bash
+export EXPO_TOKEN=Zvo154SMcwr8VXwJh0ZTPldkr46ohKYjGSjCf0U6
+export EXPO_APPLE_APP_SPECIFIC_PASSWORD=kzcf-vqrp-htts-xtfh
 ```
 
 ---
@@ -480,5 +536,6 @@ This implementation provides a complete, production-ready dark mode system with:
 - ✅ Real-time theme switching
 - ✅ Proper error handling
 - ✅ Clean, maintainable code
+- ✅ **Deployed to TestFlight (Build #4, November 2, 2025)**
 
-All code is committed and pushed to GitHub. The app is ready for testing and deployment.
+All code is committed and pushed to GitHub. Build #4 is successfully deployed to TestFlight and awaiting Apple's processing.
