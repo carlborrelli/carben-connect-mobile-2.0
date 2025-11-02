@@ -24,14 +24,15 @@ import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
 const { width, height } = Dimensions.get('window');
 const PHOTO_SIZE = (width - (SPACING.lg * 3)) / 2;
 
-const STATUS_COLORS = {
+// Function to get status colors based on theme
+const getStatusColors = (colors) => ({
   'NEW': colors.blue,
   'ESTIMATE_SENT': colors.purple,
   'APPROVED': colors.green,
   'IN_PROGRESS': colors.orange,
   'COMPLETE': colors.teal,
   'PAID': colors.green,
-};
+});
 
 const STATUS_LABELS = {
   'NEW': 'New',
@@ -119,6 +120,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
     );
   }
 
+  const STATUS_COLORS = getStatusColors(colors);
   const statusColor = STATUS_COLORS[project.status] || colors.gray;
   const statusLabel = STATUS_LABELS[project.status] || project.status;
 
