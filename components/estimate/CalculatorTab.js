@@ -391,11 +391,36 @@ export default function CalculatorTab({ projectId }) {
       (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setMaterials(data.materials || [createEmptyLineItem()]);
+
+          // Convert materials data: ensure qty and unitCost are strings for TextInput
+          const materials = (data.materials || [createEmptyLineItem()]).map(item => ({
+            ...item,
+            qty: String(item.qty || '1'),
+            unitCost: String(item.unitCost || ''),
+          }));
+          setMaterials(materials);
+
           setMaterialsMarkup(String(data.materialsMarkup || 30));
-          setSubcontractors(data.subcontractors || [createEmptyLineItem()]);
+
+          // Convert subcontractors data: ensure item and unitCost are strings
+          const subcontractors = (data.subcontractors || [createEmptyLineItem()]).map(item => ({
+            ...item,
+            item: String(item.item || ''),
+            qty: String(item.qty || '1'),
+            unitCost: String(item.unitCost || ''),
+          }));
+          setSubcontractors(subcontractors);
+
           setSubcontractorsMarkup(String(data.subcontractorsMarkup || 30));
-          setLabor(data.labor || [createEmptyLaborItem()]);
+
+          // Convert labor data: ensure days and rate are strings
+          const labor = (data.labor || [createEmptyLaborItem()]).map(item => ({
+            ...item,
+            days: String(item.days || '1'),
+            rate: String(item.rate || '4000'),
+          }));
+          setLabor(labor);
+
           setProfitType(data.profitType || 'percent');
           setProfitValue(String(data.profitValue !== undefined ? data.profitValue : 0));
         }
