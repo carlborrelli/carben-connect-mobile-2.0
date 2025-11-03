@@ -29,7 +29,7 @@ const createEmptyLineItem = () => ({
   id: Date.now().toString() + Math.random(),
   item: '',
   qty: '1',
-  cost: '',
+  unitCost: '',
   total: 0,
 });
 
@@ -90,10 +90,10 @@ const CalculatorSection = ({
 
       const updated = { ...item, [field]: value };
 
-      if (field === 'qty' || field === 'cost') {
+      if (field === 'qty' || field === 'unitCost') {
         const qty = parseFloat(field === 'qty' ? value : item.qty) || 0;
-        const cost = parseFloat(field === 'cost' ? value : item.cost) || 0;
-        updated.total = qty * cost;
+        const unitCost = parseFloat(field === 'unitCost' ? value : item.unitCost) || 0;
+        updated.total = qty * unitCost;
       }
 
       return updated;
@@ -155,8 +155,8 @@ const CalculatorSection = ({
               />
               <TextInput
                 style={[styles.tableInput, { flex: 1.75 }]}
-                value={item.cost}
-                onChangeText={(text) => updateItem(item.id, 'cost', text)}
+                value={item.unitCost}
+                onChangeText={(text) => updateItem(item.id, 'unitCost', text)}
                 placeholder="0.00"
                 placeholderTextColor={colors.quaternaryLabel}
                 keyboardType="decimal-pad"
