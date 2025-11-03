@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -59,6 +59,8 @@ const CalculatorSection = ({
   onMarkupChange,
   colors,
   styles,
+  editingFieldRef,
+  sectionType,
 }) => {
   const calculateSubtotal = () => {
     return items.reduce((sum, item) => sum + (item.total || 0), 0);
@@ -129,8 +131,8 @@ const CalculatorSection = ({
         <View style={styles.sectionContent}>
           <View style={styles.tableHeader}>
             <Text style={[styles.tableHeaderText, { flex: 2 }]}>Item</Text>
-            <Text style={[styles.tableHeaderText, { flex: 0.5 }]}>QTY</Text>
-            <Text style={[styles.tableHeaderText, { flex: 1.75 }]}>Cost</Text>
+            <Text style={[styles.tableHeaderText, { flex: 1 }]}>QTY</Text>
+            <Text style={[styles.tableHeaderText, { flex: 1.25 }]}>Cost</Text>
             <Text style={[styles.tableHeaderText, { flex: 1.75 }]}>Total</Text>
             <View style={{ width: 32 }} />
           </View>
@@ -141,22 +143,28 @@ const CalculatorSection = ({
                 style={[styles.tableInput, { flex: 2 }]}
                 value={item.item}
                 onChangeText={(text) => updateItem(item.id, 'item', text)}
+                onFocus={() => { if (editingFieldRef) editingFieldRef.current = `${sectionType}-${item.id}-item`; }}
+                onBlur={() => { if (editingFieldRef) editingFieldRef.current = null; }}
                 placeholder="Item name"
                 placeholderTextColor={colors.quaternaryLabel}
                 multiline={true}
               />
               <TextInput
-                style={[styles.tableInput, { flex: 0.5 }]}
+                style={[styles.tableInput, { flex: 1 }]}
                 value={item.qty}
                 onChangeText={(text) => updateItem(item.id, 'qty', text)}
+                onFocus={() => { if (editingFieldRef) editingFieldRef.current = `${sectionType}-${item.id}-qty`; }}
+                onBlur={() => { if (editingFieldRef) editingFieldRef.current = null; }}
                 placeholder="1"
                 placeholderTextColor={colors.quaternaryLabel}
                 keyboardType="decimal-pad"
               />
               <TextInput
-                style={[styles.tableInput, { flex: 1.75 }]}
+                style={[styles.tableInput, { flex: 1.25 }]}
                 value={item.unitCost}
                 onChangeText={(text) => updateItem(item.id, 'unitCost', text)}
+                onFocus={() => { if (editingFieldRef) editingFieldRef.current = `${sectionType}-${item.id}-unitCost`; }}
+                onBlur={() => { if (editingFieldRef) editingFieldRef.current = null; }}
                 placeholder="0.00"
                 placeholderTextColor={colors.quaternaryLabel}
                 keyboardType="decimal-pad"
@@ -384,6 +392,7 @@ export default function CalculatorTab({ projectId }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
+  const editingFieldRef = useRef(null); // Track which field is being edited
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
@@ -392,37 +401,51 @@ export default function CalculatorTab({ projectId }) {
         if (docSnap.exists()) {
           const data = docSnap.data();
 
-          // Convert materials data: ensure qty and unitCost are strings for TextInput
-          const materials = (data.materials || [createEmptyLineItem()]).map(item => ({
-            ...item,
-            qty: String(item.qty || '1'),
-            unitCost: String(item.unitCost || ''),
-          }));
-          setMaterials(materials);
+          // Only update if user is not currently editing
+          // This prevents Firebase from overwriting user input
+          if (!editingFieldRef.current || !editingFieldRef.current.startsWith('material-')) {
+            // Convert materials data: ensure qty and unitCost are strings for TextInput
+            const materials = (data.materials || [createEmptyLineItem()]).map(item => ({
+              ...item,
+              qty: String(item.qty || '1'),
+              unitCost: String(item.unitCost || ''),
+            }));
+            setMaterials(materials);
+          }
 
-          setMaterialsMarkup(String(data.materialsMarkup || 30));
+          if (editingFieldRef.current !== 'materialsMarkup') {
+            setMaterialsMarkup(String(data.materialsMarkup || 30));
+          }
 
-          // Convert subcontractors data: ensure item and unitCost are strings
-          const subcontractors = (data.subcontractors || [createEmptyLineItem()]).map(item => ({
-            ...item,
-            item: String(item.item || ''),
-            qty: String(item.qty || '1'),
-            unitCost: String(item.unitCost || ''),
-          }));
-          setSubcontractors(subcontractors);
+          if (!editingFieldRef.current || !editingFieldRef.current.startsWith('subcontractor-')) {
+            // Convert subcontractors data: ensure item and unitCost are strings
+            const subcontractors = (data.subcontractors || [createEmptyLineItem()]).map(item => ({
+              ...item,
+              item: String(item.item || ''),
+              qty: String(item.qty || '1'),
+              unitCost: String(item.unitCost || ''),
+            }));
+            setSubcontractors(subcontractors);
+          }
 
-          setSubcontractorsMarkup(String(data.subcontractorsMarkup || 30));
+          if (editingFieldRef.current !== 'subcontractorsMarkup') {
+            setSubcontractorsMarkup(String(data.subcontractorsMarkup || 30));
+          }
 
-          // Convert labor data: ensure days and rate are strings
-          const labor = (data.labor || [createEmptyLaborItem()]).map(item => ({
-            ...item,
-            days: String(item.days || '1'),
-            rate: String(item.rate || '4000'),
-          }));
-          setLabor(labor);
+          if (!editingFieldRef.current || !editingFieldRef.current.startsWith('labor-')) {
+            // Convert labor data: ensure days and rate are strings
+            const labor = (data.labor || [createEmptyLaborItem()]).map(item => ({
+              ...item,
+              days: String(item.days || '1'),
+              rate: String(item.rate || '4000'),
+            }));
+            setLabor(labor);
+          }
 
-          setProfitType(data.profitType || 'percent');
-          setProfitValue(String(data.profitValue !== undefined ? data.profitValue : 0));
+          if (editingFieldRef.current !== 'profitValue') {
+            setProfitType(data.profitType || 'percent');
+            setProfitValue(String(data.profitValue !== undefined ? data.profitValue : 0));
+          }
         }
         setLoading(false);
       },
@@ -564,6 +587,8 @@ export default function CalculatorTab({ projectId }) {
           onMarkupChange={setMaterialsMarkup}
           colors={colors}
           styles={styles}
+          editingFieldRef={editingFieldRef}
+          sectionType="material"
         />
 
         <CalculatorSection
@@ -576,6 +601,8 @@ export default function CalculatorTab({ projectId }) {
           onMarkupChange={setSubcontractorsMarkup}
           colors={colors}
           styles={styles}
+          editingFieldRef={editingFieldRef}
+          sectionType="subcontractor"
         />
 
         <LaborSection
