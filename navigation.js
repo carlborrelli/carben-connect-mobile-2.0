@@ -22,6 +22,7 @@ import ProfileScreen from './screens/ProfileScreen';
 import CalendarScreen from './screens/CalendarScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import UserManagementScreen from './screens/UserManagementScreen';
+import UserEditScreen from './screens/UserEditScreen';
 import QuickBooksScreen from './screens/QuickBooksScreen';
 
 // Components
@@ -89,6 +90,7 @@ function MoreStackScreen() {
       <Stack.Screen name="MoreMain" component={MoreScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="UserManagement" component={UserManagementScreen} />
+      <Stack.Screen name="UserEdit" component={UserEditScreen} />
       <Stack.Screen name="QuickBooks" component={QuickBooksScreen} />
       <Stack.Screen name="Drafts" component={DraftsScreen} />
       <Stack.Screen name="EstimateWorkspace" component={EstimateWorkspaceScreen} />

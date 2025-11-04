@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
@@ -99,68 +99,7 @@ export default function UserManagementScreen({ navigation }) {
 
   const handleUserPress = (user) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    Alert.alert(
-      user.name || 'User',
-      `Email: ${user.email}\nRole: ${user.role || 'client'}\nPhone: ${user.phone || 'N/A'}`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Toggle Role',
-          onPress: () => handleToggleRole(user),
-        },
-        userProfile.id !== user.id && {
-          text: 'Delete User',
-          style: 'destructive',
-          onPress: () => handleDeleteUser(user),
-        },
-      ].filter(Boolean)
-    );
-  };
-
-  const handleToggleRole = async (user) => {
-    if (user.id === userProfile.id) {
-      Alert.alert('Error', 'You cannot change your own role.');
-      return;
-    }
-
-    try {
-      const newRole = user.role === 'admin' ? 'client' : 'admin';
-      await updateDoc(doc(db, 'users', user.id), {
-        role: newRole,
-      });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Success', `User role changed to ${newRole}`);
-    } catch (error) {
-      console.error('Error updating user role:', error);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Error', 'Failed to update user role');
-    }
-  };
-
-  const handleDeleteUser = async (user) => {
-    Alert.alert(
-      'Delete User',
-      `Are you sure you want to delete ${user.name}? This action cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteDoc(doc(db, 'users', user.id));
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              Alert.alert('Success', 'User deleted successfully');
-            } catch (error) {
-              console.error('Error deleting user:', error);
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-              Alert.alert('Error', 'Failed to delete user');
-            }
-          },
-        },
-      ]
-    );
+    navigation.navigate('UserEdit', { userId: user.id });
   };
 
   const handleClearSearch = () => {
