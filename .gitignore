@@ -77,3 +77,4 @@ coverage/
 # Misc
 *.tgz
 *.gz
+CREDENTIALS.md
