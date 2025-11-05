@@ -78,3 +78,7 @@ coverage/
 *.tgz
 *.gz
 CREDENTIALS.md
+
+# Keep these files local only (contain credentials)
+DARK_MODE_IMPLEMENTATION_MEMORY.md
+DEVELOPMENT_WORKFLOW.md
