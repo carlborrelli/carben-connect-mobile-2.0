@@ -82,3 +82,29 @@ CREDENTIALS.md
 # Keep these files local only (contain credentials)
 DARK_MODE_IMPLEMENTATION_MEMORY.md
 DEVELOPMENT_WORKFLOW.md
+
+# ===== SECURITY: Never commit credentials =====
+# Local credential files
+CREDENTIALS.md
+*_CREDENTIALS.md
+
+# Workflow/memory files that may contain credentials
+DARK_MODE_IMPLEMENTATION_MEMORY.md
+DEVELOPMENT_WORKFLOW.md
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Any file with 'secret' or 'private' in the name
+*secret*
+*private*
+*.key
+*.pem
+
+# Backup files that might contain credentials
+*.backup
+*.bak
+*~
+
