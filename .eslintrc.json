@@ -1,0 +1,15 @@
+{
+  extends: [
+    expo,
+    prettier
+  ],
+  plugins: [react, react-hooks],
+  rules: {
+    react-hooks/exhaustive-deps: warn,
+    no-console: [warn, { allow: [error, warn, log] }],
+    @typescript-eslint/no-unused-vars: [warn, {
+      argsIgnorePattern: ^_,
+      varsIgnorePattern: ^_
+    }]
+  }
+}

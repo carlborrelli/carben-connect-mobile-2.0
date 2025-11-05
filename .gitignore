@@ -1,17 +1,21 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
+# Dependencies
 node_modules/
+.pnp
+.pnp.js
 
 # Expo
 .expo/
 .expo-shared/
 dist/
 web-build/
-expo-env.d.ts
 
 # Native
-.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
 *.orig.*
 *.jks
 *.p8
@@ -22,34 +26,54 @@ expo-env.d.ts
 # Metro
 .metro-health-check*
 
-# debug
+# Debug
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+*~
+*.log
 
-# macOS
+# OS
 .DS_Store
-*.pem
-Thumbs.db
-
-# local env files
-.env
-.env*.local
-.env.*.local
-
-# typescript
-*.tsbuildinfo
-
-# generated native folders
-/ios
-/android
-
-# Credentials (NEVER commit these)
-CREDENTIALS.md
+*.swp
+*.swo
+*.swn
+*.swm
 
 # IDE
 .vscode/
 .idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
 
-# Build
-build/
+# Env files (DO NOT commit actual .env)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# iOS
+ios/Pods/
+ios/build/
+ios/*.xcworkspace
+ios/*.xcuserdata
+
+# Android  
+android/.gradle/
+android/app/build/
+android/app/debug/
+android/app/release/
+android/build/
+android/local.properties
+android/.idea/
+android/*.iml
+google-services.json
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.tgz
+*.gz

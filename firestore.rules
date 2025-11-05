@@ -1,0 +1,67 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function authed() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function isAdmin() {
+      return authed() &&
+             exists(/databases/$(database)/documents/users/$(uid())) &&
+             get(/databases/$(database)/documents/users/$(uid())).data.role == 'admin';
+    }
+
+    match /users/{userId} {
+      allow read: if authed() && (uid() == userId || isAdmin());
+      allow create: if authed() && uid() == userId;
+      allow update: if authed() && uid() == userId &&
+                      (!('role' in request.resource.data) ||
+                       request.resource.data.role == resource.data.role);
+      allow delete: if isAdmin();
+    }
+
+    match /projects/{projectId} {
+      allow read: if authed();
+      allow create: if authed();
+      allow update: if authed() &&
+                      resource.data.owner == uid() &&
+                      !('approved' in request.resource.data) &&
+                      !('paid' in request.resource.data) &&
+                      !('finalized' in request.resource.data);
+      allow delete: if authed() && (resource.data.owner == uid() || isAdmin());
+    }
+
+    match /projects/{projectId}/messages/{msgId} {
+      allow read: if authed();
+      allow create: if authed() && request.resource.data.senderId == uid();
+      allow update, delete: if false;
+    }
+
+    match /estimateCalculators/{calculatorId} {
+      allow read: if authed();
+      allow create: if authed();
+      allow update: if authed();
+      allow delete: if authed() && isAdmin();
+    }
+
+    match /clients/{clientId} {
+      allow read: if authed();
+      allow create: if authed() && isAdmin();
+      allow update: if authed() && isAdmin();
+      allow delete: if authed() && isAdmin();
+    }
+
+    match /drafts/{draftId} {
+      allow read: if authed();
+      allow create: if authed();
+      allow update: if authed() && resource.data.createdBy == uid();
+      allow delete: if authed() && (resource.data.createdBy == uid() || isAdmin());
+    }
+  }
+}

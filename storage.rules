@@ -1,0 +1,35 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function authed() {
+      return request.auth != null;
+    }
+
+    match /projectUploads/{projectId}/{filename} {
+      allow read: if authed();
+      allow write: if authed() &&
+                     request.resource.size < 15 * 1024 * 1024 &&
+                     request.resource.contentType.matches('image/.*|audio/.*|application/pdf');
+      allow delete: if authed();
+    }
+
+    match /profileImages/{userId}/{filename} {
+      allow read: if authed();
+      allow write: if authed() &&
+                     request.auth.uid == userId &&
+                     request.resource.size < 5 * 1024 * 1024 &&
+                     request.resource.contentType.matches('image/.*');
+      allow delete: if authed() && request.auth.uid == userId;
+    }
+
+    match /estimateAttachments/{estimateId}/{filename} {
+      allow read: if authed();
+      allow write: if authed() &&
+                     request.resource.size < 10 * 1024 * 1024 &&
+                     request.resource.contentType.matches('image/.*|application/pdf');
+      allow delete: if authed();
+    }
+  }
+}
