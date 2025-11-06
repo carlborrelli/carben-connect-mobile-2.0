@@ -67,8 +67,8 @@ export default function CustomTabBar({ state, descriptors, navigation }) {
             case 'Home':
               iconName = 'home';
               break;
-            case 'Clients':
-              iconName = isFocused ? 'people' : 'people-outline';
+            case 'NewProject':
+              iconName = isFocused ? 'add' : 'add-outline';
               break;
             case 'More':
               iconName = isFocused ? 'menu' : 'menu-outline';

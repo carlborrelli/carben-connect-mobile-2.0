@@ -63,12 +63,11 @@ DEVELOPMENT_WORKFLOW.md
 
 ### ⚠️ EXPOSED - Need to Rotate:
 1. **Mac Server Password** (Cb136479)
-2. **Expo Token** (Zvo154SMcwr8VXwJh0ZTPldkr46ohKYjGSjCf0U6)
-3. **Apple App Password** (kzcf-vqrp-htts-xtfh)
-4. **Old GitHub Token** (ghp_eC87...) - already invalid
+2. **Apple App Password** (kzcf-vqrp-htts-xtfh)
 
 ### ✅ ROTATED:
-- GitHub Token (now: ghp_mnky...)
+- GitHub Token (rotated 2025-11-05, old token: ghp_eC87...)
+- Expo Token (rotated 2025-11-05, old token: Zvo154...)
 
 ## Best Practices
 

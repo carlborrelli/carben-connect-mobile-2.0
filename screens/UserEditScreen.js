@@ -18,7 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { doc, updateDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { db, auth } from '../config/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { db, auth, functions } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 
@@ -122,19 +123,73 @@ export default function UserEditScreen({ navigation, route }) {
             } catch (error) {
               console.error('Error sending password reset email:', error);
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-              
+
               let errorMessage = 'Failed to send password reset email';
               if (error.code === 'auth/user-not-found') {
                 errorMessage = 'No account exists with this email address';
               } else if (error.code === 'auth/invalid-email') {
                 errorMessage = 'Invalid email address';
               }
-              
+
               Alert.alert('Error', errorMessage);
             }
           }
         }
       ]
+    );
+  };
+
+  const handleChangePassword = () => {
+    Alert.prompt(
+      'Change Password',
+      `Enter new password for ${name}`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Change Password',
+          onPress: async (newPassword) => {
+            // Validation
+            if (!newPassword || newPassword.length < 6) {
+              Alert.alert('Validation Error', 'Password must be at least 6 characters');
+              return;
+            }
+
+            try {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+              // Call Cloud Function
+              const changeUserPassword = httpsCallable(functions, 'changeUserPassword');
+              const result = await changeUserPassword({
+                userId: userId,
+                newPassword: newPassword
+              });
+
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              Alert.alert(
+                'Success',
+                `Password has been changed for ${name}`
+              );
+            } catch (error) {
+              console.error('Error changing password:', error);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+
+              let errorMessage = 'Failed to change password';
+              if (error.code === 'functions/permission-denied') {
+                errorMessage = 'You do not have permission to change passwords';
+              } else if (error.code === 'functions/not-found') {
+                errorMessage = 'User not found';
+              } else if (error.code === 'functions/invalid-argument') {
+                errorMessage = error.message || 'Invalid password';
+              } else if (error.code === 'functions/unauthenticated') {
+                errorMessage = 'You must be logged in to perform this action';
+              }
+
+              Alert.alert('Error', errorMessage);
+            }
+          }
+        }
+      ],
+      'secure-text'
     );
   };
 
@@ -297,8 +352,26 @@ export default function UserEditScreen({ navigation, route }) {
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>ACCOUNT ACTIONS</Text>
             <View style={styles.card}>
-              <TouchableOpacity 
-                style={styles.actionButton} 
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={handleChangePassword}
+              >
+                <View style={styles.actionLeft}>
+                  <Ionicons name="key-outline" size={24} color={colors.primary} />
+                  <View style={styles.actionTextContainer}>
+                    <Text style={styles.actionTitle}>Change Password</Text>
+                    <Text style={styles.actionSubtitle}>
+                      Set a new password for this user directly
+                    </Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={colors.tertiaryLabel} />
+              </TouchableOpacity>
+
+              <View style={styles.separator} />
+
+              <TouchableOpacity
+                style={styles.actionButton}
                 onPress={handleSendPasswordResetEmail}
               >
                 <View style={styles.actionLeft}>

@@ -110,10 +110,18 @@ export default function MoreScreen({ navigation }) {
           <View style={styles.menuCard}>
             <MenuItem icon="person-outline" title="Profile" onPress={() => {}} />
             <View style={styles.separator} />
+            <MenuItem
+              icon="people-outline"
+              title="Clients"
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigation.navigate("Clients");
+              }}
+            />
+            <View style={styles.separator} />
             <MenuItem icon="settings-outline" title="Settings" onPress={() => navigation.navigate("Settings")} />
           </View>
         </View>
-
         {isAdmin() && (
           <View style={styles.menuSection}>
             <Text style={styles.sectionLabel}>ADMIN</Text>

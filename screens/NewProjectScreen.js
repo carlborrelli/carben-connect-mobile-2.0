@@ -10,14 +10,18 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import * as ImagePicker from 'expo-image-picker';
+import { collection, addDoc, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
+import VoiceRecorder from '../components/VoiceRecorder';
 
 export default function NewProjectScreen({ navigation }) {
   const { colors } = useTheme();
@@ -35,6 +39,9 @@ export default function NewProjectScreen({ navigation }) {
   const [selectedQbCustomerName, setSelectedQbCustomerName] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingClients, setLoadingClients] = useState(true);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const [photos, setPhotos] = useState([]);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
 
   // Load clients and admins
   useEffect(() => {
@@ -93,6 +100,99 @@ export default function NewProjectScreen({ navigation }) {
     setShowLocationPicker(false);
   };
 
+  const handleVoiceTranscription = (data) => {
+    // Update title and description from voice
+    if (data.title && !title) {
+      setTitle(data.title);
+    }
+    if (data.description) {
+      setDescription(data.description);
+    }
+
+    // Close voice recorder
+    setShowVoiceRecorder(false);
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
+
+  const takePhoto = async () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission Required', 'Please enable camera access to take photos');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setPhotos([...photos, result.assets[0]]);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      Alert.alert('Error', 'Failed to take photo. Please try again.');
+    }
+  };
+
+  const pickPhotos = async () => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission Required', 'Please enable photo library access');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setPhotos([...photos, ...result.assets]);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error('Error picking photos:', error);
+      Alert.alert('Error', 'Failed to select photos. Please try again.');
+    }
+  };
+
+  const removePhoto = (index) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const newPhotos = photos.filter((_, i) => i !== index);
+    setPhotos(newPhotos);
+  };
+
+  const uploadPhotosToStorage = async (projectId) => {
+    const uploadedUrls = [];
+
+    for (let i = 0; i < photos.length; i++) {
+      const photo = photos[i];
+      const photoRef = ref(storage, `projects/${projectId}/photo_${Date.now()}_${i}.jpg`);
+
+      const response = await fetch(photo.uri);
+      const blob = await response.blob();
+
+      await uploadBytes(photoRef, blob);
+
+      const downloadURL = await getDownloadURL(photoRef);
+      uploadedUrls.push(downloadURL);
+    }
+
+    return uploadedUrls;
+  };
+
   const handleCreate = async () => {
     // Validation
     if (!title.trim()) {
@@ -148,6 +248,18 @@ export default function NewProjectScreen({ navigation }) {
 
       const docRef = await addDoc(collection(db, 'projects'), projectData);
 
+      // Upload photos if any
+      if (photos.length > 0) {
+        setUploadingPhotos(true);
+        const photoUrls = await uploadPhotosToStorage(docRef.id);
+
+        // Update project with photo URLs
+        await updateDoc(doc(db, 'projects', docRef.id), {
+          photos: photoUrls,
+          updatedAt: new Date(),
+        });
+      }
+
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert('Success', 'Project created successfully', [
         { text: 'OK', onPress: () => navigation.goBack() }
@@ -158,6 +270,7 @@ export default function NewProjectScreen({ navigation }) {
       Alert.alert('Error', 'Failed to create project. Please try again.');
     } finally {
       setLoading(false);
+      setUploadingPhotos(false);
     }
   };
 
@@ -194,9 +307,9 @@ export default function NewProjectScreen({ navigation }) {
         <TouchableOpacity
           onPress={handleCreate}
           style={styles.createButton}
-          disabled={loading}
+          disabled={loading || uploadingPhotos}
         >
-          {loading ? (
+          {loading || uploadingPhotos ? (
             <ActivityIndicator size="small" color={colors.primary} />
           ) : (
             <Text style={styles.createButtonText}>Create</Text>
@@ -291,6 +404,35 @@ export default function NewProjectScreen({ navigation }) {
           </View>
         )}
 
+        {/* Voice Recording Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.label}>Project Details</Text>
+            <TouchableOpacity
+              style={styles.voiceButton}
+              onPress={() => setShowVoiceRecorder(!showVoiceRecorder)}
+            >
+              <Ionicons
+                name={showVoiceRecorder ? 'close-circle' : 'mic-circle'}
+                size={24}
+                color={colors.primary}
+              />
+              <Text style={styles.voiceButtonText}>
+                {showVoiceRecorder ? 'Close' : 'Use Voice'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {showVoiceRecorder && (
+            <View style={styles.voiceRecorderContainer}>
+              <VoiceRecorder
+                onTranscription={handleVoiceTranscription}
+                existingDescription={description}
+              />
+            </View>
+          )}
+        </View>
+
         {/* Project Title */}
         <View style={styles.section}>
           <Text style={styles.label}>Project Title *</Text>
@@ -321,11 +463,53 @@ export default function NewProjectScreen({ navigation }) {
           />
         </View>
 
+        {/* Photos Section */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Photos</Text>
+
+          <View style={styles.photoButtonsContainer}>
+            <TouchableOpacity
+              style={styles.photoButton}
+              onPress={takePhoto}
+              disabled={loading || uploadingPhotos}
+            >
+              <Ionicons name="camera" size={24} color={colors.primary} />
+              <Text style={styles.photoButtonText}>Take Photo</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.photoButton}
+              onPress={pickPhotos}
+              disabled={loading || uploadingPhotos}
+            >
+              <Ionicons name="images" size={24} color={colors.primary} />
+              <Text style={styles.photoButtonText}>Choose Photos</Text>
+            </TouchableOpacity>
+          </View>
+
+          {photos.length > 0 && (
+            <View style={styles.photoGrid}>
+              {photos.map((photo, index) => (
+                <View key={index} style={styles.photoItem}>
+                  <Image source={{ uri: photo.uri }} style={styles.photoImage} />
+                  <TouchableOpacity
+                    style={styles.photoRemoveButton}
+                    onPress={() => removePhoto(index)}
+                    disabled={loading || uploadingPhotos}
+                  >
+                    <Ionicons name="close-circle" size={28} color={colors.red} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
         {/* Info */}
         <View style={styles.infoCard}>
           <Ionicons name="information-circle-outline" size={20} color={colors.blue} />
           <Text style={styles.infoCardText}>
-            The project will be created with status "New". You can add photos and details after creation.
+            Use voice to quickly describe your project, or type manually. Add photos now or after creation.
           </Text>
         </View>
       </ScrollView>
@@ -469,5 +653,72 @@ const createStyles = (colors) => StyleSheet.create({
     ...TYPOGRAPHY.footnote,
     color: colors.blue,
     flex: 1,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.xs,
+  },
+  voiceButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+  },
+  voiceButtonText: {
+    ...TYPOGRAPHY.subheadline,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  voiceRecorderContainer: {
+    backgroundColor: colors.secondarySystemGroupedBackground,
+    borderRadius: RADIUS.md,
+    marginTop: SPACING.sm,
+    padding: SPACING.md,
+  },
+  photoButtonsContainer: {
+    flexDirection: 'row',
+    gap: SPACING.md,
+  },
+  photoButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.xs,
+    backgroundColor: colors.secondarySystemGroupedBackground,
+    borderRadius: RADIUS.md,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.sm,
+  },
+  photoButtonText: {
+    ...TYPOGRAPHY.subheadline,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  photoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: SPACING.sm,
+    marginTop: SPACING.md,
+  },
+  photoItem: {
+    width: '31%',
+    aspectRatio: 1,
+    position: 'relative',
+  },
+  photoImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: RADIUS.md,
+  },
+  photoRemoveButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: colors.systemBackground,
+    borderRadius: 14,
   },
 });

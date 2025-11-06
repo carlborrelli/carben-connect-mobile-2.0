@@ -47,16 +47,24 @@ function ProjectsStackScreen() {
   );
 }
 
+// Home center button - round orange button
 function HomeStackScreen() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="HomeMain" component={HomeScreen} />
-      <Stack.Screen name="NewProject" component={NewProjectScreen} />
-      <Stack.Screen name="AddPhotos" component={AddPhotosScreen} />
-      <Stack.Screen name="Drafts" component={DraftsScreen} />
-      <Stack.Screen name="EstimateWorkspace" component={EstimateWorkspaceScreen} />
       <Stack.Screen name="Calendar" component={CalendarScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// NewProject tab - regular tab next to Home
+function NewProjectStackScreen() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="NewProjectMain" component={NewProjectScreen} />
+      <Stack.Screen name="AddPhotos" component={AddPhotosScreen} />
+      <Stack.Screen name="EstimateWorkspace" component={EstimateWorkspaceScreen} />
     </Stack.Navigator>
   );
 }
@@ -92,6 +100,8 @@ function MoreStackScreen() {
       <Stack.Screen name="UserManagement" component={UserManagementScreen} />
       <Stack.Screen name="UserEdit" component={UserEditScreen} />
       <Stack.Screen name="QuickBooks" component={QuickBooksScreen} />
+      <Stack.Screen name="Clients" component={ClientsScreen} />
+      <Stack.Screen name="ClientDetail" component={ClientDetailScreen} />
       <Stack.Screen name="Drafts" component={DraftsScreen} />
       <Stack.Screen name="EstimateWorkspace" component={EstimateWorkspaceScreen} />
       <Stack.Screen name="Calendar" component={CalendarScreen} />
@@ -139,7 +149,7 @@ export default function Navigation() {
           options={{ tabBarHideOnKeyboard: true }}
         />
         <Tab.Screen name="Home" component={HomeStackScreen} />
-        <Tab.Screen name="Clients" component={ClientsStackScreen} />
+        <Tab.Screen name="NewProject" component={NewProjectStackScreen} />
         <Tab.Screen name="More" component={MoreStackScreen} />
       </Tab.Navigator>
     </NavigationContainer>
