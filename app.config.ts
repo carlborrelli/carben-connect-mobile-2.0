@@ -5,7 +5,7 @@ export default {
     name: 'Carben Connect',
     slug: 'carben-connect',
     scheme: 'carbenconnect',
-    version: '1.0.0',
+    version: '1.0.1',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'automatic',
@@ -18,7 +18,7 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.carbenconnect.mobile',
-      buildNumber: '1',
+      buildNumber: '5',
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         NSCameraUsageDescription: 'Camera is used to capture project photos.',
