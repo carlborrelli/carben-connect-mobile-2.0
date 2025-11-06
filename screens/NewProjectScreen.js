@@ -39,7 +39,6 @@ export default function NewProjectScreen({ navigation }) {
   const [selectedQbCustomerName, setSelectedQbCustomerName] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingClients, setLoadingClients] = useState(true);
-  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [photos, setPhotos] = useState([]);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
 
@@ -406,31 +405,13 @@ export default function NewProjectScreen({ navigation }) {
 
         {/* Voice Recording Section */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.label}>Project Details</Text>
-            <TouchableOpacity
-              style={styles.voiceButton}
-              onPress={() => setShowVoiceRecorder(!showVoiceRecorder)}
-            >
-              <Ionicons
-                name={showVoiceRecorder ? 'close-circle' : 'mic-circle'}
-                size={24}
-                color={colors.primary}
-              />
-              <Text style={styles.voiceButtonText}>
-                {showVoiceRecorder ? 'Close' : 'Use Voice'}
-              </Text>
-            </TouchableOpacity>
+          <Text style={styles.label}>Project Details (Use Voice)</Text>
+          <View style={styles.voiceRecorderContainer}>
+            <VoiceRecorder
+              onTranscription={handleVoiceTranscription}
+              existingDescription={description}
+            />
           </View>
-
-          {showVoiceRecorder && (
-            <View style={styles.voiceRecorderContainer}>
-              <VoiceRecorder
-                onTranscription={handleVoiceTranscription}
-                existingDescription={description}
-              />
-            </View>
-          )}
         </View>
 
         {/* Project Title */}
