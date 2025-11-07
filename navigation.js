@@ -24,6 +24,7 @@ import SettingsScreen from './screens/SettingsScreen';
 import UserManagementScreen from './screens/UserManagementScreen';
 import UserEditScreen from './screens/UserEditScreen';
 import QuickBooksScreen from './screens/QuickBooksScreen';
+import FreshBooksScreen from './screens/FreshBooksScreen';
 
 // Components
 import CustomTabBar from './components/CustomTabBar';
@@ -41,6 +42,7 @@ function ProjectsStackScreen() {
       <Stack.Screen name="AddPhotos" component={AddPhotosScreen} />
       <Stack.Screen name="Drafts" component={DraftsScreen} />
       <Stack.Screen name="EstimateWorkspace" component={EstimateWorkspaceScreen} />
+      <Stack.Screen name="Conversation" component={ConversationScreen} />
       <Stack.Screen name="Calendar" component={CalendarScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
@@ -86,6 +88,7 @@ function ClientsStackScreen() {
       <Stack.Screen name="ClientsMain" component={ClientsScreen} />
       <Stack.Screen name="ClientDetail" component={ClientDetailScreen} />
       <Stack.Screen name="ProjectDetail" component={ProjectDetailScreen} />
+      <Stack.Screen name="Conversation" component={ConversationScreen} />
       <Stack.Screen name="Calendar" component={CalendarScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
@@ -100,6 +103,7 @@ function MoreStackScreen() {
       <Stack.Screen name="UserManagement" component={UserManagementScreen} />
       <Stack.Screen name="UserEdit" component={UserEditScreen} />
       <Stack.Screen name="QuickBooks" component={QuickBooksScreen} />
+      <Stack.Screen name="FreshBooks" component={FreshBooksScreen} />
       <Stack.Screen name="Clients" component={ClientsScreen} />
       <Stack.Screen name="ClientDetail" component={ClientDetailScreen} />
       <Stack.Screen name="Drafts" component={DraftsScreen} />

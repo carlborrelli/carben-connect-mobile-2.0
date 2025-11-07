@@ -25,7 +25,7 @@ import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
 export default function ConversationScreen({ route, navigation }) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
-  const { projectId, projectTitle } = route.params;
+  const { projectId, projectTitle, clientId } = route.params;
   const { userProfile } = useAuth();
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
@@ -106,6 +106,7 @@ export default function ConversationScreen({ route, navigation }) {
       await addDoc(collection(db, 'messages'), {
         projectId: projectId,
         projectTitle: projectTitle,
+        clientId: clientId,  // Add clientId so inbox can filter messages
         senderId: userProfile.id,
         senderName: userProfile.name,
         senderRole: userProfile.role || 'client',

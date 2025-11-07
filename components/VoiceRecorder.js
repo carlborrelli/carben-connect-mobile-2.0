@@ -1,5 +1,5 @@
 // VoiceRecorder - Voice recording component for creating projects
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -16,14 +16,15 @@ import { functions } from '../config/firebase';
 import { useTheme } from '../contexts/ThemeContext';
 import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 
-export default function VoiceRecorder({ onTranscription, existingDescription }) {
+export default function VoiceRecorder({ onTranscription, existingDescription, compact = false }) {
   const { colors } = useTheme();
-  const styles = createStyles(colors);
+  const styles = createStyles(colors, compact);
 
   const [recording, setRecording] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const timerIntervalRef = useRef(null);
 
   useEffect(() => {
     return () => {
@@ -31,8 +32,31 @@ export default function VoiceRecorder({ onTranscription, existingDescription }) 
       if (recording) {
         recording.stopAndUnloadAsync();
       }
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
     };
   }, [recording]);
+
+  // Update timer every second when recording
+  useEffect(() => {
+    if (isRecording) {
+      timerIntervalRef.current = setInterval(() => {
+        setRecordingDuration((prev) => prev + 1);
+      }, 1000);
+    } else {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    };
+  }, [isRecording]);
 
   const startRecording = async () => {
     try {
@@ -59,13 +83,6 @@ export default function VoiceRecorder({ onTranscription, existingDescription }) 
       setRecording(recording);
       setIsRecording(true);
       setRecordingDuration(0);
-
-      // Track duration
-      recording.setOnRecordingStatusUpdate((status) => {
-        if (status.isRecording) {
-          setRecordingDuration(Math.floor(status.durationMillis / 1000));
-        }
-      });
 
     } catch (error) {
       console.error('Failed to start recording:', error);
@@ -139,25 +156,15 @@ export default function VoiceRecorder({ onTranscription, existingDescription }) 
       const { title, description, summary } = generateResult.data;
       console.log('Generated:', { title, description, summary });
 
-      // Step 3: Convert summary to speech and play it
-      if (summary) {
-        const textToSpeech = httpsCallable(functions, 'textToSpeech');
-        const speechResult = await textToSpeech({ text: summary });
-
-        const audioBase64 = speechResult.data.audioData;
-
-        // Play the AI response
-        await playAudioResponse(audioBase64);
-      }
-
-      // Call the callback with the generated data
+      // Call the callback with the generated data (including raw transcription)
       onTranscription({
         title,
         description,
-        transcription,
+        transcription,  // Raw transcription for admin inbox
         summary
       });
 
+      // Success!
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setIsProcessing(false);
 
@@ -174,43 +181,6 @@ export default function VoiceRecorder({ onTranscription, existingDescription }) 
 
       Alert.alert('Error', errorMessage);
       setIsProcessing(false);
-    }
-  };
-
-  const playAudioResponse = async (base64Audio) => {
-    try {
-      // Convert base64 to blob
-      const binaryString = atob(base64Audio);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      const blob = new Blob([bytes], { type: 'audio/mp3' });
-
-      // Create a temporary URI
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-
-      await new Promise((resolve) => {
-        reader.onloadend = () => resolve();
-      });
-
-      // Play the audio
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: reader.result },
-        { shouldPlay: true }
-      );
-
-      // Unload after playing
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.didJustFinish) {
-          sound.unloadAsync();
-        }
-      });
-
-    } catch (error) {
-      console.error('Error playing audio response:', error);
-      // Non-critical error, don't show to user
     }
   };
 
@@ -243,7 +213,7 @@ export default function VoiceRecorder({ onTranscription, existingDescription }) 
         <View style={styles.recordButtonInner}>
           <Ionicons
             name={isRecording ? 'stop' : 'mic'}
-            size={32}
+            size={compact ? 20 : 32}
             color={colors.systemBackground}
           />
         </View>
@@ -266,15 +236,15 @@ export default function VoiceRecorder({ onTranscription, existingDescription }) 
   );
 }
 
-const createStyles = (colors) => StyleSheet.create({
+const createStyles = (colors, compact) => StyleSheet.create({
   container: {
     alignItems: 'center',
-    padding: SPACING.lg,
+    padding: compact ? SPACING.md : SPACING.lg,
   },
   recordButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: compact ? 60 : 80,
+    height: compact ? 60 : 80,
+    borderRadius: compact ? 30 : 40,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -286,46 +256,46 @@ const createStyles = (colors) => StyleSheet.create({
     shadowColor: colors.red,
   },
   recordButtonInner: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: compact ? 52 : 70,
+    height: compact ? 52 : 70,
+    borderRadius: compact ? 26 : 35,
     backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },
   infoContainer: {
-    marginTop: SPACING.md,
+    marginTop: SPACING.sm,
     alignItems: 'center',
   },
   infoTitle: {
-    ...TYPOGRAPHY.headline,
+    ...TYPOGRAPHY.subheadline,
     color: colors.label,
     fontWeight: '600',
   },
   duration: {
-    ...TYPOGRAPHY.title2,
+    ...TYPOGRAPHY.title3,
     color: colors.primary,
     fontWeight: '700',
     marginTop: SPACING.xs,
   },
   infoSubtitle: {
-    ...TYPOGRAPHY.footnote,
+    ...TYPOGRAPHY.caption1,
     color: colors.secondaryLabel,
     textAlign: 'center',
     marginTop: SPACING.xs,
   },
   processingContainer: {
     alignItems: 'center',
-    padding: SPACING.xl,
+    padding: SPACING.lg,
   },
   processingText: {
-    ...TYPOGRAPHY.headline,
+    ...TYPOGRAPHY.subheadline,
     color: colors.label,
     fontWeight: '600',
     marginTop: SPACING.md,
   },
   processingSubtext: {
-    ...TYPOGRAPHY.footnote,
+    ...TYPOGRAPHY.caption1,
     color: colors.secondaryLabel,
     textAlign: 'center',
     marginTop: SPACING.xs,

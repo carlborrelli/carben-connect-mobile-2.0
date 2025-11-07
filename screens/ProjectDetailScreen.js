@@ -86,6 +86,15 @@ export default function ProjectDetailScreen({ route, navigation }) {
     navigation.navigate('EstimateWorkspace', { projectId: project.id });
   };
 
+  const handleViewMessages = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    navigation.navigate('Conversation', {
+      projectId: project.id,
+      projectTitle: project.title || 'Project Messages',
+      clientId: project.clientId
+    });
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
@@ -132,16 +141,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
           <Ionicons name="chevron-back" size={28} color={colors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Project Details</Text>
-        {/* Add Estimate Button in Header for Admins */}
-        {isAdmin && (
-          <TouchableOpacity 
-            onPress={handleCreateEstimate}
-            style={styles.headerEstimateButton}
-          >
-            <Ionicons name="calculator" size={24} color={colors.primary} />
-          </TouchableOpacity>
-        )}
-        {!isAdmin && <View style={{ width: 44 }} />}
+        <View style={{ width: 44 }} />
       </View>
 
       <ScrollView style={styles.content}>
@@ -157,29 +157,42 @@ export default function ProjectDetailScreen({ route, navigation }) {
           </View>
         </View>
 
-        {/* Admin Actions - Create/Edit Estimate - MORE PROMINENT */}
-        {isAdmin && (
+        {/* Quick Actions Row */}
+        <View style={styles.actionsRow}>
+          {/* Admin Actions - Create/Edit Estimate */}
+          {isAdmin && (
+            <TouchableOpacity 
+              style={styles.actionCard}
+              onPress={handleCreateEstimate}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.actionContent, styles.estimateCard]}>
+                <View style={styles.actionIcon}>
+                  <Ionicons name="calculator" size={24} color={colors.systemBackground} />
+                </View>
+                <Text style={styles.actionText} numberOfLines={1}>
+                  {project.status === 'NEW' ? 'Estimate' : 'Estimate'}
+                </Text>
+                <Ionicons name="chevron-forward" size={20} color={colors.systemBackground} />
+              </View>
+            </TouchableOpacity>
+          )}
+
+          {/* Messages Button - Both Admin and Client */}
           <TouchableOpacity 
-            style={styles.estimateCard}
-            onPress={handleCreateEstimate}
+            style={styles.actionCard}
+            onPress={handleViewMessages}
             activeOpacity={0.7}
           >
-            <View style={styles.estimateCardLeft}>
-              <View style={styles.estimateIconContainer}>
-                <Ionicons name="calculator" size={32} color={colors.systemBackground} />
+            <View style={[styles.actionContent, styles.messagesCard]}>
+              <View style={styles.actionIcon}>
+                <Ionicons name="chatbubbles" size={24} color={colors.systemBackground} />
               </View>
-              <View style={styles.estimateCardContent}>
-                <Text style={styles.estimateCardTitle}>
-                  {project.status === 'NEW' ? 'Create Estimate' : 'View/Edit Estimate'}
-                </Text>
-                <Text style={styles.estimateCardSubtitle}>
-                  Draft description, calculate pricing, and send to QuickBooks
-                </Text>
-              </View>
+              <Text style={styles.actionText} numberOfLines={1}>Messages</Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.systemBackground} />
             </View>
-            <Ionicons name="chevron-forward" size={28} color={colors.primary} />
           </TouchableOpacity>
-        )}
+        </View>
 
         {/* Client Info */}
         {project.clientName && (
@@ -300,12 +313,6 @@ const createStyles = (colors) => StyleSheet.create({
     flex: 1,
     textAlign: 'center',
   },
-  headerEstimateButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
@@ -341,44 +348,45 @@ const createStyles = (colors) => StyleSheet.create({
     ...TYPOGRAPHY.caption1,
     fontWeight: '600',
   },
-  estimateCard: {
+  // NEW: Simplified Actions Row
+  actionsRow: {
+    flexDirection: 'row',
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.lg,
+    gap: SPACING.sm,
+  },
+  actionCard: {
+    flex: 1,
+    borderRadius: RADIUS.lg,
+    overflow: 'hidden',
+  },
+  actionContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    padding: SPACING.md,
+    minHeight: 60,
+  },
+  estimateCard: {
     backgroundColor: colors.primary,
-    marginHorizontal: SPACING.lg,
-    marginBottom: SPACING.lg,
-    padding: SPACING.lg,
-    borderRadius: RADIUS.xl,
-    ...SHADOWS.medium,
   },
-  estimateCardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: SPACING.md,
+  messagesCard: {
+    backgroundColor: colors.green,
   },
-  estimateIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: RADIUS.lg,
+  actionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: RADIUS.md,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  estimateCardContent: {
-    flex: 1,
-  },
-  estimateCardTitle: {
-    ...TYPOGRAPHY.title3,
+  actionText: {
+    ...TYPOGRAPHY.subheadline,
     color: colors.systemBackground,
     fontWeight: '700',
-    marginBottom: 4,
-  },
-  estimateCardSubtitle: {
-    ...TYPOGRAPHY.caption1,
-    color: 'rgba(255, 255, 255, 0.85)',
-    lineHeight: 16,
+    flex: 1,
+    marginLeft: SPACING.sm,
   },
   infoCard: {
     backgroundColor: colors.secondarySystemGroupedBackground,

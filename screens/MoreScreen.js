@@ -138,6 +138,8 @@ export default function MoreScreen({ navigation }) {
               <MenuItem icon="people-outline" title="User Management" onPress={() => navigation.navigate("UserManagement")} />
               <View style={styles.separator} />
               <MenuItem icon="business-outline" title="QuickBooks" onPress={() => navigation.navigate("QuickBooks")} />
+              <View style={styles.separator} />
+              <MenuItem icon="receipt-outline" title="FreshBooks" onPress={() => navigation.navigate("FreshBooks")} />
             </View>
           </View>
         )}

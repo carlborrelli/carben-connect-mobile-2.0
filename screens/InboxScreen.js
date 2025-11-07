@@ -77,7 +77,8 @@ export default function InboxScreen({ navigation }) {
   const handleMessagePress = (message) => {
     navigation.navigate('Conversation', {
       projectId: message.projectId,
-      projectTitle: message.projectTitle || 'Conversation'
+      projectTitle: message.projectTitle || 'Conversation',
+      clientId: message.clientId
     });
   };
 

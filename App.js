@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { QuickBooksProvider } from './contexts/QuickBooksContext';
 import Navigation from './navigation';
 import LoginScreen from './screens/LoginScreen';
 
@@ -35,8 +36,10 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <StatusBar style="auto" />
-        <AppContent />
+        <QuickBooksProvider>
+          <StatusBar style="auto" />
+          <AppContent />
+        </QuickBooksProvider>
       </AuthProvider>
     </ThemeProvider>
   );

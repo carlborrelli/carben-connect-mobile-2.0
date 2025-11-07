@@ -11,6 +11,8 @@ import {
   Alert,
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -41,6 +43,8 @@ export default function NewProjectScreen({ navigation }) {
   const [loadingClients, setLoadingClients] = useState(true);
   const [photos, setPhotos] = useState([]);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [voiceTranscription, setVoiceTranscription] = useState(null);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
 
   // Load clients and admins
   useEffect(() => {
@@ -106,6 +110,11 @@ export default function NewProjectScreen({ navigation }) {
     }
     if (data.description) {
       setDescription(data.description);
+    }
+
+    // Store the raw transcription for the inbox
+    if (data.transcription) {
+      setVoiceTranscription(data.transcription);
     }
 
     // Close voice recorder
@@ -259,6 +268,22 @@ export default function NewProjectScreen({ navigation }) {
         });
       }
 
+      // Add voice transcription to inbox if available (admin-only)
+      if (voiceTranscription) {
+        await addDoc(collection(db, 'messages'), {
+          projectId: docRef.id,
+          projectTitle: title.trim(),
+          senderId: 'SYSTEM',
+          senderName: 'Voice Transcription',
+          senderRole: 'system',
+          message: `Raw transcription: "${voiceTranscription}"`,
+          text: `Raw transcription: "${voiceTranscription}"`,
+          createdAt: new Date(),
+          read: false,
+          unread: true,
+        });
+      }
+
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert('Success', 'Project created successfully', [
         { text: 'OK', onPress: () => navigation.goBack() }
@@ -297,203 +322,217 @@ export default function NewProjectScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
+      {/* Header - WITHOUT Create button */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="close" size={28} color={colors.label} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>New Project</Text>
-        <TouchableOpacity
-          onPress={handleCreate}
-          style={styles.createButton}
-          disabled={loading || uploadingPhotos}
-        >
-          {loading || uploadingPhotos ? (
-            <ActivityIndicator size="small" color={colors.primary} />
-          ) : (
-            <Text style={styles.createButtonText}>Create</Text>
-          )}
-        </TouchableOpacity>
+        <View style={{ width: 44 }} />
       </View>
 
-      <ScrollView style={styles.content}>
-        {/* Client Selection (Admin only) */}
-        {isAdmin() && (
-          <View style={styles.section}>
-            <Text style={styles.label}>Client *</Text>
-            <TouchableOpacity
-              style={styles.selectButton}
-              onPress={() => setShowClientPicker(!showClientPicker)}
-            >
-              <Text style={clientName ? styles.selectButtonTextFilled : styles.selectButtonText}>
-                {clientName || 'Select a client'}
-              </Text>
-              <Ionicons name="chevron-down" size={20} color={colors.secondaryLabel} />
-            </TouchableOpacity>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={90}
+      >
+        <ScrollView
+          style={styles.content}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Client Selection (Admin only) */}
+          {isAdmin() && (
+            <View style={styles.section}>
+              <Text style={styles.label}>Client *</Text>
+              <TouchableOpacity
+                style={styles.selectButton}
+                onPress={() => setShowClientPicker(!showClientPicker)}
+              >
+                <Text style={clientName ? styles.selectButtonTextFilled : styles.selectButtonText}>
+                  {clientName || 'Select a client'}
+                </Text>
+                <Ionicons name="chevron-down" size={20} color={colors.secondaryLabel} />
+              </TouchableOpacity>
 
-            {showClientPicker && (
-              <View style={styles.picker}>
-                <ScrollView style={styles.pickerScroll} nestedScrollEnabled>
-                  {clients.map(client => (
-                    <TouchableOpacity
-                      key={client.id}
-                      style={styles.pickerItem}
-                      onPress={() => handleSelectClient(client)}
-                    >
-                      <Text style={styles.pickerItemText}>{client.name}</Text>
-                      {client.email && (
-                        <Text style={styles.pickerItemSubtext}>{client.email}</Text>
-                      )}
-                      {client.qbCustomers && client.qbCustomers.length > 1 && (
-                        <Text style={styles.pickerItemNote}>
-                          {client.qbCustomers.length} locations
-                        </Text>
-                      )}
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Location Selection (if client has multiple locations) */}
-        {hasMultipleLocations && (
-          <View style={styles.section}>
-            <Text style={styles.label}>Location *</Text>
-            <TouchableOpacity
-              style={styles.selectButton}
-              onPress={() => setShowLocationPicker(!showLocationPicker)}
-            >
-              <Text style={selectedQbCustomerName ? styles.selectButtonTextFilled : styles.selectButtonText}>
-                {selectedQbCustomerName || 'Select a location'}
-              </Text>
-              <Ionicons name="chevron-down" size={20} color={colors.secondaryLabel} />
-            </TouchableOpacity>
-
-            {showLocationPicker && (
-              <View style={styles.picker}>
-                <ScrollView style={styles.pickerScroll} nestedScrollEnabled>
-                  {selectedClient?.qbCustomers?.map(qbCustomer => (
-                    <TouchableOpacity
-                      key={qbCustomer.id}
-                      style={styles.pickerItem}
-                      onPress={() => handleSelectLocation(qbCustomer)}
-                    >
-                      <View style={styles.locationPickerItem}>
-                        <Ionicons name="location" size={18} color={colors.primary} />
-                        <Text style={styles.pickerItemText}>{qbCustomer.name}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Show single location info (non-editable) */}
-        {selectedClient?.qbCustomers && selectedClient.qbCustomers.length === 1 && (
-          <View style={styles.section}>
-            <Text style={styles.label}>Location</Text>
-            <View style={styles.infoCard}>
-              <Ionicons name="location" size={18} color={colors.primary} />
-              <Text style={styles.infoText}>{selectedClient.qbCustomers[0].name}</Text>
-            </View>
-          </View>
-        )}
-
-        {/* Voice Recording Section */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Project Details (Use Voice)</Text>
-          <View style={styles.voiceRecorderContainer}>
-            <VoiceRecorder
-              onTranscription={handleVoiceTranscription}
-              existingDescription={description}
-            />
-          </View>
-        </View>
-
-        {/* Project Title */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Project Title *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., Kitchen Remodel"
-            placeholderTextColor={colors.tertiaryLabel}
-            value={title}
-            onChangeText={setTitle}
-            editable={!loading}
-            returnKeyType="next"
-          />
-        </View>
-
-        {/* Description */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Description</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="Enter project details..."
-            placeholderTextColor={colors.tertiaryLabel}
-            value={description}
-            onChangeText={setDescription}
-            editable={!loading}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-          />
-        </View>
-
-        {/* Photos Section */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Photos</Text>
-
-          <View style={styles.photoButtonsContainer}>
-            <TouchableOpacity
-              style={styles.photoButton}
-              onPress={takePhoto}
-              disabled={loading || uploadingPhotos}
-            >
-              <Ionicons name="camera" size={24} color={colors.primary} />
-              <Text style={styles.photoButtonText}>Take Photo</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.photoButton}
-              onPress={pickPhotos}
-              disabled={loading || uploadingPhotos}
-            >
-              <Ionicons name="images" size={24} color={colors.primary} />
-              <Text style={styles.photoButtonText}>Choose Photos</Text>
-            </TouchableOpacity>
-          </View>
-
-          {photos.length > 0 && (
-            <View style={styles.photoGrid}>
-              {photos.map((photo, index) => (
-                <View key={index} style={styles.photoItem}>
-                  <Image source={{ uri: photo.uri }} style={styles.photoImage} />
-                  <TouchableOpacity
-                    style={styles.photoRemoveButton}
-                    onPress={() => removePhoto(index)}
-                    disabled={loading || uploadingPhotos}
-                  >
-                    <Ionicons name="close-circle" size={28} color={colors.red} />
-                  </TouchableOpacity>
+              {showClientPicker && (
+                <View style={styles.picker}>
+                  <ScrollView style={styles.pickerScroll} nestedScrollEnabled>
+                    {clients.map(client => (
+                      <TouchableOpacity
+                        key={client.id}
+                        style={styles.pickerItem}
+                        onPress={() => handleSelectClient(client)}
+                      >
+                        <Text style={styles.pickerItemText}>{client.name}</Text>
+                        {client.email && (
+                          <Text style={styles.pickerItemSubtext}>{client.email}</Text>
+                        )}
+                        {client.qbCustomers && client.qbCustomers.length > 1 && (
+                          <Text style={styles.pickerItemNote}>
+                            {client.qbCustomers.length} locations
+                          </Text>
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
                 </View>
-              ))}
+              )}
             </View>
           )}
-        </View>
 
-        {/* Info */}
-        <View style={styles.infoCard}>
-          <Ionicons name="information-circle-outline" size={20} color={colors.blue} />
-          <Text style={styles.infoCardText}>
-            Use voice to quickly describe your project, or type manually. Add photos now or after creation.
-          </Text>
-        </View>
-      </ScrollView>
+          {/* Location Selection (if client has multiple locations) */}
+          {hasMultipleLocations && (
+            <View style={styles.section}>
+              <Text style={styles.label}>Location *</Text>
+              <TouchableOpacity
+                style={styles.selectButton}
+                onPress={() => setShowLocationPicker(!showLocationPicker)}
+              >
+                <Text style={selectedQbCustomerName ? styles.selectButtonTextFilled : styles.selectButtonText}>
+                  {selectedQbCustomerName || 'Select a location'}
+                </Text>
+                <Ionicons name="chevron-down" size={20} color={colors.secondaryLabel} />
+              </TouchableOpacity>
+
+              {showLocationPicker && (
+                <View style={styles.picker}>
+                  <ScrollView style={styles.pickerScroll} nestedScrollEnabled>
+                    {selectedClient?.qbCustomers?.map(qbCustomer => (
+                      <TouchableOpacity
+                        key={qbCustomer.id}
+                        style={styles.pickerItem}
+                        onPress={() => handleSelectLocation(qbCustomer)}
+                      >
+                        <View style={styles.locationPickerItem}>
+                          <Ionicons name="location" size={18} color={colors.primary} />
+                          <Text style={styles.pickerItemText}>{qbCustomer.name}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Show single location info (non-editable) */}
+          {selectedClient?.qbCustomers && selectedClient.qbCustomers.length === 1 && (
+            <View style={styles.section}>
+              <Text style={styles.label}>Location</Text>
+              <View style={styles.infoCard}>
+                <Ionicons name="location" size={18} color={colors.primary} />
+                <Text style={styles.infoText}>{selectedClient.qbCustomers[0].name}</Text>
+              </View>
+            </View>
+          )}
+
+          {/* Voice Recording Section */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Project Details (Use Voice)</Text>
+            <View style={styles.voiceRecorderContainer}>
+              <VoiceRecorder
+                onTranscription={handleVoiceTranscription}
+                existingDescription={description}
+                compact={true}
+              />
+            </View>
+          </View>
+
+          {/* Project Title */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Project Title *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., Kitchen Remodel"
+              placeholderTextColor={colors.tertiaryLabel}
+              value={title}
+              onChangeText={setTitle}
+              editable={!loading}
+              returnKeyType="next"
+            />
+          </View>
+
+          {/* Description - BIGGER */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Description</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Enter project details..."
+              placeholderTextColor={colors.tertiaryLabel}
+              value={description}
+              onChangeText={setDescription}
+              editable={!loading}
+              multiline
+              numberOfLines={12}
+              textAlignVertical="top"
+            />
+          </View>
+
+          {/* Photos Section */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Photos</Text>
+
+            <View style={styles.photoButtonsContainer}>
+              <TouchableOpacity
+                style={styles.photoButton}
+                onPress={takePhoto}
+                disabled={loading || uploadingPhotos}
+              >
+                <Ionicons name="camera" size={24} color={colors.primary} />
+                <Text style={styles.photoButtonText}>Take Photo</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.photoButton}
+                onPress={pickPhotos}
+                disabled={loading || uploadingPhotos}
+              >
+                <Ionicons name="images" size={24} color={colors.primary} />
+                <Text style={styles.photoButtonText}>Choose Photos</Text>
+              </TouchableOpacity>
+            </View>
+
+            {photos.length > 0 && (
+              <View style={styles.photoGrid}>
+                {photos.map((photo, index) => (
+                  <View key={index} style={styles.photoItem}>
+                    <Image source={{ uri: photo.uri }} style={styles.photoImage} />
+                    <TouchableOpacity
+                      style={styles.photoRemoveButton}
+                      onPress={() => removePhoto(index)}
+                      disabled={loading || uploadingPhotos}
+                    >
+                      <Ionicons name="close-circle" size={28} color={colors.red} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+
+          {/* Info */}
+          <View style={styles.infoCard}>
+            <Ionicons name="information-circle-outline" size={20} color={colors.blue} />
+            <Text style={styles.infoCardText}>
+              Use voice to quickly describe your project, or type manually. Add photos now or after creation.
+            </Text>
+          </View>
+
+          {/* CREATE BUTTON - MOVED TO BOTTOM */}
+          <TouchableOpacity
+            onPress={handleCreate}
+            style={styles.bottomCreateButton}
+            disabled={loading || uploadingPhotos}
+          >
+            {loading || uploadingPhotos ? (
+              <ActivityIndicator size="small" color={colors.systemBackground} />
+            ) : (
+              <Text style={styles.bottomCreateButtonText}>Create Project</Text>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -523,17 +562,6 @@ const createStyles = (colors) => StyleSheet.create({
     ...TYPOGRAPHY.headline,
     color: colors.label,
   },
-  createButton: {
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    minWidth: 60,
-    alignItems: 'center',
-  },
-  createButtonText: {
-    ...TYPOGRAPHY.headline,
-    color: colors.primary,
-    fontWeight: '600',
-  },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
@@ -541,7 +569,10 @@ const createStyles = (colors) => StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
     padding: SPACING.lg,
+    paddingBottom: SPACING.xl,
   },
   section: {
     marginBottom: SPACING.lg,
@@ -562,7 +593,7 @@ const createStyles = (colors) => StyleSheet.create({
     minHeight: 44,
   },
   textArea: {
-    minHeight: 100,
+    minHeight: 240,
     paddingTop: SPACING.sm,
   },
   selectButton: {
@@ -635,24 +666,6 @@ const createStyles = (colors) => StyleSheet.create({
     color: colors.blue,
     flex: 1,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: SPACING.xs,
-  },
-  voiceButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.xs,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-  },
-  voiceButtonText: {
-    ...TYPOGRAPHY.subheadline,
-    color: colors.primary,
-    fontWeight: '600',
-  },
   voiceRecorderContainer: {
     backgroundColor: colors.secondarySystemGroupedBackground,
     borderRadius: RADIUS.md,
@@ -701,5 +714,22 @@ const createStyles = (colors) => StyleSheet.create({
     right: -8,
     backgroundColor: colors.systemBackground,
     borderRadius: 14,
+  },
+  // NEW BOTTOM CREATE BUTTON STYLES
+  bottomCreateButton: {
+    backgroundColor: colors.blue,
+    borderRadius: RADIUS.lg,
+    paddingVertical: SPACING.md + 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.sm,
+    ...SHADOWS.medium,
+    shadowColor: colors.blue,
+  },
+  bottomCreateButtonText: {
+    ...TYPOGRAPHY.headline,
+    color: colors.systemBackground,
+    fontWeight: '700',
   },
 });
