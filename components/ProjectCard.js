@@ -1,12 +1,12 @@
 // ProjectCard - Display project information in a card (WITH CLIENT NAME AND LOCATION)
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../contexts/ThemeContext';
 import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 
-export default function ProjectCard({ project, onPress, client, isAdmin }) {
+export default function ProjectCard({ project, onPress, client, isAdmin, selectionMode, isSelected }) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
@@ -33,21 +33,32 @@ export default function ProjectCard({ project, onPress, client, isAdmin }) {
     onPress?.(project);
   };
 
+  const handleEstimateLinkPress = async (e) => {
+    e.stopPropagation(); // Prevent card press
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (project.estimatePdfLink) {
+      await Linking.openURL(project.estimatePdfLink);
+    }
+  };
+
   const statusColor = STATUS_COLORS[project.status] || colors.gray;
   const statusLabel = STATUS_LABELS[project.status] || project.status;
 
   // Get client name and location
   const getClientInfo = () => {
+    // If project has clientName field (imported projects), use it directly
+    if (project.clientName) {
+      return {
+        clientName: project.clientName,
+        location: project.qbCustomerName || null
+      };
+    }
+
+    // Otherwise, try to get from client lookup
     if (!client) return { clientName: null, location: null };
 
-    const hasMultipleLocations = client.qbCustomers && client.qbCustomers.length > 1;
     const clientName = client.name || client.company;
-
-    // Only show location if client has multiple locations
-    let location = null;
-    if (hasMultipleLocations) {
-      location = project.qbCustomerName;
-    }
+    const location = project.qbCustomerName || null;
 
     return { clientName, location };
   };
@@ -56,10 +67,27 @@ export default function ProjectCard({ project, onPress, client, isAdmin }) {
 
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[
+        styles.card,
+        selectionMode && isSelected && styles.cardSelected
+      ]}
       onPress={handlePress}
       activeOpacity={0.7}
     >
+      {/* Selection checkbox */}
+      {selectionMode && (
+        <View style={styles.checkboxContainer}>
+          <View style={[
+            styles.checkbox,
+            isSelected && styles.checkboxSelected
+          ]}>
+            {isSelected && (
+              <Ionicons name="checkmark" size={18} color={colors.systemBackground} />
+            )}
+          </View>
+        </View>
+      )}
+
       {/* Client Name - Always show */}
       {clientName && (
         <View style={styles.clientRow}>
@@ -70,7 +98,7 @@ export default function ProjectCard({ project, onPress, client, isAdmin }) {
         </View>
       )}
 
-      {/* Location - Only if multiple locations */}
+      {/* Location - Always show if available */}
       {location && (
         <View style={styles.locationRow}>
           <Ionicons name="location-outline" size={12} color={colors.secondaryLabel} />
@@ -119,8 +147,35 @@ export default function ProjectCard({ project, onPress, client, isAdmin }) {
           </View>
         )}
 
+        {/* Date */}
+        {project.createdAt && (
+          <View style={styles.footerItem}>
+            <Ionicons name="calendar-outline" size={16} color={colors.secondaryLabel} />
+            <Text style={styles.footerText}>
+              {project.createdAt?.toDate ?
+                project.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) :
+                new Date(project.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              }
+            </Text>
+          </View>
+        )}
+
         {/* Spacer */}
         <View style={{ flex: 1 }} />
+
+        {/* Total Price - check both totalPrice and estimatedTotal */}
+        {(project.estimatedTotal != null && project.estimatedTotal > 0) || (project.totalPrice != null && project.totalPrice > 0) ? (
+          <Text style={styles.priceText}>
+            ${(project.estimatedTotal || project.totalPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </Text>
+        ) : null}
+
+        {/* Estimate PDF Link Button */}
+        {project.estimatePdfLink && (
+          <TouchableOpacity onPress={handleEstimateLinkPress} style={styles.estimateLinkButton}>
+            <Ionicons name="document-text-outline" size={20} color={colors.primary} />
+          </TouchableOpacity>
+        )}
 
         {/* Chevron */}
         <Ionicons name="chevron-forward" size={20} color={colors.tertiaryLabel} />
@@ -136,6 +191,31 @@ const createStyles = (colors) => StyleSheet.create({
     marginBottom: SPACING.md,
     backgroundColor: colors.secondarySystemGroupedBackground,
     ...SHADOWS.small,
+  },
+  cardSelected: {
+    backgroundColor: colors.primary + '10',
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  checkboxContainer: {
+    position: 'absolute',
+    top: SPACING.md,
+    right: SPACING.md,
+    zIndex: 10,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.separator,
+    backgroundColor: colors.systemBackground,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   clientRow: {
     flexDirection: 'row',
@@ -202,5 +282,14 @@ const createStyles = (colors) => StyleSheet.create({
   footerText: {
     ...TYPOGRAPHY.caption1,
     color: colors.secondaryLabel,
+  },
+  priceText: {
+    ...TYPOGRAPHY.headline,
+    color: colors.primary,
+    fontWeight: '700',
+    marginRight: SPACING.sm,
+  },
+  estimateLinkButton: {
+    marginRight: SPACING.sm,
   },
 });

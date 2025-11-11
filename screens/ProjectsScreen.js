@@ -15,11 +15,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { collection, query, orderBy, onSnapshot, where, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import ProjectCard from '../components/ProjectCard';
 import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
+import { Alert } from 'react-native';
 
 const STATUS_FILTERS = [
   { key: 'ALL', label: 'All' },
@@ -51,6 +52,12 @@ export default function ProjectsScreen({ navigation }) {
   const [selectedStatus, setSelectedStatus] = useState('ALL');
   const [sortBy, setSortBy] = useState('DATE_DESC');
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null); // Selected client for filtering
+  const [selectedLocation, setSelectedLocation] = useState(null); // Selected location for filtering
+  const [showClientMenu, setShowClientMenu] = useState(false);
+  const [showLocationMenu, setShowLocationMenu] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false); // Multi-select mode
+  const [selectedProjects, setSelectedProjects] = useState([]); // Selected project IDs
 
   // Load projects from Firestore
   useEffect(() => {
@@ -102,16 +109,16 @@ export default function ProjectsScreen({ navigation }) {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const clientsQuery = query(
-          collection(db, 'users'),
-          where('role', '==', 'client')
-        );
+        const clientsQuery = query(collection(db, 'clients'));
         const snapshot = await getDocs(clientsQuery);
         const clientsMap = {};
         snapshot.docs.forEach(doc => {
+          const data = doc.data();
           clientsMap[doc.id] = {
             id: doc.id,
-            ...doc.data()
+            ...data,
+            // Format client name for display
+            name: `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.company || 'Unnamed Client'
           };
         });
         setClients(clientsMap);
@@ -123,9 +130,19 @@ export default function ProjectsScreen({ navigation }) {
     fetchClients();
   }, []);
 
-  // Filter and sort projects when search query, status, or sort changes
+  // Filter and sort projects when filters change
   useEffect(() => {
     let filtered = [...projects];
+
+    // Filter by client (using clientId, not clientName)
+    if (selectedClient) {
+      filtered = filtered.filter(project => project.clientId === selectedClient);
+    }
+
+    // Filter by location
+    if (selectedLocation) {
+      filtered = filtered.filter(project => project.qbCustomerName === selectedLocation);
+    }
 
     // Filter by status
     if (selectedStatus !== 'ALL') {
@@ -137,12 +154,15 @@ export default function ProjectsScreen({ navigation }) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(project => {
         const title = (project.title || '').toLowerCase();
-        const clientName = (project.clientName || '').toLowerCase();
+        // Look up client name from clients object using clientId
+        const clientName = (clients[project.clientId]?.name || '').toLowerCase();
+        const location = (project.qbCustomerName || '').toLowerCase();
         const description = (project.description || '').toLowerCase();
         const status = (project.status || '').toLowerCase();
 
         return title.includes(query) ||
                clientName.includes(query) ||
+               location.includes(query) ||
                description.includes(query) ||
                status.includes(query);
       });
@@ -158,7 +178,10 @@ export default function ProjectsScreen({ navigation }) {
           return (a.createdAt?.toDate?.() || new Date(a.createdAt || 0)).getTime() -
                  (b.createdAt?.toDate?.() || new Date(b.createdAt || 0)).getTime();
         case 'CLIENT_NAME':
-          return (a.clientName || '').localeCompare(b.clientName || '');
+          // Look up client names for sorting
+          const aClientName = clients[a.clientId]?.name || '';
+          const bClientName = clients[b.clientId]?.name || '';
+          return aClientName.localeCompare(bClientName);
         case 'STATUS':
           return (a.status || '').localeCompare(b.status || '');
         default:
@@ -167,7 +190,7 @@ export default function ProjectsScreen({ navigation }) {
     });
 
     setFilteredProjects(filtered);
-  }, [searchQuery, selectedStatus, sortBy, projects]);
+  }, [searchQuery, selectedStatus, sortBy, selectedClient, selectedLocation, projects, clients]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -176,7 +199,65 @@ export default function ProjectsScreen({ navigation }) {
 
   const handleProjectPress = (project) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate('ProjectDetail', { projectId: project.id });
+
+    if (selectionMode) {
+      // Toggle selection
+      if (selectedProjects.includes(project.id)) {
+        setSelectedProjects(selectedProjects.filter(id => id !== project.id));
+      } else {
+        setSelectedProjects([...selectedProjects, project.id]);
+      }
+    } else {
+      navigation.navigate('ProjectDetail', { projectId: project.id });
+    }
+  };
+
+  const toggleSelectionMode = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setSelectionMode(!selectionMode);
+    setSelectedProjects([]);
+  };
+
+  const handleDeleteProjects = () => {
+    if (selectedProjects.length === 0) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    Alert.alert(
+      'Delete Projects',
+      `Are you sure you want to delete ${selectedProjects.length} project${selectedProjects.length > 1 ? 's' : ''}? This action cannot be undone.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+          onPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+
+              // Delete all selected projects
+              await Promise.all(
+                selectedProjects.map(projectId =>
+                  deleteDoc(doc(db, 'projects', projectId))
+                )
+              );
+
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              setSelectedProjects([]);
+              setSelectionMode(false);
+            } catch (error) {
+              console.error('Error deleting projects:', error);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+              Alert.alert('Error', 'Failed to delete projects. Please try again.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleClearSearch = () => {
@@ -204,21 +285,58 @@ export default function ProjectsScreen({ navigation }) {
     <View style={styles.headerContainer}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.title}>Projects</Text>
-          <TouchableOpacity onPress={toggleSortMenu} style={styles.sortButton}>
-            <Ionicons name={showSortMenu ? "funnel" : "funnel-outline"} size={20} color={colors.primary} />
-            <Text style={styles.sortButtonText}>
-              {SORT_OPTIONS.find(opt => opt.key === sortBy)?.label || 'Sort'}
-            </Text>
-          </TouchableOpacity>
+          {selectionMode ? (
+            <View>
+              <Text style={styles.title}>Select Projects</Text>
+              <Text style={[styles.sortButtonText, { color: colors.secondaryLabel }]}>
+                {selectedProjects.length} selected
+              </Text>
+            </View>
+          ) : (
+            <View>
+              <Text style={styles.title}>Projects</Text>
+              <TouchableOpacity onPress={toggleSortMenu} style={styles.sortButton}>
+                <Ionicons name={showSortMenu ? "funnel" : "funnel-outline"} size={20} color={colors.primary} />
+                <Text style={styles.sortButtonText}>
+                  {SORT_OPTIONS.find(opt => opt.key === sortBy)?.label || 'Sort'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
         <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Calendar")}>
-            <Ionicons name="calendar-outline" size={24} color={colors.label} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
-            <Ionicons name="person-circle-outline" size={24} color={colors.label} />
-          </TouchableOpacity>
+          {selectionMode ? (
+            <>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={handleDeleteProjects}
+                disabled={selectedProjects.length === 0}
+              >
+                <Ionicons
+                  name="trash"
+                  size={24}
+                  color={selectedProjects.length > 0 ? colors.red : colors.tertiaryLabel}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconButton} onPress={toggleSelectionMode}>
+                <Ionicons name="close" size={24} color={colors.label} />
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              {isAdmin() && (
+                <TouchableOpacity style={styles.iconButton} onPress={toggleSelectionMode}>
+                  <Ionicons name="checkmark-circle-outline" size={24} color={colors.label} />
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Calendar")}>
+                <Ionicons name="calendar-outline" size={24} color={colors.label} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
+                <Ionicons name="person-circle-outline" size={24} color={colors.label} />
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </View>
 
@@ -270,7 +388,130 @@ export default function ProjectsScreen({ navigation }) {
             </TouchableOpacity>
           )}
         </View>
+        {/* Client Filter Dropdown */}
+        <TouchableOpacity
+          style={[styles.filterDropdownButton, selectedClient && styles.filterDropdownButtonActive]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setShowClientMenu(!showClientMenu);
+            setShowLocationMenu(false);
+          }}
+        >
+          <Text style={[styles.filterDropdownText, selectedClient && styles.filterDropdownTextActive]}>
+            {selectedClient ? (clients[selectedClient]?.name || 'Client') : 'Client'}
+          </Text>
+          <Ionicons name="chevron-down" size={16} color={selectedClient ? colors.systemBackground : colors.primary} />
+        </TouchableOpacity>
       </View>
+
+      {/* Client Menu */}
+      {showClientMenu && (
+        <View style={styles.filterMenu}>
+          <TouchableOpacity
+            style={styles.filterMenuItem}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setSelectedClient(null);
+              setSelectedLocation(null);
+              setShowClientMenu(false);
+            }}
+          >
+            <Text style={[styles.filterMenuItemText, !selectedClient && styles.filterMenuItemTextActive]}>
+              All Clients
+            </Text>
+            {!selectedClient && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+          </TouchableOpacity>
+          {/* Build list of unique clientIds from projects, then display client names */}
+          {Array.from(new Set(projects.map(p => p.clientId).filter(Boolean)))
+            .sort((a, b) => (clients[a]?.name || '').localeCompare(clients[b]?.name || ''))
+            .map(clientId => (
+            <TouchableOpacity
+              key={clientId}
+              style={styles.filterMenuItem}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setSelectedClient(clientId);
+                setSelectedLocation(null);
+                setShowClientMenu(false);
+              }}
+            >
+              <Text style={[
+                styles.filterMenuItemText,
+                selectedClient === clientId && styles.filterMenuItemTextActive
+              ]}>
+                {clients[clientId]?.name || 'Unknown Client'}
+              </Text>
+              {selectedClient === clientId && (
+                <Ionicons name="checkmark" size={20} color={colors.primary} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {/* Location Filter - Only show if client is selected */}
+      {selectedClient && (
+        <View style={styles.locationFilterContainer}>
+          <TouchableOpacity
+            style={[styles.filterDropdownButton, selectedLocation && styles.filterDropdownButtonActive, { flex: 1 }]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setShowLocationMenu(!showLocationMenu);
+              setShowClientMenu(false);
+            }}
+          >
+            <Text style={[styles.filterDropdownText, selectedLocation && styles.filterDropdownTextActive]}>
+              {selectedLocation || 'All Locations'}
+            </Text>
+            <Ionicons name="chevron-down" size={16} color={selectedLocation ? colors.systemBackground : colors.primary} />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Location Menu */}
+      {showLocationMenu && selectedClient && (
+        <View style={styles.filterMenu}>
+          <TouchableOpacity
+            style={styles.filterMenuItem}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setSelectedLocation(null);
+              setShowLocationMenu(false);
+            }}
+          >
+            <Text style={[styles.filterMenuItemText, !selectedLocation && styles.filterMenuItemTextActive]}>
+              All Locations
+            </Text>
+            {!selectedLocation && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+          </TouchableOpacity>
+          {Array.from(new Set(
+            projects
+              .filter(p => p.clientId === selectedClient)
+              .map(p => p.qbCustomerName)
+              .filter(Boolean)
+          )).sort().map(location => (
+            <TouchableOpacity
+              key={location}
+              style={styles.filterMenuItem}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setSelectedLocation(location);
+                setShowLocationMenu(false);
+              }}
+            >
+              <Text style={[
+                styles.filterMenuItemText,
+                selectedLocation === location && styles.filterMenuItemTextActive
+              ]}>
+                {location}
+              </Text>
+              {selectedLocation === location && (
+                <Ionicons name="checkmark" size={20} color={colors.primary} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
       {/* Status Filters */}
       <ScrollView
@@ -361,6 +602,8 @@ export default function ProjectsScreen({ navigation }) {
             onPress={handleProjectPress}
             client={clients[item.clientId]}
             isAdmin={isAdmin()}
+            selectionMode={selectionMode}
+            isSelected={selectedProjects.includes(item.id)}
           />
         )}
         contentContainerStyle={styles.listContent}
@@ -448,10 +691,13 @@ const createStyles = (colors) => StyleSheet.create({
     justifyContent: 'center',
   },
   searchContainer: {
+    flexDirection: 'row',
     paddingHorizontal: SPACING.lg,
     paddingBottom: SPACING.md,
+    gap: SPACING.sm,
   },
   searchInputContainer: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.secondarySystemGroupedBackground,
@@ -470,6 +716,57 @@ const createStyles = (colors) => StyleSheet.create({
   },
   clearButton: {
     padding: SPACING.xs,
+  },
+  filterDropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs / 2,
+    backgroundColor: colors.secondarySystemGroupedBackground,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: SPACING.sm,
+    height: 44,
+    minWidth: 80,
+    justifyContent: 'center',
+  },
+  filterDropdownButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  filterDropdownText: {
+    ...TYPOGRAPHY.subheadline,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  filterDropdownTextActive: {
+    color: colors.systemBackground,
+  },
+  locationFilterContainer: {
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.md,
+  },
+  filterMenu: {
+    backgroundColor: colors.secondarySystemGroupedBackground,
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.sm,
+    borderRadius: RADIUS.md,
+    ...SHADOWS.small,
+    maxHeight: 300,
+  },
+  filterMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.separator,
+  },
+  filterMenuItemText: {
+    ...TYPOGRAPHY.body,
+    color: colors.label,
+  },
+  filterMenuItemTextActive: {
+    color: colors.primary,
+    fontWeight: '600',
   },
   filtersContainer: {
     paddingHorizontal: SPACING.lg,
