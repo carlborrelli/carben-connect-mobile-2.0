@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useAudioRecorder, RecordingPresets, setAudioModeAsync } from 'expo-audio';
+import { useAudioRecorder, RecordingPresets, setAudioModeAsync, requestRecordingPermissionsAsync } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../contexts/ThemeContext';
@@ -56,13 +56,20 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
+      // Request microphone permissions
+      const { granted } = await requestRecordingPermissionsAsync();
+      if (!granted) {
+        Alert.alert('Permission Required', 'Please enable microphone access to use voice recording');
+        return;
+      }
+
       // Configure audio mode for recording on iOS
       await setAudioModeAsync({
         playsInSilentMode: true,
         allowsRecording: true,
       });
 
-      // Request permissions and start recording
+      // Start recording
       await audioRecorder.record();
       setRecordingDuration(0);
 
