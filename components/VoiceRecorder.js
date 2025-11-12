@@ -11,8 +11,6 @@ import {
 import { useAudioRecorder, RecordingPresets } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '../config/firebase';
 import { useTheme } from '../contexts/ThemeContext';
 import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 
@@ -104,35 +102,48 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
       const response = await fetch(uri);
       const blob = await response.blob();
 
-      // Convert to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-
-      await new Promise((resolve, reject) => {
-        reader.onloadend = () => resolve();
-        reader.onerror = reject;
+      // Step 1: Transcribe audio using Vercel API
+      const formData = new FormData();
+      formData.append('audio', {
+        uri: uri,
+        type: 'audio/m4a',
+        name: 'recording.m4a'
       });
 
-      const base64Audio = reader.result.split(',')[1];
-
-      // Step 1: Transcribe audio
-      const transcribeAudio = httpsCallable(functions, 'transcribeAudio');
-      const transcribeResult = await transcribeAudio({
-        audioData: base64Audio,
-        mimeType: 'audio/m4a'
+      const transcribeResponse = await fetch('https://carbenconnect.com/api/ai/transcribe', {
+        method: 'POST',
+        body: formData,
       });
 
-      const transcription = transcribeResult.data.text;
+      if (!transcribeResponse.ok) {
+        const error = await transcribeResponse.json();
+        throw new Error(error.error || 'Failed to transcribe audio');
+      }
+
+      const transcribeData = await transcribeResponse.json();
+      const transcription = transcribeData.text;
       console.log('Transcription:', transcription);
 
-      // Step 2: Generate project details from transcription
-      const generateProject = httpsCallable(functions, 'generateProject');
-      const generateResult = await generateProject({
-        transcription,
-        existingDescription: existingDescription || null
+      // Step 2: Generate project details from transcription using Vercel API
+      const generateResponse = await fetch('https://carbenconnect.com/api/ai/generate-project', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          description: existingDescription
+            ? `${existingDescription}\n\nAdditional information: ${transcription}`
+            : transcription
+        }),
       });
 
-      const { title, description, summary } = generateResult.data;
+      if (!generateResponse.ok) {
+        const error = await generateResponse.json();
+        throw new Error(error.error || 'Failed to generate project');
+      }
+
+      const generateData = await generateResponse.json();
+      const { title, description, summary } = generateData;
       console.log('Generated:', { title, description, summary });
 
       // Call the callback with the generated data (including raw transcription)
