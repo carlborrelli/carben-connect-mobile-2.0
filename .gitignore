@@ -108,3 +108,5 @@ DEVELOPMENT_WORKFLOW.md
 *.bak
 *~
 
+ios/.xcode.env.local
+ios/*.xcodeproj/project.xcworkspace/
