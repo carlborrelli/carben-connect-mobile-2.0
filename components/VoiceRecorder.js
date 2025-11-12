@@ -34,11 +34,14 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
 
   // Update timer every second when recording
   useEffect(() => {
+    console.log('useEffect triggered - audioRecorder.isRecording:', audioRecorder.isRecording);
     if (audioRecorder.isRecording) {
+      console.log('Starting timer interval');
       timerIntervalRef.current = setInterval(() => {
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
     } else {
+      console.log('Clearing timer interval');
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
         timerIntervalRef.current = null;
@@ -78,8 +81,10 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
 
       // Start recording
       console.log('Starting recording...');
+      console.log('audioRecorder.isRecording BEFORE:', audioRecorder.isRecording);
       await audioRecorder.record();
       console.log('Recording started successfully');
+      console.log('audioRecorder.isRecording AFTER:', audioRecorder.isRecording);
       setRecordingDuration(0);
 
     } catch (error) {
