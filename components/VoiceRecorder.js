@@ -155,15 +155,15 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
 
   const processRecording = async (uri) => {
     try {
-      // Read the audio file
-      const response = await fetch(uri);
-      const blob = await response.blob();
+      console.log('Processing recording URI:', uri);
 
       // Step 1: Transcribe audio using Vercel API
       const formData = new FormData();
+
+      // In React Native, FormData needs the file object with uri, type, and name
       formData.append('audio', {
         uri: uri,
-        type: 'audio/m4a',
+        type: 'audio/mp4', // m4a is actually MPEG-4 audio
         name: 'recording.m4a'
       });
 
