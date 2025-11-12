@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useAudioRecorder, RecordingPresets } from 'expo-audio';
+import { useAudioRecorder, RecordingPresets, setIsAudioActiveAsync } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../contexts/ThemeContext';
@@ -56,6 +56,9 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
+      // Enable audio recording on iOS
+      await setIsAudioActiveAsync(true);
+
       // Request permissions and start recording
       await audioRecorder.record();
       setRecordingDuration(0);
@@ -64,7 +67,7 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
       console.error('Failed to start recording:', error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
 
-      if (error.message.includes('permission')) {
+      if (error.message.includes('permission') || error.message.includes('Permission')) {
         Alert.alert('Permission Required', 'Please enable microphone access to use voice recording');
       } else {
         Alert.alert('Error', 'Failed to start recording. Please try again.');
@@ -81,6 +84,9 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
       // Stop recording and get the recording object
       const recording = await audioRecorder.stop();
 
+      // Disable audio recording on iOS
+      await setIsAudioActiveAsync(false);
+
       if (!recording || !recording.uri) {
         throw new Error('No recording URI');
       }
@@ -93,6 +99,13 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Error', 'Failed to process recording. Please try again.');
       setIsProcessing(false);
+
+      // Make sure to disable audio even on error
+      try {
+        await setIsAudioActiveAsync(false);
+      } catch (e) {
+        // Ignore error
+      }
     }
   };
 
