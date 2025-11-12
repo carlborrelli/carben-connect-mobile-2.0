@@ -56,6 +56,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
   const [loadingInvoices, setLoadingInvoices] = useState(true);
   const [showStatusPicker, setShowStatusPicker] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [location, setLocation] = useState(null); // Location object from locationId
 
   const isAdmin = userProfile?.role === 'admin';
 
@@ -68,7 +69,16 @@ export default function ProjectDetailScreen({ route, navigation }) {
     try {
       const projectDoc = await getDoc(doc(db, 'projects', projectId));
       if (projectDoc.exists()) {
-        setProject({ id: projectDoc.id, ...projectDoc.data() });
+        const projectData = { id: projectDoc.id, ...projectDoc.data() };
+        setProject(projectData);
+
+        // Load location if locationId exists
+        if (projectData.locationId) {
+          const locationDoc = await getDoc(doc(db, 'locations', projectData.locationId));
+          if (locationDoc.exists()) {
+            setLocation({ id: locationDoc.id, ...locationDoc.data() });
+          }
+        }
       }
     } catch (error) {
       console.error('Error loading project:', error);
@@ -239,10 +249,10 @@ export default function ProjectDetailScreen({ route, navigation }) {
                 <Ionicons name="person" size={16} color={colors.secondaryLabel} />
                 <Text style={styles.clientText}>{project.clientName}</Text>
               </View>
-              {project.locationName && (
+              {location && (
                 <View style={styles.locationRow}>
                   <Ionicons name="location" size={16} color={colors.secondaryLabel} />
-                  <Text style={styles.locationText}>{project.locationName}</Text>
+                  <Text style={styles.locationText}>{location.name}</Text>
                 </View>
               )}
               {project.freshbooksInvoiceNumber && (

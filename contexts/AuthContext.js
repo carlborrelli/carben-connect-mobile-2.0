@@ -104,8 +104,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Check if user is admin (checks the REAL user, not viewed user)
-  const isAdmin = () => {
+  // Check if REAL user is admin (for permissions/features)
+  const isRealAdmin = () => {
     if (originalAdmin) {
       // If viewing as client, check the original admin
       return originalAdmin.role === 'admin';
@@ -113,9 +113,18 @@ export const AuthProvider = ({ children }) => {
     return userProfile?.role === 'admin';
   };
 
+  // Check if CURRENT view is admin (for UI display)
+  const isAdmin = () => {
+    // When viewing as client, return false so UI shows client perspective
+    if (viewingAsUser) {
+      return false;
+    }
+    return userProfile?.role === 'admin';
+  };
+
   // View as client - switches to client view
   const viewAsClient = async (clientId) => {
-    if (!isAdmin()) {
+    if (!isRealAdmin()) {
       console.error('Only admins can view as client');
       return { success: false, error: 'Unauthorized' };
     }
@@ -183,7 +192,8 @@ export const AuthProvider = ({ children }) => {
     error,
     signIn,
     signOut,
-    isAdmin,
+    isAdmin, // Current view's role (false when viewing as client)
+    isRealAdmin, // Real user's role (true even when viewing as client)
     viewAsClient,
     exitViewAsClient,
     getEffectiveUser,

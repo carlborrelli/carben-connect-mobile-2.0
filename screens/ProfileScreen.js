@@ -12,7 +12,7 @@ import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
 export default function ProfileScreen({ navigation }) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
-  const { userProfile, isAdmin, signOut, viewAsClient, isViewingAsClient } = useAuth();
+  const { userProfile, isAdmin, isRealAdmin, signOut, viewAsClient, exitViewAsClient, isViewingAsClient } = useAuth();
   const [showClientSelector, setShowClientSelector] = useState(false);
 
   const handleSignOut = async () => {
@@ -38,6 +38,12 @@ export default function ProfileScreen({ navigation }) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Error', result.error || 'Failed to switch to client view');
     }
+  };
+
+  const handleExitClientView = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    exitViewAsClient();
+    navigation.navigate('Home');
   };
 
   const InfoRow = ({ icon, label, value }) => (
@@ -132,8 +138,16 @@ export default function ProfileScreen({ navigation }) {
 
         {/* Actions */}
         <View style={styles.section}>
-          {/* View as Client Button (Admin Only) */}
-          {isAdmin() && !isViewingAsClient() && (
+          {/* Exit Client View Button (When viewing as client) */}
+          {isViewingAsClient() && (
+            <TouchableOpacity style={styles.exitViewButton} onPress={handleExitClientView}>
+              <Ionicons name="arrow-back" size={20} color={colors.primary} />
+              <Text style={styles.exitViewText}>Exit Client View</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* View as Client Button (Admin Only, not in client view) */}
+          {isRealAdmin() && !isViewingAsClient() && (
             <TouchableOpacity style={styles.viewAsClientButton} onPress={handleViewAsClient}>
               <Ionicons name="eye-outline" size={20} color={colors.primary} />
               <Text style={styles.viewAsClientText}>View as Client</Text>
@@ -143,7 +157,7 @@ export default function ProfileScreen({ navigation }) {
 
           {/* Sign Out Button */}
           <TouchableOpacity
-            style={[styles.signOutButton, isAdmin() && !isViewingAsClient() && { marginTop: SPACING.sm }]}
+            style={[styles.signOutButton, (isRealAdmin() || isViewingAsClient()) && { marginTop: SPACING.sm }]}
             onPress={handleSignOut}
           >
             <Ionicons name="log-out-outline" size={20} color={colors.red} />
@@ -272,6 +286,22 @@ const createStyles = (colors) => StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     backgroundColor: colors.separator,
     marginLeft: SPACING.md + 20 + SPACING.sm,
+  },
+  exitViewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.sm,
+    backgroundColor: colors.primary + '20',
+    marginHorizontal: SPACING.lg,
+    padding: SPACING.md,
+    borderRadius: RADIUS.lg,
+    ...SHADOWS.small,
+  },
+  exitViewText: {
+    ...TYPOGRAPHY.headline,
+    color: colors.primary,
+    fontWeight: '600',
   },
   viewAsClientButton: {
     flexDirection: 'row',

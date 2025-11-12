@@ -2,6 +2,7 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { QuickBooksProvider } from './contexts/QuickBooksContext';
@@ -40,14 +41,16 @@ function AppContent() {
 // Root app component
 export default function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <QuickBooksProvider>
-          <StatusBar style="auto" />
-          <AppContent />
-        </QuickBooksProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <QuickBooksProvider>
+            <StatusBar style="auto" />
+            <AppContent />
+          </QuickBooksProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
 

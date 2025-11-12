@@ -68,12 +68,16 @@ export default function ProjectsScreen({ navigation }) {
 
     if (isAdmin()) {
       // Admin sees all projects
+      console.log('[ProjectsScreen] Loading ALL projects (admin mode)');
       projectQuery = query(
         collection(db, 'projects'),
         orderBy('createdAt', 'desc')
       );
     } else {
       // Client sees only their projects
+      console.log('[ProjectsScreen] Loading projects for clientId:', userProfile.id);
+      console.log('[ProjectsScreen] Client name:', userProfile.name);
+      console.log('[ProjectsScreen] Client email:', userProfile.email);
       projectQuery = query(
         collection(db, 'projects'),
         where('clientId', '==', userProfile.id),
@@ -85,12 +89,20 @@ export default function ProjectsScreen({ navigation }) {
     const unsubscribe = onSnapshot(
       projectQuery,
       (snapshot) => {
+        console.log('[ProjectsScreen] Loaded', snapshot.docs.length, 'projects');
         const projectsData = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
           photoCount: doc.data().photos?.length || 0,
           messageCount: 0, // TODO: Count messages from messages collection
         }));
+
+        // Debug: Log first project's clientId
+        if (projectsData.length > 0 && !isAdmin()) {
+          console.log('[ProjectsScreen] First project clientId:', projectsData[0].clientId);
+          console.log('[ProjectsScreen] First project title:', projectsData[0].title || projectsData[0].name);
+        }
+
         setProjects(projectsData);
         setFilteredProjects(projectsData);
         setLoading(false);
@@ -110,7 +122,11 @@ export default function ProjectsScreen({ navigation }) {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const clientsQuery = query(collection(db, 'clients'));
+        // Fetch from users collection where role = 'client'
+        const clientsQuery = query(
+          collection(db, 'users'),
+          where('role', '==', 'client')
+        );
         const snapshot = await getDocs(clientsQuery);
         const clientsMap = {};
         snapshot.docs.forEach(doc => {
@@ -119,7 +135,7 @@ export default function ProjectsScreen({ navigation }) {
             id: doc.id,
             ...data,
             // Format client name for display
-            name: `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.company || 'Unnamed Client'
+            name: data.name || `${data.firstName || ''} ${data.lastName || ''}`.trim() || data.company || 'Unnamed Client'
           };
         });
         setClients(clientsMap);
@@ -163,9 +179,13 @@ export default function ProjectsScreen({ navigation }) {
       filtered = filtered.filter(project => project.clientId === selectedClient);
     }
 
-    // Filter by location
+    // Filter by location (using locationId lookup)
     if (selectedLocation) {
-      filtered = filtered.filter(project => project.locationName === selectedLocation);
+      filtered = filtered.filter(project => {
+        if (!project.locationId) return false;
+        const location = locations[project.locationId];
+        return location?.name === selectedLocation || location?.nickname === selectedLocation;
+      });
     }
 
     // Filter by status
@@ -180,7 +200,9 @@ export default function ProjectsScreen({ navigation }) {
         const title = (project.title || '').toLowerCase();
         // Look up client name from clients object using clientId
         const clientName = (clients[project.clientId]?.name || '').toLowerCase();
-        const location = (project.locationName || '').toLowerCase();
+        // Look up location name using locationId
+        const locationObj = locations[project.locationId];
+        const location = (locationObj?.nickname || locationObj?.name || '').toLowerCase();
         const description = (project.description || '').toLowerCase();
         const status = (project.status || '').toLowerCase();
 
@@ -412,48 +434,117 @@ export default function ProjectsScreen({ navigation }) {
             </TouchableOpacity>
           )}
         </View>
-        {/* Client Filter Dropdown */}
-        <TouchableOpacity
-          style={[styles.filterDropdownButton, selectedClient && styles.filterDropdownButtonActive]}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setShowClientMenu(!showClientMenu);
-          }}
-        >
-          <Text style={[styles.filterDropdownText, (selectedClient || selectedLocation) && styles.filterDropdownTextActive]}>
-            {selectedLocation || (selectedClient ? (clients[selectedClient]?.name || 'Client') : 'Client')}
-          </Text>
-          <Ionicons name="chevron-down" size={16} color={selectedClient ? colors.systemBackground : colors.primary} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Client Menu with expandable locations */}
-      {showClientMenu && (
-        <View style={styles.filterMenu}>
+        {/* CLIENT-ONLY: Location Filter | ADMIN: Client Filter */}
+        {!isAdmin() ? (
+          /* CLIENT VIEW: Show location filter only if client has multiple locations */
+          userProfile?.qbCustomers && userProfile.qbCustomers.length > 1 ? (
+            <TouchableOpacity
+              style={[styles.filterDropdownButton, selectedLocation && styles.filterDropdownButtonActive]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowClientMenu(!showClientMenu);
+              }}
+            >
+              <Text style={[styles.filterDropdownText, selectedLocation && styles.filterDropdownTextActive]}>
+                {selectedLocation ? (() => {
+                  // Find location by name and display nickname for space-saving
+                  const locationObj = Object.values(locations).find(loc => loc.name === selectedLocation);
+                  return locationObj?.nickname || locationObj?.name || selectedLocation;
+                })() : 'All Locations'}
+              </Text>
+              <Ionicons name="chevron-down" size={16} color={selectedLocation ? colors.systemBackground : colors.primary} />
+            </TouchableOpacity>
+          ) : null
+        ) : (
+          /* ADMIN VIEW: Keep existing client filter */
           <TouchableOpacity
-            style={styles.filterMenuItem}
+            style={[styles.filterDropdownButton, selectedClient && styles.filterDropdownButtonActive]}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setSelectedClient(null);
-              setSelectedLocation(null);
-              setExpandedClient(null);
-              setShowClientMenu(false);
+              setShowClientMenu(!showClientMenu);
             }}
           >
-            <Text style={[styles.filterMenuItemText, !selectedClient && !selectedLocation && styles.filterMenuItemTextActive]}>
-              All Clients
+            <Text style={[styles.filterDropdownText, (selectedClient || selectedLocation) && styles.filterDropdownTextActive]}>
+              {selectedLocation ? (() => {
+                // Find location by name and display nickname for space-saving
+                const locationObj = Object.values(locations).find(loc => loc.name === selectedLocation);
+                return locationObj?.nickname || locationObj?.name || selectedLocation;
+              })() : (selectedClient ? (clients[selectedClient]?.name || 'Client') : 'Client')}
             </Text>
-            {!selectedClient && !selectedLocation && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+            <Ionicons name="chevron-down" size={16} color={selectedClient ? colors.systemBackground : colors.primary} />
           </TouchableOpacity>
+        )}
+      </View>
+
+      {/* CLIENT-ONLY: Location Menu | ADMIN: Client Menu with expandable locations */}
+      {showClientMenu && (
+        <View style={styles.filterMenu}>
+          {!isAdmin() ? (
+            /* CLIENT VIEW: Show only their locations */
+            <>
+              <TouchableOpacity
+                style={styles.filterMenuItem}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setSelectedLocation(null);
+                  setShowClientMenu(false);
+                }}
+              >
+                <Text style={[styles.filterMenuItemText, !selectedLocation && styles.filterMenuItemTextActive]}>
+                  All Locations
+                </Text>
+                {!selectedLocation && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+              </TouchableOpacity>
+              {/* Show client's locations from qbCustomers */}
+              {userProfile?.qbCustomers?.map(qbCustomer => (
+                <TouchableOpacity
+                  key={qbCustomer.id}
+                  style={styles.filterMenuItem}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setSelectedLocation(qbCustomer.name);
+                    setShowClientMenu(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.filterMenuItemText,
+                    selectedLocation === qbCustomer.name && styles.filterMenuItemTextActive
+                  ]}>
+                    {qbCustomer.name}
+                  </Text>
+                  {selectedLocation === qbCustomer.name && (
+                    <Ionicons name="checkmark" size={20} color={colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </>
+          ) : (
+            /* ADMIN VIEW: Keep existing client filter menu */
+            <>
+              <TouchableOpacity
+                style={styles.filterMenuItem}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setSelectedClient(null);
+                  setSelectedLocation(null);
+                  setExpandedClient(null);
+                  setShowClientMenu(false);
+                }}
+              >
+                <Text style={[styles.filterMenuItemText, !selectedClient && !selectedLocation && styles.filterMenuItemTextActive]}>
+                  All Clients
+                </Text>
+                {!selectedClient && !selectedLocation && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+              </TouchableOpacity>
           {/* Build list of unique clientIds from projects, then display client names */}
           {Array.from(new Set(projects.map(p => p.clientId).filter(Boolean)))
             .sort((a, b) => (clients[a]?.name || '').localeCompare(clients[b]?.name || ''))
             .map(clientId => {
-              // Get locations for this client from the locations collection
-              const clientLocations = Object.values(locations)
-                .filter(loc => loc.clientId === clientId)
-                .map(loc => loc.name)
-                .sort();
+              // Get locations for this client from their qbCustomers array
+              const client = clients[clientId];
+              const clientLocations = client?.qbCustomers
+                ? client.qbCustomers.map(qbCust => qbCust.name).sort()
+                : [];
               const isExpanded = expandedClient === clientId;
 
               return (
@@ -463,20 +554,16 @@ export default function ProjectsScreen({ navigation }) {
                     onPress={() => {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                       if (clientLocations.length === 0) {
-                        // No locations - select client immediately
-                        setSelectedClient(clientId);
-                        setSelectedLocation(null);
-                        setExpandedClient(null);
-                        setShowClientMenu(false);
-                      } else if (isExpanded) {
-                        // Already expanded - select client and close
+                        // No locations - select client and close
                         setSelectedClient(clientId);
                         setSelectedLocation(null);
                         setExpandedClient(null);
                         setShowClientMenu(false);
                       } else {
-                        // Has locations and not expanded - expand to show them
-                        setExpandedClient(clientId);
+                        // Has locations - select client and expand to show location options
+                        setSelectedClient(clientId);
+                        setSelectedLocation(null); // Clear location to show all
+                        setExpandedClient(isExpanded ? null : clientId); // Toggle expand
                       }
                     }}
                   >
@@ -501,32 +588,61 @@ export default function ProjectsScreen({ navigation }) {
                   </TouchableOpacity>
 
                   {/* Show locations when expanded */}
-                  {isExpanded && clientLocations.map(location => (
-                    <TouchableOpacity
-                      key={location}
-                      style={[styles.filterMenuItem, { paddingLeft: 32 }]}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setSelectedClient(clientId);
-                        setSelectedLocation(location);
-                        setExpandedClient(null);
-                        setShowClientMenu(false);
-                      }}
-                    >
-                      <Text style={[
-                        styles.filterMenuItemText,
-                        selectedLocation === location && styles.filterMenuItemTextActive
-                      ]}>
-                        {location}
-                      </Text>
-                      {selectedLocation === location && (
-                        <Ionicons name="checkmark" size={20} color={colors.primary} />
-                      )}
-                    </TouchableOpacity>
-                  ))}
+                  {isExpanded && (
+                    <>
+                      {/* "All Locations" option for this client */}
+                      <TouchableOpacity
+                        style={[styles.filterMenuItem, { paddingLeft: 32, backgroundColor: colors.tertiarySystemGroupedBackground }]}
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          setSelectedClient(clientId);
+                          setSelectedLocation(null); // Clear location filter
+                          setExpandedClient(null);
+                          setShowClientMenu(false);
+                        }}
+                      >
+                        <Text style={[
+                          styles.filterMenuItemText,
+                          selectedClient === clientId && !selectedLocation && styles.filterMenuItemTextActive
+                        ]}>
+                          All Locations
+                        </Text>
+                        {selectedClient === clientId && !selectedLocation && (
+                          <Ionicons name="checkmark" size={20} color={colors.primary} />
+                        )}
+                      </TouchableOpacity>
+
+                      {/* Individual locations */}
+                      {clientLocations.map(location => (
+                        <TouchableOpacity
+                          key={location}
+                          style={[styles.filterMenuItem, { paddingLeft: 32 }]}
+                          onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            setSelectedClient(clientId);
+                            setSelectedLocation(location);
+                            setExpandedClient(null);
+                            setShowClientMenu(false);
+                          }}
+                        >
+                          <Text style={[
+                            styles.filterMenuItemText,
+                            selectedLocation === location && styles.filterMenuItemTextActive
+                          ]}>
+                            {location}
+                          </Text>
+                          {selectedLocation === location && (
+                            <Ionicons name="checkmark" size={20} color={colors.primary} />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </>
+                  )}
                 </View>
               );
             })}
+            </>
+          )}
         </View>
       )}
 
@@ -618,6 +734,7 @@ export default function ProjectsScreen({ navigation }) {
             project={item}
             onPress={handleProjectPress}
             client={clients[item.clientId]}
+            location={locations[item.locationId]} // Pass location object
             isAdmin={isAdmin()}
             selectionMode={selectionMode}
             isSelected={selectedProjects.includes(item.id)}

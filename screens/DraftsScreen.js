@@ -24,6 +24,7 @@ export default function DraftsScreen({ navigation }) {
   const [projects, setProjects] = useState([]);
   const [estimateProgress, setEstimateProgress] = useState({});
   const [clients, setClients] = useState({});
+  const [locations, setLocations] = useState({}); // Locations lookup by id
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -79,7 +80,26 @@ export default function DraftsScreen({ navigation }) {
       }
     };
 
+    // Fetch all locations
+    const fetchLocations = async () => {
+      try {
+        const locationsQuery = query(collection(db, 'locations'));
+        const snapshot = await getDocs(locationsQuery);
+        const locationsMap = {};
+        snapshot.docs.forEach(doc => {
+          locationsMap[doc.id] = {
+            id: doc.id,
+            ...doc.data()
+          };
+        });
+        setLocations(locationsMap);
+      } catch (error) {
+        console.error('Error fetching locations:', error);
+      }
+    };
+
     fetchClients();
+    fetchLocations();
 
     return () => {
       unsubscribeProjects();
@@ -133,10 +153,11 @@ export default function DraftsScreen({ navigation }) {
     const hasMultipleLocations = client.qbCustomers && client.qbCustomers.length > 1;
     const clientName = client.name || client.company;
 
-    // Only show location if client has multiple locations
+    // Only show location if client has multiple locations (using locationId lookup)
     let location = null;
-    if (hasMultipleLocations) {
-      location = project.qbCustomerName;
+    if (hasMultipleLocations && project.locationId) {
+      const locationObj = locations[project.locationId];
+      location = locationObj?.name;  // Use FULL name in drafts listing
     }
 
     return { clientName, location };

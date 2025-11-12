@@ -1,6 +1,7 @@
 // ViewModeBanner - Shows when admin is viewing as a client
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,6 +9,7 @@ import { COLORS, TYPOGRAPHY, SPACING } from '../theme';
 
 const ViewModeBanner = () => {
   const { isViewingAsClient, viewingAsUser, exitViewAsClient } = useAuth();
+  const insets = useSafeAreaInsets();
 
   if (!isViewingAsClient()) {
     return null;
@@ -19,7 +21,7 @@ const ViewModeBanner = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.content}>
         {/* Icon */}
         <Ionicons name="eye" size={18} color={COLORS.white} style={styles.icon} />

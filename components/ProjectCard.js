@@ -6,7 +6,7 @@ import * as Haptics from 'expo-haptics';
 import { useTheme } from '../contexts/ThemeContext';
 import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
 
-export default function ProjectCard({ project, onPress, client, isAdmin, selectionMode, isSelected }) {
+export default function ProjectCard({ project, onPress, client, location, isAdmin, selectionMode, isSelected }) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
@@ -51,20 +51,20 @@ export default function ProjectCard({ project, onPress, client, isAdmin, selecti
     if (project.clientName) {
       return {
         clientName: project.clientName,
-        location: project.locationName || project.qbCustomerName || null
+        locationName: location?.name || null  // Use FULL name in listing
       };
     }
 
     // Otherwise, try to get from client lookup
-    if (!client) return { clientName: null, location: null };
+    if (!client) return { clientName: null, locationName: null };
 
     const clientName = client.name || client.company;
-    const location = project.locationName || project.qbCustomerName || null;
+    const locationName = location?.name || null;  // Use FULL name in listing
 
-    return { clientName, location };
+    return { clientName, locationName };
   };
 
-  const { clientName, location } = getClientInfo();
+  const { clientName, locationName } = getClientInfo();
 
   return (
     <TouchableOpacity
@@ -97,11 +97,11 @@ export default function ProjectCard({ project, onPress, client, isAdmin, selecti
       )}
 
       {/* Location - Same size as client with icon */}
-      {location && (
+      {locationName && (
         <View style={styles.locationRow}>
           <Ionicons name="location-outline" size={14} color={colors.secondaryLabel} />
           <Text style={styles.locationText} numberOfLines={1}>
-            {location}
+            {locationName}
           </Text>
         </View>
       )}
