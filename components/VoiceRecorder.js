@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { Audio } from 'expo-av';
+import { useAudioRecorder, RecordingPresets } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { httpsCallable } from 'firebase/functions';
@@ -20,8 +20,7 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
   const { colors } = useTheme();
   const styles = createStyles(colors, compact);
 
-  const [recording, setRecording] = useState(null);
-  const [isRecording, setIsRecording] = useState(false);
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const timerIntervalRef = useRef(null);
@@ -29,18 +28,15 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
   useEffect(() => {
     return () => {
       // Cleanup on unmount
-      if (recording) {
-        recording.stopAndUnloadAsync();
-      }
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
       }
     };
-  }, [recording]);
+  }, []);
 
   // Update timer every second when recording
   useEffect(() => {
-    if (isRecording) {
+    if (audioRecorder.isRecording) {
       timerIntervalRef.current = setInterval(() => {
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
@@ -56,38 +52,25 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
         clearInterval(timerIntervalRef.current);
       }
     };
-  }, [isRecording]);
+  }, [audioRecorder.isRecording]);
 
   const startRecording = async () => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      // Request permissions
-      const permission = await Audio.requestPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert('Permission Required', 'Please enable microphone access to use voice recording');
-        return;
-      }
-
-      // Set audio mode for recording
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
-
-      // Start recording
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-
-      setRecording(recording);
-      setIsRecording(true);
+      // Request permissions and start recording
+      await audioRecorder.record();
       setRecordingDuration(0);
 
     } catch (error) {
       console.error('Failed to start recording:', error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert('Error', 'Failed to start recording. Please try again.');
+
+      if (error.message.includes('permission')) {
+        Alert.alert('Permission Required', 'Please enable microphone access to use voice recording');
+      } else {
+        Alert.alert('Error', 'Failed to start recording. Please try again.');
+      }
     }
   };
 
@@ -95,18 +78,14 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      if (!recording) return;
-
-      setIsRecording(false);
       setIsProcessing(true);
 
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
+      // Stop recording and get URI
+      const uri = await audioRecorder.stop();
 
-      // Reset audio mode
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-      });
+      if (!uri) {
+        throw new Error('No recording URI');
+      }
 
       // Process the recording
       await processRecording(uri);
@@ -205,14 +184,14 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
       <TouchableOpacity
         style={[
           styles.recordButton,
-          isRecording && styles.recordButtonActive
+          audioRecorder.isRecording && styles.recordButtonActive
         ]}
-        onPress={isRecording ? stopRecording : startRecording}
+        onPress={audioRecorder.isRecording ? stopRecording : startRecording}
         activeOpacity={0.8}
       >
         <View style={styles.recordButtonInner}>
           <Ionicons
-            name={isRecording ? 'stop' : 'mic'}
+            name={audioRecorder.isRecording ? 'stop' : 'mic'}
             size={compact ? 20 : 32}
             color={colors.systemBackground}
           />
@@ -221,13 +200,13 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
 
       <View style={styles.infoContainer}>
         <Text style={styles.infoTitle}>
-          {isRecording ? 'Recording...' : 'Tap to Record'}
+          {audioRecorder.isRecording ? 'Recording...' : 'Tap to Record'}
         </Text>
-        {isRecording && (
+        {audioRecorder.isRecording && (
           <Text style={styles.duration}>{formatDuration(recordingDuration)}</Text>
         )}
         <Text style={styles.infoSubtitle}>
-          {isRecording
+          {audioRecorder.isRecording
             ? 'Tap again to stop and process'
             : 'Describe your project using your voice'}
         </Text>
