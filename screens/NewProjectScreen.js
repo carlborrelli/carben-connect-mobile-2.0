@@ -333,13 +333,14 @@ export default function NewProjectScreen({ navigation }) {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={90}
+        style={{ flex: 1, backgroundColor: colors.systemGroupedBackground }}
+        keyboardVerticalOffset={0}
       >
         <ScrollView
           style={styles.content}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
           {/* Client Selection (Admin only) */}
           {isAdmin() && (
