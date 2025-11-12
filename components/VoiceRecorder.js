@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useAudioRecorder, RecordingPresets, setAudioModeAsync, requestRecordingPermissionsAsync } from 'expo-audio';
+import { useAudioRecorder, useAudioRecorderState, RecordingPresets, setAudioModeAsync, requestRecordingPermissionsAsync } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../contexts/ThemeContext';
@@ -19,6 +19,7 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
   const styles = createStyles(colors, compact);
 
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorderState = useAudioRecorderState(audioRecorder);
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const timerIntervalRef = useRef(null);
@@ -34,8 +35,8 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
 
   // Update timer every second when recording
   useEffect(() => {
-    console.log('useEffect triggered - audioRecorder.isRecording:', audioRecorder.isRecording);
-    if (audioRecorder.isRecording) {
+    console.log('useEffect triggered - recorderState.isRecording:', recorderState.isRecording);
+    if (recorderState.isRecording) {
       console.log('Starting timer interval');
       timerIntervalRef.current = setInterval(() => {
         setRecordingDuration((prev) => prev + 1);
@@ -53,7 +54,7 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
         clearInterval(timerIntervalRef.current);
       }
     };
-  }, [audioRecorder.isRecording]);
+  }, [recorderState.isRecording]);
 
   const startRecording = async () => {
     try {
@@ -81,10 +82,10 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
 
       // Start recording
       console.log('Starting recording...');
-      console.log('audioRecorder.isRecording BEFORE:', audioRecorder.isRecording);
+      console.log('recorderState.isRecording BEFORE:', recorderState.isRecording);
       await audioRecorder.record();
       console.log('Recording started successfully');
-      console.log('audioRecorder.isRecording AFTER:', audioRecorder.isRecording);
+      console.log('recorderState.isRecording AFTER:', recorderState.isRecording);
       setRecordingDuration(0);
 
     } catch (error) {
@@ -239,14 +240,14 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
       <TouchableOpacity
         style={[
           styles.recordButton,
-          audioRecorder.isRecording && styles.recordButtonActive
+          recorderState.isRecording && styles.recordButtonActive
         ]}
-        onPress={audioRecorder.isRecording ? stopRecording : startRecording}
+        onPress={recorderState.isRecording ? stopRecording : startRecording}
         activeOpacity={0.8}
       >
         <View style={styles.recordButtonInner}>
           <Ionicons
-            name={audioRecorder.isRecording ? 'stop' : 'mic'}
+            name={recorderState.isRecording ? 'stop' : 'mic'}
             size={compact ? 20 : 32}
             color={colors.systemBackground}
           />
@@ -255,13 +256,13 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
 
       <View style={styles.infoContainer}>
         <Text style={styles.infoTitle}>
-          {audioRecorder.isRecording ? 'Recording...' : 'Tap to Record'}
+          {recorderState.isRecording ? 'Recording...' : 'Tap to Record'}
         </Text>
-        {audioRecorder.isRecording && (
+        {recorderState.isRecording && (
           <Text style={styles.duration}>{formatDuration(recordingDuration)}</Text>
         )}
         <Text style={styles.infoSubtitle}>
-          {audioRecorder.isRecording
+          {recorderState.isRecording
             ? 'Tap again to stop and process'
             : 'Describe your project using your voice'}
         </Text>
