@@ -111,8 +111,12 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
 
       setIsProcessing(true);
 
+      console.log('Stopping recording...');
+      console.log('recorderState before stop:', JSON.stringify(recorderState, null, 2));
+
       // Stop recording and get the recording object
       const recording = await audioRecorder.stop();
+      console.log('Recording stopped, result:', JSON.stringify(recording, null, 2));
 
       // Reset audio mode after recording
       await setAudioModeAsync({
@@ -120,12 +124,16 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
         allowsRecording: false,
       });
 
-      if (!recording || !recording.uri) {
+      // The URI is in recorderState.url, not in the recording object
+      const recordingUri = recorderState.url || recording?.uri;
+      console.log('Recording URI to process:', recordingUri);
+
+      if (!recordingUri) {
         throw new Error('No recording URI');
       }
 
       // Process the recording
-      await processRecording(recording.uri);
+      await processRecording(recordingUri);
 
     } catch (error) {
       console.error('Failed to stop recording:', error);
