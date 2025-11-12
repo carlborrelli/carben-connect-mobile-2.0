@@ -80,17 +80,16 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
       });
       console.log('Audio mode set successfully');
 
+      // Prepare the recorder
+      console.log('Preparing to record...');
+      await audioRecorder.prepareToRecordAsync();
+      console.log('Recorder prepared, canRecord:', recorderState.canRecord);
+
       // Start recording
       console.log('Starting recording...');
-      console.log('recorderState.isRecording BEFORE:', recorderState.isRecording);
-      console.log('recorderState full state BEFORE:', JSON.stringify(recorderState, null, 2));
       await audioRecorder.record();
       console.log('Recording started successfully');
-
-      // Wait a tick for state to update
-      await new Promise(resolve => setTimeout(resolve, 100));
-      console.log('recorderState.isRecording AFTER delay:', recorderState.isRecording);
-      console.log('recorderState full state AFTER:', JSON.stringify(recorderState, null, 2));
+      console.log('recorderState after record():', JSON.stringify(recorderState, null, 2));
       setRecordingDuration(0);
 
     } catch (error) {
