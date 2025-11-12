@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useAudioRecorder, RecordingPresets, setIsAudioActiveAsync } from 'expo-audio';
+import { useAudioRecorder, RecordingPresets, setAudioModeAsync } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../contexts/ThemeContext';
@@ -56,8 +56,11 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      // Enable audio recording on iOS
-      await setIsAudioActiveAsync(true);
+      // Configure audio mode for recording on iOS
+      await setAudioModeAsync({
+        playsInSilentMode: true,
+        allowsRecording: true,
+      });
 
       // Request permissions and start recording
       await audioRecorder.record();
@@ -84,8 +87,11 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
       // Stop recording and get the recording object
       const recording = await audioRecorder.stop();
 
-      // Disable audio recording on iOS
-      await setIsAudioActiveAsync(false);
+      // Reset audio mode after recording
+      await setAudioModeAsync({
+        playsInSilentMode: false,
+        allowsRecording: false,
+      });
 
       if (!recording || !recording.uri) {
         throw new Error('No recording URI');
@@ -100,9 +106,12 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
       Alert.alert('Error', 'Failed to process recording. Please try again.');
       setIsProcessing(false);
 
-      // Make sure to disable audio even on error
+      // Make sure to reset audio mode even on error
       try {
-        await setIsAudioActiveAsync(false);
+        await setAudioModeAsync({
+          playsInSilentMode: false,
+          allowsRecording: false,
+        });
       } catch (e) {
         // Ignore error
       }
