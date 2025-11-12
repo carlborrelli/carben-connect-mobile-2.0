@@ -1,21 +1,43 @@
 // ProfileScreen - View and edit user profile
-import React from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '../contexts/AuthContext';
+import ClientSelectorModal from '../components/ClientSelectorModal';
 import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
 
 export default function ProfileScreen({ navigation }) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
-  const { userProfile, isAdmin, signOut } = useAuth();
+  const { userProfile, isAdmin, signOut, viewAsClient, isViewingAsClient } = useAuth();
+  const [showClientSelector, setShowClientSelector] = useState(false);
 
   const handleSignOut = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await signOut();
+  };
+
+  const handleViewAsClient = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowClientSelector(true);
+  };
+
+  const handleSelectClient = async (client) => {
+    setShowClientSelector(false);
+
+    const result = await viewAsClient(client.id);
+
+    if (result.success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // Navigate back to home to show client view
+      navigation.navigate('Home');
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert('Error', result.error || 'Failed to switch to client view');
+    }
   };
 
   const InfoRow = ({ icon, label, value }) => (
@@ -110,12 +132,32 @@ export default function ProfileScreen({ navigation }) {
 
         {/* Actions */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          {/* View as Client Button (Admin Only) */}
+          {isAdmin() && !isViewingAsClient() && (
+            <TouchableOpacity style={styles.viewAsClientButton} onPress={handleViewAsClient}>
+              <Ionicons name="eye-outline" size={20} color={colors.primary} />
+              <Text style={styles.viewAsClientText}>View as Client</Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.secondaryLabel} />
+            </TouchableOpacity>
+          )}
+
+          {/* Sign Out Button */}
+          <TouchableOpacity
+            style={[styles.signOutButton, isAdmin() && !isViewingAsClient() && { marginTop: SPACING.sm }]}
+            onPress={handleSignOut}
+          >
             <Ionicons name="log-out-outline" size={20} color={colors.red} />
             <Text style={styles.signOutText}>Sign Out</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Client Selector Modal */}
+      <ClientSelectorModal
+        visible={showClientSelector}
+        onClose={() => setShowClientSelector(false)}
+        onSelectClient={handleSelectClient}
+      />
     </SafeAreaView>
   );
 }
@@ -230,6 +272,24 @@ const createStyles = (colors) => StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     backgroundColor: colors.separator,
     marginLeft: SPACING.md + 20 + SPACING.sm,
+  },
+  viewAsClientButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: SPACING.sm,
+    backgroundColor: colors.primary + '10',
+    marginHorizontal: SPACING.lg,
+    padding: SPACING.md,
+    borderRadius: RADIUS.lg,
+    ...SHADOWS.small,
+  },
+  viewAsClientText: {
+    ...TYPOGRAPHY.headline,
+    color: colors.primary,
+    fontWeight: '600',
+    flex: 1,
+    marginLeft: SPACING.xs,
   },
   signOutButton: {
     flexDirection: 'row',

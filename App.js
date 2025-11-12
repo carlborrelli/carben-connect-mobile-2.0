@@ -7,6 +7,7 @@ import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { QuickBooksProvider } from './contexts/QuickBooksContext';
 import Navigation from './navigation';
 import LoginScreen from './screens/LoginScreen';
+import ViewModeBanner from './components/ViewModeBanner';
 
 // Main app content (conditionally renders login or navigation)
 function AppContent() {
@@ -28,7 +29,12 @@ function AppContent() {
   }
 
   // Show main navigation if authenticated
-  return <Navigation />;
+  return (
+    <>
+      <ViewModeBanner />
+      <Navigation />
+    </>
+  );
 }
 
 // Root app component

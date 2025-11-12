@@ -25,6 +25,10 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // View as client feature
+  const [viewingAsUser, setViewingAsUser] = useState(null); // The client being viewed
+  const [originalAdmin, setOriginalAdmin] = useState(null); // Store original admin profile
+
   // Check for persisted auth on mount
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -100,19 +104,90 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Check if user is admin
+  // Check if user is admin (checks the REAL user, not viewed user)
   const isAdmin = () => {
+    if (originalAdmin) {
+      // If viewing as client, check the original admin
+      return originalAdmin.role === 'admin';
+    }
     return userProfile?.role === 'admin';
+  };
+
+  // View as client - switches to client view
+  const viewAsClient = async (clientId) => {
+    if (!isAdmin()) {
+      console.error('Only admins can view as client');
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    try {
+      setLoading(true);
+
+      // Load the client's profile
+      const clientDoc = await getDoc(doc(db, 'users', clientId));
+      if (!clientDoc.exists()) {
+        throw new Error('Client not found');
+      }
+
+      const clientProfile = { id: clientId, ...clientDoc.data() };
+
+      // Store original admin if not already stored
+      if (!originalAdmin) {
+        setOriginalAdmin(userProfile);
+      }
+
+      // Switch to client view
+      setViewingAsUser(clientProfile);
+      setUserProfile(clientProfile); // This makes all queries use client's data
+
+      return { success: true };
+    } catch (err) {
+      console.error('Error viewing as client:', err);
+      return { success: false, error: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Exit view as client - return to admin view
+  const exitViewAsClient = () => {
+    if (!originalAdmin) {
+      console.error('Not currently viewing as client');
+      return { success: false };
+    }
+
+    // Restore original admin profile
+    setUserProfile(originalAdmin);
+    setViewingAsUser(null);
+    setOriginalAdmin(null);
+
+    return { success: true };
+  };
+
+  // Get the effective user (for display purposes)
+  const getEffectiveUser = () => {
+    return viewingAsUser || userProfile;
+  };
+
+  // Check if currently viewing as client
+  const isViewingAsClient = () => {
+    return viewingAsUser !== null;
   };
 
   const value = {
     user,
-    userProfile,
+    userProfile, // This is the "effective" profile (client if viewing as client, admin if not)
+    originalAdmin, // The real admin user (null if not viewing as client)
+    viewingAsUser, // The client being viewed (null if not viewing as client)
     loading,
     error,
     signIn,
     signOut,
     isAdmin,
+    viewAsClient,
+    exitViewAsClient,
+    getEffectiveUser,
+    isViewingAsClient,
   };
 
   return (
