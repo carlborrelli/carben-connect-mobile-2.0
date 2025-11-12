@@ -54,27 +54,37 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
 
   const startRecording = async () => {
     try {
+      console.log('startRecording called');
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
       // Request microphone permissions
-      const { granted } = await requestRecordingPermissionsAsync();
-      if (!granted) {
+      console.log('Requesting microphone permissions...');
+      const permissionResponse = await requestRecordingPermissionsAsync();
+      console.log('Permission response:', permissionResponse);
+
+      if (!permissionResponse.granted) {
+        console.log('Permission denied');
         Alert.alert('Permission Required', 'Please enable microphone access to use voice recording');
         return;
       }
 
       // Configure audio mode for recording on iOS
+      console.log('Setting audio mode...');
       await setAudioModeAsync({
         playsInSilentMode: true,
         allowsRecording: true,
       });
+      console.log('Audio mode set successfully');
 
       // Start recording
+      console.log('Starting recording...');
       await audioRecorder.record();
+      console.log('Recording started successfully');
       setRecordingDuration(0);
 
     } catch (error) {
       console.error('Failed to start recording:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
 
       if (error.message.includes('permission') || error.message.includes('Permission')) {
