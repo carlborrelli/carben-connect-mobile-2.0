@@ -36,8 +36,9 @@ export default function ProjectCard({ project, onPress, client, isAdmin, selecti
   const handleEstimateLinkPress = async (e) => {
     e.stopPropagation(); // Prevent card press
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (project.estimatePdfLink) {
-      await Linking.openURL(project.estimatePdfLink);
+    const pdfLink = project.invoicePdfLink || project.estimatePdfLink;
+    if (pdfLink) {
+      await Linking.openURL(pdfLink);
     }
   };
 
@@ -50,7 +51,7 @@ export default function ProjectCard({ project, onPress, client, isAdmin, selecti
     if (project.clientName) {
       return {
         clientName: project.clientName,
-        location: project.qbCustomerName || null
+        location: project.locationName || project.qbCustomerName || null
       };
     }
 
@@ -58,7 +59,7 @@ export default function ProjectCard({ project, onPress, client, isAdmin, selecti
     if (!client) return { clientName: null, location: null };
 
     const clientName = client.name || client.company;
-    const location = project.qbCustomerName || null;
+    const location = project.locationName || project.qbCustomerName || null;
 
     return { clientName, location };
   };
@@ -88,38 +89,53 @@ export default function ProjectCard({ project, onPress, client, isAdmin, selecti
         </View>
       )}
 
-      {/* Client Name - Always show */}
+      {/* Client Name - Prominent display */}
       {clientName && (
-        <View style={styles.clientRow}>
-          <Ionicons name="person-outline" size={12} color={colors.secondaryLabel} />
-          <Text style={styles.clientText} numberOfLines={1}>
-            {clientName}
-          </Text>
-        </View>
+        <Text style={styles.clientName} numberOfLines={1}>
+          {clientName}
+        </Text>
       )}
 
-      {/* Location - Always show if available */}
+      {/* Location - Same size as client with icon */}
       {location && (
         <View style={styles.locationRow}>
-          <Ionicons name="location-outline" size={12} color={colors.secondaryLabel} />
+          <Ionicons name="location-outline" size={14} color={colors.secondaryLabel} />
           <Text style={styles.locationText} numberOfLines={1}>
             {location}
           </Text>
         </View>
       )}
 
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.title} numberOfLines={2}>
-            {project.title || 'Untitled Project'}
+      {/* FreshBooks Invoice ID */}
+      {project.freshbooksInvoiceNumber && (
+        <View style={styles.invoiceIdRow}>
+          <Ionicons name="document-outline" size={14} color={colors.secondaryLabel} />
+          <Text style={styles.invoiceIdText} numberOfLines={1}>
+            Invoice {project.freshbooksInvoiceNumber}
           </Text>
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: statusColor + '20' }]}>
-          <Text style={[styles.statusText, { color: statusColor }]}>
-            {statusLabel}
+      )}
+
+      {/* QuickBooks Invoice ID */}
+      {project.quickbooksInvoiceNumber && (
+        <View style={styles.invoiceIdRow}>
+          <Ionicons name="document-outline" size={14} color={colors.secondaryLabel} />
+          <Text style={styles.invoiceIdText} numberOfLines={1}>
+            Invoice {project.quickbooksInvoiceNumber}
           </Text>
         </View>
+      )}
+
+      {/* Title - Larger, from AI-generated description */}
+      <Text style={styles.title} numberOfLines={2}>
+        {project.title || 'Untitled Project'}
+      </Text>
+
+      {/* Status Badge */}
+      <View style={[styles.statusBadge, { backgroundColor: statusColor + '20' }]}>
+        <Text style={[styles.statusText, { color: statusColor }]}>
+          {statusLabel}
+        </Text>
       </View>
 
       {/* Description */}
@@ -131,30 +147,17 @@ export default function ProjectCard({ project, onPress, client, isAdmin, selecti
 
       {/* Footer */}
       <View style={styles.footer}>
-        {/* Photo count */}
-        {project.photoCount > 0 && (
-          <View style={styles.footerItem}>
-            <Ionicons name="images-outline" size={16} color={colors.secondaryLabel} />
-            <Text style={styles.footerText}>{project.photoCount}</Text>
-          </View>
-        )}
-
-        {/* Message count */}
-        {project.messageCount > 0 && (
-          <View style={styles.footerItem}>
-            <Ionicons name="mail-outline" size={16} color={colors.secondaryLabel} />
-            <Text style={styles.footerText}>{project.messageCount}</Text>
-          </View>
-        )}
-
-        {/* Date */}
-        {project.createdAt && (
+        {/* Date - prioritize txnDate for invoices */}
+        {(project.txnDate || project.createdAt) && (
           <View style={styles.footerItem}>
             <Ionicons name="calendar-outline" size={16} color={colors.secondaryLabel} />
             <Text style={styles.footerText}>
-              {project.createdAt?.toDate ?
-                project.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) :
-                new Date(project.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              {project.txnDate ?
+                new Date(project.txnDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) :
+                (project.createdAt?.toDate ?
+                  project.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) :
+                  new Date(project.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                )
               }
             </Text>
           </View>
@@ -163,15 +166,17 @@ export default function ProjectCard({ project, onPress, client, isAdmin, selecti
         {/* Spacer */}
         <View style={{ flex: 1 }} />
 
-        {/* Total Price - check both totalPrice and estimatedTotal */}
-        {(project.estimatedTotal != null && project.estimatedTotal > 0) || (project.totalPrice != null && project.totalPrice > 0) ? (
+        {/* Total Amount - check totalAmount, estimatedTotal, or totalPrice */}
+        {(project.totalAmount != null && project.totalAmount > 0) ||
+         (project.estimatedTotal != null && project.estimatedTotal > 0) ||
+         (project.totalPrice != null && project.totalPrice > 0) ? (
           <Text style={styles.priceText}>
-            ${(project.estimatedTotal || project.totalPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ${(project.totalAmount || project.estimatedTotal || project.totalPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </Text>
         ) : null}
 
-        {/* Estimate PDF Link Button */}
-        {project.estimatePdfLink && (
+        {/* Invoice PDF Link Button - check both invoicePdfLink and estimatePdfLink */}
+        {(project.invoicePdfLink || project.estimatePdfLink) && (
           <TouchableOpacity onPress={handleEstimateLinkPress} style={styles.estimateLinkButton}>
             <Ionicons name="document-text-outline" size={20} color={colors.primary} />
           </TouchableOpacity>
@@ -217,17 +222,11 @@ const createStyles = (colors) => StyleSheet.create({
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
-  clientRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: SPACING.xs / 2,
-  },
-  clientText: {
-    ...TYPOGRAPHY.caption2,
+  clientName: {
+    ...TYPOGRAPHY.subheadline,
     fontWeight: '600',
-    flex: 1,
-    color: colors.secondaryLabel,
+    color: colors.label,
+    marginBottom: SPACING.xs / 2,
   },
   locationRow: {
     flexDirection: 'row',
@@ -236,29 +235,35 @@ const createStyles = (colors) => StyleSheet.create({
     marginBottom: SPACING.xs / 2,
   },
   locationText: {
-    ...TYPOGRAPHY.caption2,
+    ...TYPOGRAPHY.subheadline,
     fontWeight: '500',
     flex: 1,
     color: colors.secondaryLabel,
   },
-  header: {
+  invoiceIdRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    gap: 4,
     marginBottom: SPACING.sm,
   },
-  headerLeft: {
+  invoiceIdText: {
+    ...TYPOGRAPHY.caption1,
+    fontWeight: '500',
     flex: 1,
-    marginRight: SPACING.sm,
+    color: colors.tertiaryLabel,
   },
   title: {
-    ...TYPOGRAPHY.headline,
+    ...TYPOGRAPHY.title3,
+    fontWeight: '600',
     color: colors.label,
+    marginBottom: SPACING.xs,
   },
   statusBadge: {
+    alignSelf: 'flex-start',
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xs / 2,
     borderRadius: RADIUS.sm,
+    marginBottom: SPACING.sm,
   },
   statusText: {
     ...TYPOGRAPHY.caption1,

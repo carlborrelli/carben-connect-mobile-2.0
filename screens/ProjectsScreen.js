@@ -46,6 +46,7 @@ export default function ProjectsScreen({ navigation }) {
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
   const [clients, setClients] = useState({});
+  const [locations, setLocations] = useState({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,7 +56,7 @@ export default function ProjectsScreen({ navigation }) {
   const [selectedClient, setSelectedClient] = useState(null); // Selected client for filtering
   const [selectedLocation, setSelectedLocation] = useState(null); // Selected location for filtering
   const [showClientMenu, setShowClientMenu] = useState(false);
-  const [showLocationMenu, setShowLocationMenu] = useState(false);
+  const [expandedClient, setExpandedClient] = useState(null); // Track which client is expanded in dropdown
   const [selectionMode, setSelectionMode] = useState(false); // Multi-select mode
   const [selectedProjects, setSelectedProjects] = useState([]); // Selected project IDs
 
@@ -130,6 +131,29 @@ export default function ProjectsScreen({ navigation }) {
     fetchClients();
   }, []);
 
+  // Fetch locations
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const locationsQuery = query(collection(db, 'locations'));
+        const snapshot = await getDocs(locationsQuery);
+        const locationsMap = {};
+        snapshot.docs.forEach(doc => {
+          const data = doc.data();
+          locationsMap[doc.id] = {
+            id: doc.id,
+            ...data
+          };
+        });
+        setLocations(locationsMap);
+      } catch (error) {
+        console.error('Error fetching locations:', error);
+      }
+    };
+
+    fetchLocations();
+  }, []);
+
   // Filter and sort projects when filters change
   useEffect(() => {
     let filtered = [...projects];
@@ -141,7 +165,7 @@ export default function ProjectsScreen({ navigation }) {
 
     // Filter by location
     if (selectedLocation) {
-      filtered = filtered.filter(project => project.qbCustomerName === selectedLocation);
+      filtered = filtered.filter(project => project.locationName === selectedLocation);
     }
 
     // Filter by status
@@ -156,7 +180,7 @@ export default function ProjectsScreen({ navigation }) {
         const title = (project.title || '').toLowerCase();
         // Look up client name from clients object using clientId
         const clientName = (clients[project.clientId]?.name || '').toLowerCase();
-        const location = (project.qbCustomerName || '').toLowerCase();
+        const location = (project.locationName || '').toLowerCase();
         const description = (project.description || '').toLowerCase();
         const status = (project.status || '').toLowerCase();
 
@@ -394,17 +418,16 @@ export default function ProjectsScreen({ navigation }) {
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setShowClientMenu(!showClientMenu);
-            setShowLocationMenu(false);
           }}
         >
-          <Text style={[styles.filterDropdownText, selectedClient && styles.filterDropdownTextActive]}>
-            {selectedClient ? (clients[selectedClient]?.name || 'Client') : 'Client'}
+          <Text style={[styles.filterDropdownText, (selectedClient || selectedLocation) && styles.filterDropdownTextActive]}>
+            {selectedLocation || (selectedClient ? (clients[selectedClient]?.name || 'Client') : 'Client')}
           </Text>
           <Ionicons name="chevron-down" size={16} color={selectedClient ? colors.systemBackground : colors.primary} />
         </TouchableOpacity>
       </View>
 
-      {/* Client Menu */}
+      {/* Client Menu with expandable locations */}
       {showClientMenu && (
         <View style={styles.filterMenu}>
           <TouchableOpacity
@@ -413,103 +436,97 @@ export default function ProjectsScreen({ navigation }) {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setSelectedClient(null);
               setSelectedLocation(null);
+              setExpandedClient(null);
               setShowClientMenu(false);
             }}
           >
-            <Text style={[styles.filterMenuItemText, !selectedClient && styles.filterMenuItemTextActive]}>
+            <Text style={[styles.filterMenuItemText, !selectedClient && !selectedLocation && styles.filterMenuItemTextActive]}>
               All Clients
             </Text>
-            {!selectedClient && <Ionicons name="checkmark" size={20} color={colors.primary} />}
+            {!selectedClient && !selectedLocation && <Ionicons name="checkmark" size={20} color={colors.primary} />}
           </TouchableOpacity>
           {/* Build list of unique clientIds from projects, then display client names */}
           {Array.from(new Set(projects.map(p => p.clientId).filter(Boolean)))
             .sort((a, b) => (clients[a]?.name || '').localeCompare(clients[b]?.name || ''))
-            .map(clientId => (
-            <TouchableOpacity
-              key={clientId}
-              style={styles.filterMenuItem}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setSelectedClient(clientId);
-                setSelectedLocation(null);
-                setShowClientMenu(false);
-              }}
-            >
-              <Text style={[
-                styles.filterMenuItemText,
-                selectedClient === clientId && styles.filterMenuItemTextActive
-              ]}>
-                {clients[clientId]?.name || 'Unknown Client'}
-              </Text>
-              {selectedClient === clientId && (
-                <Ionicons name="checkmark" size={20} color={colors.primary} />
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
+            .map(clientId => {
+              // Get locations for this client from the locations collection
+              const clientLocations = Object.values(locations)
+                .filter(loc => loc.clientId === clientId)
+                .map(loc => loc.name)
+                .sort();
+              const isExpanded = expandedClient === clientId;
 
-      {/* Location Filter - Only show if client is selected */}
-      {selectedClient && (
-        <View style={styles.locationFilterContainer}>
-          <TouchableOpacity
-            style={[styles.filterDropdownButton, selectedLocation && styles.filterDropdownButtonActive, { flex: 1 }]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setShowLocationMenu(!showLocationMenu);
-              setShowClientMenu(false);
-            }}
-          >
-            <Text style={[styles.filterDropdownText, selectedLocation && styles.filterDropdownTextActive]}>
-              {selectedLocation || 'All Locations'}
-            </Text>
-            <Ionicons name="chevron-down" size={16} color={selectedLocation ? colors.systemBackground : colors.primary} />
-          </TouchableOpacity>
-        </View>
-      )}
+              return (
+                <View key={clientId}>
+                  <TouchableOpacity
+                    style={styles.filterMenuItem}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      if (clientLocations.length === 0) {
+                        // No locations - select client immediately
+                        setSelectedClient(clientId);
+                        setSelectedLocation(null);
+                        setExpandedClient(null);
+                        setShowClientMenu(false);
+                      } else if (isExpanded) {
+                        // Already expanded - select client and close
+                        setSelectedClient(clientId);
+                        setSelectedLocation(null);
+                        setExpandedClient(null);
+                        setShowClientMenu(false);
+                      } else {
+                        // Has locations and not expanded - expand to show them
+                        setExpandedClient(clientId);
+                      }
+                    }}
+                  >
+                    <Text style={[
+                      styles.filterMenuItemText,
+                      selectedClient === clientId && !selectedLocation && styles.filterMenuItemTextActive
+                    ]}>
+                      {clients[clientId]?.name || 'Unknown Client'}
+                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      {selectedClient === clientId && !selectedLocation && (
+                        <Ionicons name="checkmark" size={20} color={colors.primary} />
+                      )}
+                      {clientLocations.length > 0 && (
+                        <Ionicons
+                          name={isExpanded ? "chevron-up" : "chevron-down"}
+                          size={16}
+                          color={colors.secondaryLabel}
+                        />
+                      )}
+                    </View>
+                  </TouchableOpacity>
 
-      {/* Location Menu */}
-      {showLocationMenu && selectedClient && (
-        <View style={styles.filterMenu}>
-          <TouchableOpacity
-            style={styles.filterMenuItem}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setSelectedLocation(null);
-              setShowLocationMenu(false);
-            }}
-          >
-            <Text style={[styles.filterMenuItemText, !selectedLocation && styles.filterMenuItemTextActive]}>
-              All Locations
-            </Text>
-            {!selectedLocation && <Ionicons name="checkmark" size={20} color={colors.primary} />}
-          </TouchableOpacity>
-          {Array.from(new Set(
-            projects
-              .filter(p => p.clientId === selectedClient)
-              .map(p => p.qbCustomerName)
-              .filter(Boolean)
-          )).sort().map(location => (
-            <TouchableOpacity
-              key={location}
-              style={styles.filterMenuItem}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setSelectedLocation(location);
-                setShowLocationMenu(false);
-              }}
-            >
-              <Text style={[
-                styles.filterMenuItemText,
-                selectedLocation === location && styles.filterMenuItemTextActive
-              ]}>
-                {location}
-              </Text>
-              {selectedLocation === location && (
-                <Ionicons name="checkmark" size={20} color={colors.primary} />
-              )}
-            </TouchableOpacity>
-          ))}
+                  {/* Show locations when expanded */}
+                  {isExpanded && clientLocations.map(location => (
+                    <TouchableOpacity
+                      key={location}
+                      style={[styles.filterMenuItem, { paddingLeft: 32 }]}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setSelectedClient(clientId);
+                        setSelectedLocation(location);
+                        setExpandedClient(null);
+                        setShowClientMenu(false);
+                      }}
+                    >
+                      <Text style={[
+                        styles.filterMenuItemText,
+                        selectedLocation === location && styles.filterMenuItemTextActive
+                      ]}>
+                        {location}
+                      </Text>
+                      {selectedLocation === location && (
+                        <Ionicons name="checkmark" size={20} color={colors.primary} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              );
+            })}
         </View>
       )}
 
