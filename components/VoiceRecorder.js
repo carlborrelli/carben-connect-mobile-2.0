@@ -80,15 +80,15 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
 
       setIsProcessing(true);
 
-      // Stop recording and get URI
-      const uri = await audioRecorder.stop();
+      // Stop recording and get the recording object
+      const recording = await audioRecorder.stop();
 
-      if (!uri) {
+      if (!recording || !recording.uri) {
         throw new Error('No recording URI');
       }
 
       // Process the recording
-      await processRecording(uri);
+      await processRecording(recording.uri);
 
     } catch (error) {
       console.error('Failed to stop recording:', error);
