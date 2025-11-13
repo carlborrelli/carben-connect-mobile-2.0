@@ -35,14 +35,11 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
 
   // Update timer every second when recording
   useEffect(() => {
-    console.log('useEffect triggered - recorderState.isRecording:', recorderState.isRecording);
     if (recorderState.isRecording) {
-      console.log('Starting timer interval');
       timerIntervalRef.current = setInterval(() => {
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
     } else {
-      console.log('Clearing timer interval');
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
         timerIntervalRef.current = null;
@@ -58,43 +55,31 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
 
   const startRecording = async () => {
     try {
-      console.log('startRecording called');
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
       // Request microphone permissions
-      console.log('Requesting microphone permissions...');
       const permissionResponse = await requestRecordingPermissionsAsync();
-      console.log('Permission response:', permissionResponse);
 
       if (!permissionResponse.granted) {
-        console.log('Permission denied');
         Alert.alert('Permission Required', 'Please enable microphone access to use voice recording');
         return;
       }
 
       // Configure audio mode for recording on iOS
-      console.log('Setting audio mode...');
       await setAudioModeAsync({
         playsInSilentMode: true,
         allowsRecording: true,
       });
-      console.log('Audio mode set successfully');
 
       // Prepare the recorder
-      console.log('Preparing to record...');
       await audioRecorder.prepareToRecordAsync();
-      console.log('Recorder prepared, canRecord:', recorderState.canRecord);
 
       // Start recording
-      console.log('Starting recording...');
       await audioRecorder.record();
-      console.log('Recording started successfully');
-      console.log('recorderState after record():', JSON.stringify(recorderState, null, 2));
       setRecordingDuration(0);
 
     } catch (error) {
       console.error('Failed to start recording:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
 
       if (error.message.includes('permission') || error.message.includes('Permission')) {
@@ -111,12 +96,8 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
 
       setIsProcessing(true);
 
-      console.log('Stopping recording...');
-      console.log('recorderState before stop:', JSON.stringify(recorderState, null, 2));
-
       // Stop recording and get the recording object
-      const recording = await audioRecorder.stop();
-      console.log('Recording stopped, result:', JSON.stringify(recording, null, 2));
+      await audioRecorder.stop();
 
       // Reset audio mode after recording
       await setAudioModeAsync({
@@ -124,9 +105,8 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
         allowsRecording: false,
       });
 
-      // The URI is in recorderState.url, not in the recording object
-      const recordingUri = recorderState.url || recording?.uri;
-      console.log('Recording URI to process:', recordingUri);
+      // The URI is in recorderState.url
+      const recordingUri = recorderState.url;
 
       if (!recordingUri) {
         throw new Error('No recording URI');
@@ -155,8 +135,6 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
 
   const processRecording = async (uri) => {
     try {
-      console.log('Processing recording URI:', uri);
-
       // Step 1: Transcribe audio using Vercel API
       const formData = new FormData();
 
@@ -179,7 +157,6 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
 
       const transcribeData = await transcribeResponse.json();
       const transcription = transcribeData.text;
-      console.log('Transcription:', transcription);
 
       // Step 2: Generate project details from transcription using Vercel API
       const generateResponse = await fetch('https://carbenconnect.com/api/ai/generate-project', {
@@ -201,7 +178,6 @@ export default function VoiceRecorder({ onTranscription, existingDescription, co
 
       const generateData = await generateResponse.json();
       const { title, description, summary } = generateData;
-      console.log('Generated:', { title, description, summary });
 
       // Call the callback with the generated data (including raw transcription)
       onTranscription({
