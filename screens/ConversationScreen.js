@@ -52,12 +52,27 @@ export default function ConversationScreen({ route, navigation }) {
   }, []);
 
   useEffect(() => {
-    if (!projectId) return;
+    // For general messages (no project), filter by clientId only
+    let messagesQuery;
 
-    const messagesQuery = query(
-      collection(db, 'messages'),
-      where('projectId', '==', projectId)
-    );
+    if (!projectId) {
+      // General messages - no project
+      if (!clientId) {
+        setLoading(false);
+        return;
+      }
+      messagesQuery = query(
+        collection(db, 'messages'),
+        where('clientId', '==', clientId),
+        where('projectId', '==', null)
+      );
+    } else {
+      // Project-specific messages
+      messagesQuery = query(
+        collection(db, 'messages'),
+        where('projectId', '==', projectId)
+      );
+    }
 
     const unsubscribe = onSnapshot(
       messagesQuery,

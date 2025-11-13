@@ -8,8 +8,7 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  RefreshControl,
-  Alert
+  RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -76,19 +75,9 @@ export default function InboxScreen({ navigation }) {
   };
 
   const handleMessagePress = (message) => {
-    // For general messages without a project, show an alert
-    if (!message.projectId) {
-      Alert.alert(
-        'General Message',
-        message.message || message.text || 'No message content',
-        [{ text: 'OK' }]
-      );
-      return;
-    }
-
     navigation.navigate('Conversation', {
-      projectId: message.projectId,
-      projectTitle: message.projectTitle || 'Conversation',
+      projectId: message.projectId || null,
+      projectTitle: message.projectTitle || 'General Message',
       clientId: message.clientId
     });
   };
