@@ -136,48 +136,6 @@ export default function ProfileScreen({ navigation }) {
           </View>
         )}
 
-        {/* Legal & Support */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>LEGAL & SUPPORT</Text>
-          <View style={styles.card}>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                console.log('Privacy Policy button pressed');
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                console.log('Navigating to PrivacyPolicy');
-                navigation.navigate('PrivacyPolicy');
-                console.log('Navigation called');
-              }}
-            >
-              <View style={styles.menuItemLeft}>
-                <Ionicons name="shield-checkmark-outline" size={20} color={colors.secondaryLabel} />
-                <Text style={styles.menuItemText}>Privacy Policy</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.tertiaryLabel} />
-            </TouchableOpacity>
-
-            <View style={styles.separator} />
-
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                console.log('Terms of Service button pressed');
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                console.log('Navigating to TermsOfService');
-                navigation.navigate('TermsOfService');
-                console.log('Navigation called');
-              }}
-            >
-              <View style={styles.menuItemLeft}>
-                <Ionicons name="document-text-outline" size={20} color={colors.secondaryLabel} />
-                <Text style={styles.menuItemText}>Terms of Service</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.tertiaryLabel} />
-            </TouchableOpacity>
-          </View>
-        </View>
-
         {/* Actions */}
         <View style={styles.section}>
           {/* Exit Client View Button (When viewing as client) */}
@@ -378,22 +336,5 @@ const createStyles = (colors) => StyleSheet.create({
     ...TYPOGRAPHY.headline,
     color: colors.red,
     fontWeight: '600',
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: SPACING.md,
-    minHeight: 56,
-  },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-    flex: 1,
-  },
-  menuItemText: {
-    ...TYPOGRAPHY.body,
-    color: colors.label,
   },
 });
