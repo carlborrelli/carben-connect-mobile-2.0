@@ -1,0 +1,238 @@
+// TermsOfServiceScreen - Terms of Service
+import React from 'react';
+import { useTheme } from '../contexts/ThemeContext';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { TYPOGRAPHY, SPACING, RADIUS } from '../theme';
+
+export default function TermsOfServiceScreen({ navigation }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={28} color={colors.primary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Terms of Service</Text>
+        <View style={{ width: 44 }} />
+      </View>
+
+      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.date}>Last Updated: January 12, 2025</Text>
+
+        <Text style={styles.intro}>
+          Welcome to Carben Connect. By accessing or using our application and services, you agree to be bound by these Terms of Service. Please read them carefully.
+        </Text>
+
+        <Text style={styles.sectionTitle}>1. Acceptance of Terms</Text>
+        <Text style={styles.paragraph}>
+          By creating an account and using Carben Connect, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service and our Privacy Policy. If you do not agree, please do not use our services.
+        </Text>
+
+        <Text style={styles.sectionTitle}>2. Description of Service</Text>
+        <Text style={styles.paragraph}>
+          Carben Connect is a project management platform designed for construction professionals and their clients. Our services include:
+        </Text>
+        <Text style={styles.bullet}>• Project creation and management</Text>
+        <Text style={styles.bullet}>• Photo uploads and documentation</Text>
+        <Text style={styles.bullet}>• Voice-to-text project descriptions</Text>
+        <Text style={styles.bullet}>• AI-assisted estimate generation</Text>
+        <Text style={styles.bullet}>• Client-contractor communication</Text>
+        <Text style={styles.bullet}>• QuickBooks integration</Text>
+        <Text style={styles.bullet}>• Invoice and estimate management</Text>
+
+        <Text style={styles.sectionTitle}>3. User Accounts</Text>
+        <Text style={styles.paragraph}>
+          <Text style={styles.bold}>Account Creation:</Text> You must provide accurate and complete information when creating an account. You are responsible for maintaining the confidentiality of your account credentials.
+        </Text>
+        <Text style={styles.paragraph}>
+          <Text style={styles.bold}>Account Types:</Text> Carben Connect offers two account types: Administrator (contractor) and Client. Different features and permissions apply to each account type.
+        </Text>
+        <Text style={styles.paragraph}>
+          <Text style={styles.bold}>Account Security:</Text> You are responsible for all activities that occur under your account. Notify us immediately of any unauthorized access.
+        </Text>
+
+        <Text style={styles.sectionTitle}>4. Acceptable Use</Text>
+        <Text style={styles.paragraph}>
+          You agree NOT to:
+        </Text>
+        <Text style={styles.bullet}>• Use the service for any illegal purpose</Text>
+        <Text style={styles.bullet}>• Upload malicious code, viruses, or harmful content</Text>
+        <Text style={styles.bullet}>• Attempt to gain unauthorized access to our systems</Text>
+        <Text style={styles.bullet}>• Harass, abuse, or harm other users</Text>
+        <Text style={styles.bullet}>• Impersonate another person or entity</Text>
+        <Text style={styles.bullet}>• Scrape, copy, or reverse engineer our application</Text>
+        <Text style={styles.bullet}>• Share your account credentials with others</Text>
+
+        <Text style={styles.sectionTitle}>5. Content and Intellectual Property</Text>
+        <Text style={styles.paragraph}>
+          <Text style={styles.bold}>Your Content:</Text> You retain ownership of all content you upload (photos, project descriptions, etc.). By uploading content, you grant us a license to store, process, and display it as necessary to provide our services.
+        </Text>
+        <Text style={styles.paragraph}>
+          <Text style={styles.bold}>Our Content:</Text> The Carben Connect application, including its design, code, features, and trademarks, is owned by Carben Connect and protected by intellectual property laws.
+        </Text>
+        <Text style={styles.paragraph}>
+          <Text style={styles.bold}>AI-Generated Content:</Text> Content generated by our AI features (project descriptions, estimates) is provided as a tool to assist you. You are responsible for reviewing and verifying all AI-generated content before use.
+        </Text>
+
+        <Text style={styles.sectionTitle}>6. Voice Recording and AI Features</Text>
+        <Text style={styles.paragraph}>
+          Our voice recording feature uses OpenAI's Whisper API to transcribe audio and GPT models to generate project details. By using this feature:
+        </Text>
+        <Text style={styles.bullet}>• You consent to temporary audio processing</Text>
+        <Text style={styles.bullet}>• You acknowledge that transcriptions may contain errors</Text>
+        <Text style={styles.bullet}>• You agree to review all AI-generated content for accuracy</Text>
+
+        <Text style={styles.sectionTitle}>7. QuickBooks Integration</Text>
+        <Text style={styles.paragraph}>
+          If you connect QuickBooks:
+        </Text>
+        <Text style={styles.bullet}>• You authorize us to access your QuickBooks data</Text>
+        <Text style={styles.bullet}>• You are responsible for maintaining your QuickBooks subscription</Text>
+        <Text style={styles.bullet}>• We are not liable for QuickBooks sync errors or data discrepancies</Text>
+        <Text style={styles.bullet}>• You can revoke access at any time through QuickBooks settings</Text>
+
+        <Text style={styles.sectionTitle}>8. Fees and Payment</Text>
+        <Text style={styles.paragraph}>
+          Carben Connect may offer both free and paid service tiers. If you subscribe to a paid tier:
+        </Text>
+        <Text style={styles.bullet}>• Fees are charged on a recurring basis</Text>
+        <Text style={styles.bullet}>• You authorize us to charge your payment method</Text>
+        <Text style={styles.bullet}>• Fees are non-refundable except as required by law</Text>
+        <Text style={styles.bullet}>• We may change fees with 30 days notice</Text>
+
+        <Text style={styles.sectionTitle}>9. Limitation of Liability</Text>
+        <Text style={styles.paragraph}>
+          TO THE MAXIMUM EXTENT PERMITTED BY LAW:
+        </Text>
+        <Text style={styles.bullet}>• We provide the service "AS IS" without warranties</Text>
+        <Text style={styles.bullet}>• We are not liable for indirect, incidental, or consequential damages</Text>
+        <Text style={styles.bullet}>• Our total liability is limited to fees paid in the past 12 months</Text>
+        <Text style={styles.bullet}>• We are not responsible for third-party service failures (Firebase, OpenAI, QuickBooks)</Text>
+
+        <Text style={styles.sectionTitle}>10. Service Availability</Text>
+        <Text style={styles.paragraph}>
+          We strive to provide reliable service but do not guarantee:
+        </Text>
+        <Text style={styles.bullet}>• Uninterrupted access (maintenance, outages may occur)</Text>
+        <Text style={styles.bullet}>• Error-free operation</Text>
+        <Text style={styles.bullet}>• Compatibility with all devices</Text>
+        <Text style={styles.bullet}>• Permanent data retention (maintain your own backups)</Text>
+
+        <Text style={styles.sectionTitle}>11. Termination</Text>
+        <Text style={styles.paragraph}>
+          We may suspend or terminate your account if you:
+        </Text>
+        <Text style={styles.bullet}>• Violate these Terms of Service</Text>
+        <Text style={styles.bullet}>• Engage in fraudulent activity</Text>
+        <Text style={styles.bullet}>• Fail to pay applicable fees</Text>
+        <Text style={styles.paragraph}>
+          You may terminate your account at any time by contacting us. Upon termination, your access will cease, but certain data may be retained for legal and business purposes.
+        </Text>
+
+        <Text style={styles.sectionTitle}>12. Changes to Terms</Text>
+        <Text style={styles.paragraph}>
+          We reserve the right to modify these Terms of Service at any time. We will notify you of material changes through the app or via email. Continued use after changes constitutes acceptance of the new terms.
+        </Text>
+
+        <Text style={styles.sectionTitle}>13. Governing Law</Text>
+        <Text style={styles.paragraph}>
+          These Terms are governed by the laws of the United States. Any disputes will be resolved in the appropriate courts.
+        </Text>
+
+        <Text style={styles.sectionTitle}>14. Contact Information</Text>
+        <Text style={styles.paragraph}>
+          For questions about these Terms of Service, contact us at:
+        </Text>
+        <Text style={styles.paragraph}>
+          Email: support@carbenconnect.com{'\n'}
+          Website: www.carbenconnect.com
+        </Text>
+
+        <Text style={styles.footer}>
+          By using Carben Connect, you acknowledge that you have read and understood these Terms of Service and agree to be bound by them.
+        </Text>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const createStyles = (colors) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.systemGroupedBackground,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    backgroundColor: colors.systemBackground,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.separator,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    ...TYPOGRAPHY.headline,
+    color: colors.label,
+  },
+  content: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: SPACING.lg,
+    paddingBottom: SPACING.xl * 2,
+  },
+  date: {
+    ...TYPOGRAPHY.caption1,
+    color: colors.secondaryLabel,
+    marginBottom: SPACING.lg,
+    fontStyle: 'italic',
+  },
+  intro: {
+    ...TYPOGRAPHY.body,
+    color: colors.label,
+    marginBottom: SPACING.xl,
+    lineHeight: 24,
+  },
+  sectionTitle: {
+    ...TYPOGRAPHY.title3,
+    color: colors.label,
+    fontWeight: '700',
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.sm,
+  },
+  paragraph: {
+    ...TYPOGRAPHY.body,
+    color: colors.label,
+    marginBottom: SPACING.md,
+    lineHeight: 24,
+  },
+  bullet: {
+    ...TYPOGRAPHY.body,
+    color: colors.label,
+    marginBottom: SPACING.xs,
+    marginLeft: SPACING.md,
+    lineHeight: 24,
+  },
+  bold: {
+    fontWeight: '600',
+  },
+  footer: {
+    ...TYPOGRAPHY.callout,
+    color: colors.secondaryLabel,
+    marginTop: SPACING.xl,
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
+});

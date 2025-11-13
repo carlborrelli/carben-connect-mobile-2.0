@@ -25,6 +25,8 @@ import UserManagementScreen from './screens/UserManagementScreen';
 import UserEditScreen from './screens/UserEditScreen';
 import QuickBooksScreen from './screens/QuickBooksScreen';
 import FreshBooksScreen from './screens/FreshBooksScreen';
+import PrivacyPolicyScreen from './screens/PrivacyPolicyScreen';
+import TermsOfServiceScreen from './screens/TermsOfServiceScreen';
 
 // Components
 import CustomTabBar from './components/CustomTabBar';
@@ -110,6 +112,8 @@ function MoreStackScreen() {
       <Stack.Screen name="EstimateWorkspace" component={EstimateWorkspaceScreen} />
       <Stack.Screen name="Calendar" component={CalendarScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+      <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
     </Stack.Navigator>
   );
 }
