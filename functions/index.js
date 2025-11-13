@@ -1529,3 +1529,10 @@ exports.freshbooksClearImported = functions.https.onCall(async (data, context) =
     );
   }
 });
+
+
+// Push Notification Functions
+const notificationFunctions = require("./notificationFunctions");
+exports.onMessageCreated = notificationFunctions.onMessageCreated;
+exports.onEstimateCreated = notificationFunctions.onEstimateCreated;
+exports.onProjectCreated = notificationFunctions.onProjectCreated;

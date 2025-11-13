@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { QuickBooksProvider } from './contexts/QuickBooksContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import Navigation from './navigation';
 import LoginScreen from './screens/LoginScreen';
 import ViewModeBanner from './components/ViewModeBanner';
@@ -44,10 +45,12 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider>
         <AuthProvider>
-          <QuickBooksProvider>
-            <StatusBar style="auto" />
-            <AppContent />
-          </QuickBooksProvider>
+          <NotificationProvider>
+            <QuickBooksProvider>
+              <StatusBar style="auto" />
+              <AppContent />
+            </QuickBooksProvider>
+          </NotificationProvider>
         </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>
