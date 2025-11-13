@@ -147,9 +147,9 @@ export default function MoreScreen({ navigation }) {
         <View style={styles.menuSection}>
           <Text style={styles.sectionLabel}>SUPPORT</Text>
           <View style={styles.menuCard}>
-            <MenuItem icon="document-text-outline" title="Privacy Policy" onPress={() => {}} />
+            <MenuItem icon="document-text-outline" title="Privacy Policy" onPress={() => navigation.navigate('PrivacyPolicy')} />
             <View style={styles.separator} />
-            <MenuItem icon="shield-checkmark-outline" title="Terms of Service" onPress={() => {}} />
+            <MenuItem icon="shield-checkmark-outline" title="Terms of Service" onPress={() => navigation.navigate('TermsOfService')} />
           </View>
         </View>
 
