@@ -143,8 +143,11 @@ export default function ProfileScreen({ navigation }) {
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
+                console.log('Privacy Policy button pressed');
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                console.log('Navigating to PrivacyPolicy');
                 navigation.navigate('PrivacyPolicy');
+                console.log('Navigation called');
               }}
             >
               <View style={styles.menuItemLeft}>
@@ -159,8 +162,11 @@ export default function ProfileScreen({ navigation }) {
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
+                console.log('Terms of Service button pressed');
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                console.log('Navigating to TermsOfService');
                 navigation.navigate('TermsOfService');
+                console.log('Navigation called');
               }}
             >
               <View style={styles.menuItemLeft}>
