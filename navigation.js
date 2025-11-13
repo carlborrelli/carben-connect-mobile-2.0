@@ -15,6 +15,7 @@ import DraftsScreen from './screens/DraftsScreen';
 import EstimateWorkspaceScreen from './screens/EstimateWorkspaceScreen';
 import InboxScreen from './screens/InboxScreen';
 import ConversationScreen from './screens/ConversationScreen';
+import NewMessageScreen from './screens/NewMessageScreen';
 import ClientsScreen from './screens/ClientsScreen';
 import ClientDetailScreen from './screens/ClientDetailScreen';
 import MoreScreen from './screens/MoreScreen';
@@ -81,6 +82,7 @@ function InboxStackScreen() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="InboxMain" component={InboxScreen} />
+      <Stack.Screen name="NewMessage" component={NewMessageScreen} />
       <Stack.Screen name="Conversation" component={ConversationScreen} />
       <Stack.Screen name="Calendar" component={CalendarScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />

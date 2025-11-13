@@ -86,6 +86,9 @@ export default function InboxScreen({ navigation }) {
     <View style={styles.header}>
       <Text style={styles.title}>Inbox</Text>
       <View style={styles.headerIcons}>
+        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("NewMessage")}>
+          <Ionicons name="create-outline" size={24} color={colors.primary} />
+        </TouchableOpacity>
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Calendar")}>
           <Ionicons name="calendar-outline" size={24} color={colors.label} />
         </TouchableOpacity>
@@ -118,8 +121,15 @@ export default function InboxScreen({ navigation }) {
             <Ionicons name="mail-outline" size={64} color={colors.tertiaryLabel} />
             <Text style={styles.emptyTitle}>No Messages</Text>
             <Text style={styles.emptyText}>
-              Project messages will appear here
+              Send a message to start a conversation
             </Text>
+            <TouchableOpacity
+              style={styles.emptyButton}
+              onPress={() => navigation.navigate("NewMessage")}
+            >
+              <Ionicons name="create-outline" size={20} color={colors.systemBackground} />
+              <Text style={styles.emptyButtonText}>New Message</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </SafeAreaView>
@@ -202,6 +212,22 @@ const createStyles = (colors) => StyleSheet.create({
     ...TYPOGRAPHY.body,
     color: colors.secondaryLabel,
     textAlign: 'center',
+    marginBottom: SPACING.lg,
+  },
+  emptyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+    backgroundColor: colors.primary,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+    borderRadius: SPACING.md,
+    marginTop: SPACING.md,
+  },
+  emptyButtonText: {
+    ...TYPOGRAPHY.subheadline,
+    color: colors.systemBackground,
+    fontWeight: '600',
   },
   listContent: {
     padding: SPACING.lg,
