@@ -4,7 +4,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { TYPOGRAPHY, SPACING, RADIUS } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS , TAB_BAR_HEIGHT } from '../theme';
 
 export default function PrivacyPolicyScreen({ navigation }) {
   const { colors } = useTheme();
@@ -21,7 +21,7 @@ export default function PrivacyPolicyScreen({ navigation }) {
         <View style={{ width: 44 }} />
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.content} contentContainerStyle={{ ...styles.scrollContent, paddingBottom: TAB_BAR_HEIGHT }}>
         <Text style={styles.date}>Last Updated: January 12, 2025</Text>
 
         <Text style={styles.intro}>

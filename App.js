@@ -33,6 +33,7 @@ function AppContent() {
   // Show main navigation if authenticated
   return (
     <>
+      <StatusBar style="auto" />
       <ViewModeBanner />
       <Navigation />
     </>
@@ -47,7 +48,6 @@ export default function App() {
         <AuthProvider>
           <NotificationProvider>
             <QuickBooksProvider>
-              <StatusBar style="auto" />
               <AppContent />
             </QuickBooksProvider>
           </NotificationProvider>

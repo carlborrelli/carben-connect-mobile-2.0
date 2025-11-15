@@ -19,7 +19,7 @@ import { collection, query, orderBy, onSnapshot, where, getDocs, deleteDoc, doc 
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import ProjectCard from '../components/ProjectCard';
-import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  , TAB_BAR_HEIGHT } from '../theme';
 import { Alert } from 'react-native';
 
 const STATUS_FILTERS = [
@@ -953,6 +953,7 @@ const createStyles = (colors) => StyleSheet.create({
     textAlign: 'center',
   },
   listContent: {
+    paddingBottom: TAB_BAR_HEIGHT,
     padding: SPACING.lg,
   },
 });

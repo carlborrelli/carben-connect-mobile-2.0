@@ -22,7 +22,7 @@ import { collection, addDoc, query, where, getDocs, updateDoc, doc } from 'fireb
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  , TAB_BAR_HEIGHT } from '../theme';
 import VoiceRecorder from '../components/VoiceRecorder';
 
 export default function NewProjectScreen({ navigation }) {
@@ -339,7 +339,7 @@ export default function NewProjectScreen({ navigation }) {
         <ScrollView
           style={styles.content}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={{ ...styles.scrollContent, paddingBottom: TAB_BAR_HEIGHT }}
           showsVerticalScrollIndicator={false}
         >
           {/* Client Selection (Admin only) */}

@@ -732,6 +732,7 @@ const createStyles = (colors) => StyleSheet.create({
     justifyContent: 'center',
   },
   content: {
+    paddingBottom: 100,
     flex: 1,
   },
   section: {

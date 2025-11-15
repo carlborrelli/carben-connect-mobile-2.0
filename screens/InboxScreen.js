@@ -16,17 +16,17 @@ import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestor
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import MessageCard from '../components/MessageCard';
-import { TYPOGRAPHY, SPACING  } from '../theme';
+import { TYPOGRAPHY, SPACING  , TAB_BAR_HEIGHT } from '../theme';
 
 export default function InboxScreen({ navigation }) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const { userProfile, isAdmin } = useAuth();
-  const [messages, setMessages] = useState([]);
+  const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Load messages from Firestore
+  // Load messages from Firestore and group into conversations
   useEffect(() => {
     if (!userProfile) return;
 
@@ -55,7 +55,70 @@ export default function InboxScreen({ navigation }) {
           id: doc.id,
           ...doc.data(),
         }));
-        setMessages(messagesData);
+
+        // Group messages into conversations
+        const conversationMap = new Map();
+        const conversationMessages = new Map(); // Track all messages per conversation
+
+        messagesData.forEach(message => {
+          // Create a unique key for each conversation
+          // For project messages, use projectId
+          // For general messages, use clientId
+          const conversationKey = message.projectId
+            ? `project-${message.projectId}`
+            : `client-${message.clientId}`;
+
+          // Track all messages for each conversation
+          if (!conversationMessages.has(conversationKey)) {
+            conversationMessages.set(conversationKey, []);
+          }
+          conversationMessages.get(conversationKey).push(message);
+
+          // Only keep the most recent message for each conversation
+          if (!conversationMap.has(conversationKey)) {
+            conversationMap.set(conversationKey, message);
+          }
+        });
+
+        // Convert map to array and determine unread status
+        const conversationsList = Array.from(conversationMap.values()).map(conversation => {
+          const conversationKey = conversation.projectId
+            ? `project-${conversation.projectId}`
+            : `client-${conversation.clientId}`;
+
+          const allMessages = conversationMessages.get(conversationKey) || [];
+
+          // Find the most recent admin message
+          const adminMessages = allMessages
+            .filter(msg => msg.senderRole === 'admin')
+            .sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis());
+
+          // Find the most recent client message
+          const clientMessages = allMessages
+            .filter(msg => msg.senderRole === 'client')
+            .sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis());
+
+          // Message is unread if:
+          // - There's an admin message
+          // - And either no client messages OR the latest admin message is newer than the latest client message
+          let unread = false;
+          if (adminMessages.length > 0) {
+            if (clientMessages.length === 0) {
+              unread = true; // Admin sent message, no response yet
+            } else {
+              const latestAdminTime = adminMessages[0].createdAt?.toMillis() || 0;
+              const latestClientTime = clientMessages[0].createdAt?.toMillis() || 0;
+              unread = latestAdminTime > latestClientTime; // Admin message is more recent
+            }
+          }
+
+          return {
+            ...conversation,
+            unread
+          };
+        }).sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis());
+
+        setConversations(conversationsList);
         setLoading(false);
         setRefreshing(false);
       },
@@ -112,7 +175,7 @@ export default function InboxScreen({ navigation }) {
   }
 
   // Empty state
-  if (messages.length === 0) {
+  if (conversations.length === 0) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         {renderHeader()}
@@ -136,13 +199,13 @@ export default function InboxScreen({ navigation }) {
     );
   }
 
-  // Messages list
+  // Conversations list
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {renderHeader()}
       
       <FlatList
-        data={messages}
+        data={conversations}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <MessageCard message={item} onPress={handleMessagePress} />
@@ -230,6 +293,7 @@ const createStyles = (colors) => StyleSheet.create({
     fontWeight: '600',
   },
   listContent: {
+    paddingBottom: TAB_BAR_HEIGHT,
     padding: SPACING.lg,
   },
 });

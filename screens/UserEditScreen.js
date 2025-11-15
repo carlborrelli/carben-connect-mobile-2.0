@@ -21,7 +21,7 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
 import { db, auth, functions } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS , TAB_BAR_HEIGHT } from '../theme';
 
 export default function UserEditScreen({ navigation, route }) {
   const { userId } = route.params;
@@ -267,7 +267,7 @@ export default function UserEditScreen({ navigation, route }) {
           </TouchableOpacity>
         </View>
 
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView contentContainerStyle={{ ...styles.content, paddingBottom: 100 }}>
           {/* Avatar Section */}
           <View style={styles.avatarSection}>
             <View style={[styles.avatar, isAdminUser && styles.avatarAdmin]}>
@@ -457,6 +457,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   content: {
     padding: SPACING.lg,
+    paddingBottom: TAB_BAR_HEIGHT + SPACING.lg,
   },
   avatarSection: {
     alignItems: 'center',

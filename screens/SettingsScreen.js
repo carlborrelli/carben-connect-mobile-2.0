@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '../contexts/AuthContext';
-import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  , TAB_BAR_HEIGHT } from '../theme';
 
 export default function SettingsScreen({ navigation }) {
   const { colors } = useTheme();
@@ -186,6 +186,7 @@ export default function SettingsScreen({ navigation }) {
               type="link"
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigation.navigate('PrivacyPolicy');
               }}
             />
             <View style={styles.separator} />
@@ -195,6 +196,7 @@ export default function SettingsScreen({ navigation }) {
               type="link"
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigation.navigate('TermsOfService');
               }}
             />
           </View>
@@ -235,7 +237,9 @@ const createStyles = (colors) => StyleSheet.create({
     color: colors.label,
   },
   content: {
+    paddingBottom: 100,
     padding: SPACING.lg,
+    paddingBottom: TAB_BAR_HEIGHT + SPACING.lg,
   },
   section: {
     marginBottom: SPACING.lg,

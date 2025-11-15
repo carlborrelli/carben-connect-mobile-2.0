@@ -18,7 +18,7 @@ import * as Haptics from 'expo-haptics';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  , TAB_BAR_HEIGHT } from '../theme';
 
 export default function QuickBooksScreen({ navigation }) {
   const { colors } = useTheme();
@@ -466,7 +466,9 @@ const createStyles = (colors) => StyleSheet.create({
     justifyContent: 'center',
   },
   content: {
+    paddingBottom: 100,
     padding: SPACING.lg,
+    paddingBottom: TAB_BAR_HEIGHT + SPACING.lg,
   },
   statusCard: {
     backgroundColor: colors.secondarySystemGroupedBackground,

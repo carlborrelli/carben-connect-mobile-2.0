@@ -18,19 +18,28 @@ Notifications.setNotificationHandler({
   }),
 });
 
+// Store navigation ref so we can navigate from anywhere
+let navigationRef = null;
+
+export function setNavigationRef(ref) {
+  navigationRef = ref;
+}
+
 export function NotificationProvider({ children }) {
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, isViewingAsClient } = useAuth();
   const [expoPushToken, setExpoPushToken] = useState('');
   const [notification, setNotification] = useState(false);
   const notificationListener = useRef();
   const responseListener = useRef();
+  const lastNotificationResponse = useRef(null);
 
   useEffect(() => {
     registerForPushNotificationsAsync().then(token => {
       if (token) {
         setExpoPushToken(token);
         // Store token in Firebase user document
-        if (user && userProfile) {
+        // Skip if viewing as client (admin impersonating)
+        if (user && userProfile && !isViewingAsClient()) {
           updateDoc(doc(db, 'users', userProfile.id), {
             expoPushToken: token,
             deviceType: Platform.OS,
@@ -54,6 +63,15 @@ export function NotificationProvider({ children }) {
       handleNotificationResponse(response);
     });
 
+    // Check for notification that opened the app
+    Notifications.getLastNotificationResponseAsync()
+      .then(response => {
+        if (response && response !== lastNotificationResponse.current) {
+          lastNotificationResponse.current = response;
+          handleNotificationResponse(response);
+        }
+      });
+
     return () => {
       Notifications.removeNotificationSubscription(notificationListener.current);
       Notifications.removeNotificationSubscription(responseListener.current);
@@ -61,14 +79,72 @@ export function NotificationProvider({ children }) {
   }, [user, userProfile]);
 
   const handleNotificationResponse = (response) => {
+    if (!navigationRef || !navigationRef.current) {
+      console.log('Navigation ref not ready');
+      return;
+    }
+
     const data = response.notification.request.content.data;
+    console.log('Navigating based on notification data:', data);
 
     // Navigate based on notification type
-    // This will be handled by passing a navigation ref
-    console.log('Notification data:', data);
+    switch (data.type) {
+      case 'message':
+        // First navigate to Inbox tab to establish the navigation stack
+        navigationRef.current.navigate('Inbox');
 
-    // Types: 'message', 'estimate', 'project'
-    // data.projectId, data.conversationId, etc.
+        // Then navigate to the conversation with a small delay to ensure the tab is ready
+        setTimeout(() => {
+          navigationRef.current.navigate('Inbox', {
+            screen: 'Conversation',
+            params: {
+              projectId: data.projectId || null,
+              projectTitle: data.projectTitle || 'General Message',
+              clientId: data.clientId
+            }
+          });
+        }, 100);
+        break;
+
+      case 'estimate':
+        // Navigate to the project/estimate
+        if (data.projectId) {
+          // First navigate to Projects tab
+          navigationRef.current.navigate('Projects');
+
+          // Then navigate to the specific project
+          setTimeout(() => {
+            navigationRef.current.navigate('Projects', {
+              screen: 'ProjectDetail',
+              params: {
+                projectId: data.projectId
+              }
+            });
+          }, 100);
+        }
+        break;
+
+      case 'project':
+        // Navigate to the new project
+        if (data.projectId) {
+          // First navigate to Projects tab
+          navigationRef.current.navigate('Projects');
+
+          // Then navigate to the specific project
+          setTimeout(() => {
+            navigationRef.current.navigate('Projects', {
+              screen: 'ProjectDetail',
+              params: {
+                projectId: data.projectId
+              }
+            });
+          }, 100);
+        }
+        break;
+
+      default:
+        console.log('Unknown notification type:', data.type);
+    }
   };
 
   return (

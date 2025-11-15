@@ -16,7 +16,7 @@ import * as Haptics from 'expo-haptics';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import ProjectCard from '../components/ProjectCard';
-import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  , TAB_BAR_HEIGHT } from '../theme';
 
 export default function ClientDetailScreen({ route, navigation }) {
   const { colors } = useTheme();
@@ -93,7 +93,7 @@ export default function ClientDetailScreen({ route, navigation }) {
         <View style={{ width: 44 }} />
       </View>
 
-      <ScrollView
+      <ScrollView contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT }}
         style={styles.content}
         refreshControl={
           <RefreshControl

@@ -18,7 +18,7 @@ import * as Haptics from 'expo-haptics';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  , TAB_BAR_HEIGHT } from '../theme';
 
 export default function UserManagementScreen({ navigation }) {
   const { colors } = useTheme();
@@ -405,6 +405,7 @@ const createStyles = (colors) => StyleSheet.create({
     marginTop: SPACING.xs,
   },
   listContent: {
+    paddingBottom: 100,
     padding: SPACING.lg,
   },
   userCard: {

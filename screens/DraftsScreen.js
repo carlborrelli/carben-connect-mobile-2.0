@@ -15,7 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { collection, query, where, onSnapshot, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  , TAB_BAR_HEIGHT } from '../theme';
 
 export default function DraftsScreen({ navigation }) {
   const { colors } = useTheme();
@@ -316,6 +316,7 @@ const createStyles = (colors) => StyleSheet.create({
     justifyContent: 'center',
   },
   listContent: {
+    paddingBottom: TAB_BAR_HEIGHT,
     padding: SPACING.md,
   },
   projectCard: {

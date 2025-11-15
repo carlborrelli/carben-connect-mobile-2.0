@@ -276,6 +276,9 @@ export const TOUCH_TARGET = {
   large: 56,
 };
 
+// Tab Bar Height (for padding calculations to prevent content overlap)
+export const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 80 : 70;
+
 // Helper function to get theme based on mode
 export const getTheme = (isDark = false) => ({
   colors: isDark ? DARK_COLORS : LIGHT_COLORS,
@@ -285,6 +288,7 @@ export const getTheme = (isDark = false) => ({
   shadows: SHADOWS,
   animation: ANIMATION,
   touchTarget: TOUCH_TARGET,
+  tabBarHeight: TAB_BAR_HEIGHT,
 });
 
 export default {
@@ -296,5 +300,6 @@ export default {
   SHADOWS,
   ANIMATION,
   TOUCH_TARGET,
+  TAB_BAR_HEIGHT,
   getTheme,
 };

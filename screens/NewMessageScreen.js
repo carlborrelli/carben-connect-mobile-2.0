@@ -17,7 +17,7 @@ import * as Haptics from 'expo-haptics';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS , TAB_BAR_HEIGHT } from '../theme';
 
 export default function NewMessageScreen({ navigation, route }) {
   const { colors } = useTheme();
@@ -164,7 +164,7 @@ export default function NewMessageScreen({ navigation, route }) {
         <View style={{ width: 44 }} />
       </View>
 
-      <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT }} keyboardShouldPersistTaps="handled">
         {/* Project Selection */}
         <View style={styles.section}>
           <Text style={styles.label}>Project (Optional)</Text>

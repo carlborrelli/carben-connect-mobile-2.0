@@ -1,17 +1,20 @@
 // MoreScreen - Settings and additional options
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS , TAB_BAR_HEIGHT } from '../theme';
 
 export default function MoreScreen({ navigation }) {
   const { userProfile, isAdmin, signOut } = useAuth();
   const { colors, themeMode, setThemeMode } = useTheme();
   const styles = createStyles(colors);
+
+  // Check if this is Branden's account
+  const isBranden = userProfile?.email?.toLowerCase().includes("bsternbach");
 
   const handleSignOut = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -54,17 +57,35 @@ export default function MoreScreen({ navigation }) {
       <ScrollView contentContainerStyle={styles.content}>
         {/* Profile Section */}
         <View style={styles.profileSection}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {userProfile?.name?.charAt(0)?.toUpperCase() || 'U'}
-            </Text>
-          </View>
-          <Text style={styles.profileName}>{userProfile?.name || 'User'}</Text>
-          <Text style={styles.profileEmail}>{userProfile?.email || ''}</Text>
-          {isAdmin() && (
-            <View style={styles.adminBadge}>
-              <Text style={styles.adminText}>Admin</Text>
-            </View>
+          {isBranden ? (
+            <>
+              <Image
+                source={require('../assets/BrandenSternbach.png')}
+                style={styles.brandenLogo}
+                resizeMode="contain"
+              />
+              <Text style={styles.profileEmail}>{userProfile?.email || ''}</Text>
+              {isAdmin() && (
+                <View style={styles.adminBadge}>
+                  <Text style={styles.adminText}>Admin</Text>
+                </View>
+              )}
+            </>
+          ) : (
+            <>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {userProfile?.name?.charAt(0)?.toUpperCase() || 'U'}
+                </Text>
+              </View>
+              <Text style={styles.profileName}>{userProfile?.name || 'User'}</Text>
+              <Text style={styles.profileEmail}>{userProfile?.email || ''}</Text>
+              {isAdmin() && (
+                <View style={styles.adminBadge}>
+                  <Text style={styles.adminText}>Admin</Text>
+                </View>
+              )}
+            </>
           )}
         </View>
 
@@ -108,18 +129,23 @@ export default function MoreScreen({ navigation }) {
         <View style={styles.menuSection}>
           <Text style={styles.sectionLabel}>ACCOUNT</Text>
           <View style={styles.menuCard}>
-            <MenuItem icon="person-outline" title="Profile" onPress={() => {}} />
-            <View style={styles.separator} />
             <MenuItem
-              icon="people-outline"
-              title="Clients"
+              icon="person-outline"
+              title="Profile"
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                navigation.navigate("Clients");
+                navigation.navigate("Profile");
               }}
             />
             <View style={styles.separator} />
-            <MenuItem icon="settings-outline" title="Settings" onPress={() => navigation.navigate("Settings")} />
+            <MenuItem
+              icon="settings-outline"
+              title="Settings"
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigation.navigate("Settings");
+              }}
+            />
           </View>
         </View>
         {isAdmin() && (
@@ -192,7 +218,9 @@ const createStyles = (colors) => StyleSheet.create({
     justifyContent: 'center',
   },
   content: {
+    paddingBottom: 100,
     padding: SPACING.lg,
+    paddingBottom: TAB_BAR_HEIGHT + SPACING.lg,
   },
   profileSection: {
     alignItems: 'center',
@@ -210,7 +238,7 @@ const createStyles = (colors) => StyleSheet.create({
   avatarText: {
     ...TYPOGRAPHY.title1,
     color: colors.systemBackground,
-    fontWeight: '700',
+    fontWeight: '700',    lineHeight: 36,
   },
   profileName: {
     ...TYPOGRAPHY.title2,
@@ -299,5 +327,10 @@ const createStyles = (colors) => StyleSheet.create({
     color: colors.tertiaryLabel,
     textAlign: 'center',
     marginTop: SPACING.lg,
+  },
+  brandenLogo: {
+    width: 200,
+    height: 200,
+    marginBottom: SPACING.md,
   },
 });

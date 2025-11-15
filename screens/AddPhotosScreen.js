@@ -19,7 +19,7 @@ import { collection, query, where, getDocs, doc, updateDoc, arrayUnion } from 'f
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  , TAB_BAR_HEIGHT } from '../theme';
 
 export default function AddPhotosScreen({ navigation }) {
   const { colors } = useTheme();
@@ -238,7 +238,7 @@ export default function AddPhotosScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Project Selection */}
         <View style={styles.section}>
           <Text style={styles.label}>Project *</Text>
@@ -368,6 +368,7 @@ const createStyles = (colors) => StyleSheet.create({
   content: {
     flex: 1,
     padding: SPACING.lg,
+    paddingBottom: TAB_BAR_HEIGHT + SPACING.lg,
   },
   section: {
     marginBottom: SPACING.lg,

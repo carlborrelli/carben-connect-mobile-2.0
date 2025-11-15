@@ -1,20 +1,25 @@
 // HomeScreen - Central hub for quick actions and overview
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS, TAB_BAR_HEIGHT } from '../theme';
+import GlowingCallButton from '../components/GlowingCallButton';
+import ClientSummary from '../components/ClientSummary';
+import BrandWelcomeHeader from '../components/BrandWelcomeHeader';
 
 export default function HomeScreen({ navigation }) {
   const { userProfile, isAdmin } = useAuth();
   const { colors } = useTheme();
   const [activeProjectsCount, setActiveProjectsCount] = useState(0);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [benPhone, setBenPhone] = useState(null);
+  const [carlPhone, setCarlPhone] = useState(null);
 
   // Fetch active projects count
   useEffect(() => {
@@ -71,6 +76,22 @@ export default function HomeScreen({ navigation }) {
     return () => unsubscribe();
   }, [userProfile, isAdmin]);
 
+  // Fetch phone numbers for Ben and Carl
+  useEffect(() => {
+    // Hardcoded phone numbers (avoiding Firestore permission issues)
+    setBenPhone('6104056901');
+    setCarlPhone('4849479597');
+  }, []);
+
+  const handleCall = (phoneNumber, name) => {
+    if (!phoneNumber) {
+      alert(`Phone number for ${name} not found`);
+      return;
+    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Linking.openURL(`tel:${phoneNumber}`);
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.systemGroupedBackground }]} edges={['top']}>
       {/* Header with icons */}
@@ -86,12 +107,33 @@ export default function HomeScreen({ navigation }) {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* Greeting */}
-        <View style={styles.greeting}>
-          <Text style={[styles.greetingText, { color: colors.secondaryLabel }]}>Welcome back,</Text>
-          <Text style={[styles.name, { color: colors.label }]}>{userProfile?.name || 'User'}</Text>
-        </View>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Brand Welcome Header */}
+        <BrandWelcomeHeader clientName={userProfile?.name || 'User'} />
+
+        {/* Content with padding */}
+        <View style={styles.content}>
+          {/* Call Buttons - Only show for clients */}
+          {!isAdmin() && (
+            <View style={styles.callButtonsContainer}>
+            <GlowingCallButton
+              title="CALL BEN"
+              onPress={() => handleCall(benPhone, 'Ben')}
+              style={styles.callButton}
+              reverse={true}
+            />
+            <GlowingCallButton
+              title="CALL CARL"
+              onPress={() => handleCall(carlPhone, 'Carl')}
+              style={styles.callButton}
+            />
+          </View>
+        )}
+
+        {/* Client Summary - Only show for clients */}
+        {!isAdmin() && (
+          <ClientSummary navigation={navigation} />
+        )}
 
         {/* Quick Stats */}
         <View style={styles.statsContainer}>
@@ -104,34 +146,6 @@ export default function HomeScreen({ navigation }) {
             <Text style={[styles.statLabel, { color: colors.secondaryLabel }]}>Unread Messages</Text>
           </View>
         </View>
-
-        {/* Admin Quick Access - Drafts & Estimates */}
-        {isAdmin() && (
-          <TouchableOpacity 
-            style={[styles.draftsBanner, { 
-              backgroundColor: colors.secondarySystemGroupedBackground,
-              borderColor: colors.primary 
-            }]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              navigation.navigate("Drafts");
-            }}
-            activeOpacity={0.7}
-          >
-            <View style={styles.draftsBannerLeft}>
-              <View style={styles.draftsBannerIcon}>
-                <Ionicons name="document-text" size={28} color={colors.primary} />
-              </View>
-              <View style={styles.draftsBannerContent}>
-                <Text style={[styles.draftsBannerTitle, { color: colors.label }]}>Drafts & Estimates</Text>
-                <Text style={[styles.draftsBannerSubtitle, { color: colors.secondaryLabel }]}>
-                  Create and manage project estimates
-                </Text>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color={colors.gray2} />
-          </TouchableOpacity>
-        )}
 
         {/* Quick Actions */}
         <View style={styles.section}>
@@ -173,6 +187,7 @@ export default function HomeScreen({ navigation }) {
             <Text style={[styles.emptyText, { color: colors.tertiaryLabel }]}>No recent activity</Text>
           </View>
         </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -202,17 +217,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  scrollContent: {
+    paddingBottom: TAB_BAR_HEIGHT,
+  },
   content: {
     padding: SPACING.lg,
-  },
-  greeting: {
-    marginBottom: SPACING.lg,
-  },
-  greetingText: {
-    ...TYPOGRAPHY.body,
-  },
-  name: {
-    ...TYPOGRAPHY.title1,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -305,5 +314,14 @@ const styles = StyleSheet.create({
   emptyText: {
     ...TYPOGRAPHY.body,
     marginTop: SPACING.sm,
+  },
+  callButtonsContainer: {
+    flexDirection: 'row',
+    gap: SPACING.md,
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.lg,
+  },
+  callButton: {
+    flex: 1,
   },
 });

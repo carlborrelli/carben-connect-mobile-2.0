@@ -1,9 +1,10 @@
 // Navigation - Main navigation structure
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StackActions } from '@react-navigation/native';
+import { setNavigationRef } from './contexts/NotificationContext';
 
 // Screens
 import HomeScreen from './screens/HomeScreen';
@@ -59,6 +60,7 @@ function HomeStackScreen() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="HomeMain" component={HomeScreen} />
+      <Stack.Screen name="ProjectDetail" component={ProjectDetailScreen} />
       <Stack.Screen name="Calendar" component={CalendarScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
@@ -129,8 +131,16 @@ function MoreStackScreen() {
 }
 
 export default function Navigation() {
+  const navigationRef = useRef(null);
+
+  useEffect(() => {
+    if (navigationRef.current) {
+      setNavigationRef(navigationRef);
+    }
+  }, []);
+
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Tab.Navigator
         tabBar={(props) => <CustomTabBar {...props} />}
         screenOptions={{

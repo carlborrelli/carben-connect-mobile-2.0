@@ -1,13 +1,13 @@
 // ProfileScreen - View and edit user profile
 import React, { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '../contexts/AuthContext';
 import ClientSelectorModal from '../components/ClientSelectorModal';
-import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS, TAB_BAR_HEIGHT } from '../theme';
 
 export default function ProfileScreen({ navigation }) {
   const { colors } = useTheme();
@@ -56,8 +56,11 @@ export default function ProfileScreen({ navigation }) {
     </View>
   );
 
+  // Check if this is Branden's account
+  const isBranden = userProfile?.email?.toLowerCase().includes("bsternbach");
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top']} backgroundColor={colors.systemBackground}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -67,20 +70,30 @@ export default function ProfileScreen({ navigation }) {
         <View style={{ width: 44 }} />
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT }}>
         {/* Profile Avatar */}
         <View style={styles.avatarSection}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {userProfile?.name?.charAt(0)?.toUpperCase() || 'U'}
-            </Text>
-          </View>
-          <Text style={styles.name}>{userProfile?.name || 'User'}</Text>
-          {isAdmin() && (
-            <View style={styles.adminBadge}>
-              <Ionicons name="shield-checkmark" size={14} color={colors.primary} />
-              <Text style={styles.adminText}>Admin</Text>
-            </View>
+          {isBranden ? (
+            <Image
+              source={require('../assets/BrandenSternbach.png')}
+              style={styles.brandenLogo}
+              resizeMode="contain"
+            />
+          ) : (
+            <>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {userProfile?.name?.charAt(0)?.toUpperCase() || 'U'}
+                </Text>
+              </View>
+              <Text style={styles.name}>{userProfile?.name || 'User'}</Text>
+              {isAdmin() && (
+                <View style={styles.adminBadge}>
+                  <Ionicons name="shield-checkmark" size={14} color={colors.primary} />
+                  <Text style={styles.adminText}>Admin</Text>
+                </View>
+              )}
+            </>
           )}
         </View>
 
@@ -221,7 +234,12 @@ const createStyles = (colors) => StyleSheet.create({
     ...TYPOGRAPHY.largeTitle,
     color: colors.systemBackground,
     fontWeight: '700',
-    fontSize: 48,
+    fontSize: 48,    lineHeight: 48,
+  },
+  brandenLogo: {
+    width: 280,
+    height: 280,
+    marginBottom: SPACING.md,
   },
   name: {
     ...TYPOGRAPHY.title1,

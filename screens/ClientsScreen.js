@@ -17,7 +17,7 @@ import { collection, query, onSnapshot, where } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import ClientCard from '../components/ClientCard';
-import { TYPOGRAPHY, SPACING  } from '../theme';
+import { TYPOGRAPHY, SPACING  , TAB_BAR_HEIGHT } from '../theme';
 
 export default function ClientsScreen({ navigation }) {
   const { colors } = useTheme();
@@ -207,6 +207,7 @@ const createStyles = (colors) => StyleSheet.create({
     textAlign: 'center',
   },
   listContent: {
+    paddingBottom: TAB_BAR_HEIGHT,
     padding: SPACING.lg,
   },
 });

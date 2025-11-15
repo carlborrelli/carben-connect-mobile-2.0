@@ -20,7 +20,7 @@ import * as Haptics from 'expo-haptics';
 import { collection, query, where, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  , TAB_BAR_HEIGHT } from '../theme';
 
 export default function ConversationScreen({ route, navigation }) {
   const { colors } = useTheme();
@@ -259,7 +259,7 @@ export default function ConversationScreen({ route, navigation }) {
             data={messages}
             keyExtractor={(item) => item.id}
             renderItem={renderMessage}
-            contentContainerStyle={[
+            contentContainerStyle={[{ paddingBottom: TAB_BAR_HEIGHT },
               styles.messagesList,
               { paddingBottom: inputHeight }
             ]}

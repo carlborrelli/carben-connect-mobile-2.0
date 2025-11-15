@@ -20,7 +20,7 @@ import * as Haptics from 'expo-haptics';
 import { doc, getDoc, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  } from '../theme';
+import { TYPOGRAPHY, SPACING, RADIUS, SHADOWS  , TAB_BAR_HEIGHT } from '../theme';
 
 const { width, height } = Dimensions.get('window');
 const PHOTO_SIZE = (width - (SPACING.lg * 3)) / 2;
@@ -62,8 +62,10 @@ export default function ProjectDetailScreen({ route, navigation }) {
 
   useEffect(() => {
     loadProject();
-    loadInvoices();
-  }, [projectId]);
+    if (isAdmin) {
+      loadInvoices();
+    }
+  }, [projectId, isAdmin]);
 
   const loadProject = async () => {
     try {
@@ -222,7 +224,7 @@ export default function ProjectDetailScreen({ route, navigation }) {
         )}
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT }}>
         {/* Title & Status */}
         <View style={styles.section}>
           <View style={styles.titleRow}>

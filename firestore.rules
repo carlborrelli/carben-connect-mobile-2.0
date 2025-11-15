@@ -20,8 +20,11 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if authed() && (uid() == userId || isAdmin());
       allow create: if authed() && uid() == userId;
+      // Allow users to update their own profile, but prevent role changes unless admin
       allow update: if authed() && uid() == userId &&
-                      (!('role' in request.resource.data) ||
+                      // If role field exists in the update, ensure it's not being changed
+                      (!request.resource.data.keys().hasAny(['role']) ||
+                       !resource.data.keys().hasAny(['role']) ||
                        request.resource.data.role == resource.data.role);
       allow delete: if isAdmin();
     }
@@ -43,6 +46,14 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    match /messages/{messageId} {
+      // Top-level messages collection
+      allow read: if authed();
+      allow create: if authed();
+      allow update: if authed();
+      allow delete: if isAdmin();
+    }
+
     match /estimateCalculators/{calculatorId} {
       allow read: if authed();
       allow create: if authed();
@@ -62,6 +73,12 @@ service cloud.firestore {
       allow create: if authed();
       allow update: if authed() && resource.data.createdBy == uid();
       allow delete: if authed() && (resource.data.createdBy == uid() || isAdmin());
+    }
+
+    match /adminInfo/{docId} {
+      // Public read access for admin contact info
+      allow read: if authed();
+      allow write: if isAdmin();
     }
   }
 }
