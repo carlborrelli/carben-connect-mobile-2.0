@@ -218,7 +218,6 @@ const createStyles = (colors) => StyleSheet.create({
     justifyContent: 'center',
   },
   content: {
-    paddingBottom: 100,
     padding: SPACING.lg,
     paddingBottom: TAB_BAR_HEIGHT + SPACING.lg,
   },

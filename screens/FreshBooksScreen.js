@@ -554,7 +554,7 @@ export default function FreshBooksScreen({ navigation }) {
             {/* Invoice List */}
             {invoices.length > 0 && (
               <View style={styles.section}>
-                <View style={styles.invoiceHeader}>
+                <View style={styles.invoiceListHeader}>
                   <Text style={styles.sectionTitle}>
                     Invoices ({invoices.length})
                   </Text>
@@ -817,7 +817,7 @@ const createStyles = (colors) => StyleSheet.create({
     color: colors.systemBackground,
     fontWeight: '600',
   },
-  invoiceHeader: {
+  invoiceListHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

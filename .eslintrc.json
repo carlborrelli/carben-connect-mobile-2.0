@@ -1,15 +1,25 @@
 {
-  extends: [
-    expo,
-    prettier
-  ],
-  plugins: [react, react-hooks],
-  rules: {
-    react-hooks/exhaustive-deps: warn,
-    no-console: [warn, { allow: [error, warn, log] }],
-    @typescript-eslint/no-unused-vars: [warn, {
-      argsIgnorePattern: ^_,
-      varsIgnorePattern: ^_
+  "root": true,
+  "extends": ["expo", "prettier"],
+  "plugins": ["react", "react-hooks"],
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "rules": {
+    "import/no-unresolved": "off",
+    "import/named": "off",
+    "react-hooks/exhaustive-deps": "warn",
+    "no-console": ["warn", { "allow": ["error", "warn", "log"] }],
+    "@typescript-eslint/no-unused-vars": ["warn", {
+      "argsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_"
     }]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["functions/**/*.js"],
+      "env": { "node": true }
+    }
+  ]
 }

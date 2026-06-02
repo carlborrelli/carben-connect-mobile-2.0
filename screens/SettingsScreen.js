@@ -237,7 +237,6 @@ const createStyles = (colors) => StyleSheet.create({
     color: colors.label,
   },
   content: {
-    paddingBottom: 100,
     padding: SPACING.lg,
     paddingBottom: TAB_BAR_HEIGHT + SPACING.lg,
   },
