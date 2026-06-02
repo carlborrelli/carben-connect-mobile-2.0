@@ -1,0 +1,2008 @@
+[
+  {
+    "area": "Auth & Navigation",
+    "summary": "This subsystem handles authentication, theming, top-level provider composition, and the entire navigation tree for the Carben Connect Mobile 2.0 app. App.js composes nested context providers (Theme, Auth, Notification, QuickBooks) and gates the UI: a loading spinner while auth state resolves, LoginScreen when unauthenticated, and the full tabbed Navigation when authenticated. AuthContext wraps Firebase Auth (email/password) with Firestore-backed user profiles and an admin-only \"View as Client\" impersonation feature. ThemeContext provides a comprehensive Apple-style light/dark color system with AsyncStorage-persisted theme preference. Navigation builds a 5-tab bottom navigator with per-tab native stacks and a custom iOS-style tab bar featuring a raised circular center \"Home\" button. The code is clean and consistent but has a few real defects (notably broken color references in the ViewModeBanner) and unpersisted impersonation/theme-context edge cases.",
+    "features": [
+      {
+        "name": "Email/Password Sign-In",
+        "status": "complete",
+        "description": "User enters email + password on LoginScreen; signIn() calls Firebase signInWithEmailAndPassword, then loads the Firestore user profile. Errors are mapped to friendly messages (invalid-email, user-not-found, wrong-password, too-many-requests) and shown via Alert with haptic feedback. Success triggers a success haptic and onAuthStateChanged flips the app into the authenticated tree.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/LoginScreen.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/AuthContext.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/config/firebase.js"
+        ],
+        "dataTouched": "Firebase Auth (email/password); Firestore read of users/{uid}",
+        "integrations": "Firebase Auth, Firebase Firestore"
+      },
+      {
+        "name": "Auth State Persistence & Bootstrap",
+        "status": "complete",
+        "description": "On mount AuthContext subscribes to onAuthStateChanged. When a Firebase user is present it loads the profile; otherwise clears user/profile. Firebase Auth persistence uses AsyncStorage (initializeAuth + getReactNativePersistence), so sessions survive app restarts. loading flag drives the spinner in App.js AppContent.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/AuthContext.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/config/firebase.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/App.js"
+        ],
+        "dataTouched": "Firebase Auth persistence in AsyncStorage; Firestore users/{uid}; AsyncStorage key 'userProfile'",
+        "integrations": "Firebase Auth, Firestore, AsyncStorage"
+      },
+      {
+        "name": "User Profile Loading & Caching",
+        "status": "partial",
+        "description": "loadUserProfile reads users/{uid} from Firestore and caches it to AsyncStorage under 'userProfile'. However the cached copy is written but never read back on startup (no offline hydration), and the catch block only console.errors without surfacing or retrying, so a profile-load failure silently leaves userProfile null while the user is still 'logged in'.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/AuthContext.js"
+        ],
+        "dataTouched": "Firestore users/{uid} (fields include role, name); AsyncStorage 'userProfile'",
+        "integrations": "Firestore, AsyncStorage"
+      },
+      {
+        "name": "Sign Out",
+        "status": "complete",
+        "description": "signOut calls firebaseSignOut, removes the cached 'userProfile' from AsyncStorage, and clears local state. Returns success/error object. Triggered from elsewhere (e.g. Profile/Settings screens, not in this file set).",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/AuthContext.js"
+        ],
+        "dataTouched": "Firebase Auth; AsyncStorage 'userProfile'",
+        "integrations": "Firebase Auth, AsyncStorage"
+      },
+      {
+        "name": "View as Client (Admin Impersonation)",
+        "status": "partial",
+        "description": "Admins can call viewAsClient(clientId) which loads the client's users/{clientId} doc and swaps userProfile to the client's profile so all downstream queries use the client's data; originalAdmin is stashed. exitViewAsClient restores the admin profile. isAdmin() returns false while impersonating (UI shows client perspective) while isRealAdmin() still reports true for permission checks. ViewModeBanner renders an orange banner with the client name and an Exit button. Marked partial because impersonation state is purely in-memory (lost on reload), viewAsClient sets loading=true which can flash the global loading spinner, and the banner has broken color tokens (see incomplete).",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/AuthContext.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/ViewModeBanner.js"
+        ],
+        "dataTouched": "Firestore users/{clientId} (fields name, role)",
+        "integrations": "Firestore"
+      },
+      {
+        "name": "Theme System (Light/Dark + Tokens)",
+        "status": "complete",
+        "description": "ThemeContext exposes a full Apple-style color palette for light and dark modes (system backgrounds, labels, fills, separators, semantic colors, grays, Carben brand orange) plus typography, spacing, radius, shadows, animation, and touch-target tokens imported from theme.js. isDark derives from themeMode (automatic/light/dark) vs the OS color scheme. Consumed widely via useTheme().",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/ThemeContext.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/theme.js"
+        ],
+        "dataTouched": "None",
+        "integrations": "None"
+      },
+      {
+        "name": "Theme Preference Persistence",
+        "status": "complete",
+        "description": "setThemePreference(mode) writes the chosen mode to AsyncStorage key '@carben_theme_mode' and updates state; on mount it loads and validates the saved value. Default mode is 'automatic' (follows OS).",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/ThemeContext.js"
+        ],
+        "dataTouched": "AsyncStorage '@carben_theme_mode'",
+        "integrations": "AsyncStorage"
+      },
+      {
+        "name": "Tab Navigation (5 tabs + per-tab stacks)",
+        "status": "complete",
+        "description": "Bottom tab navigator with Projects, Inbox, Home (center), NewProject, More. Each tab is a native stack navigator exposing its detail screens; shared screens (Calendar, Profile, PrivacyPolicy, TermsOfService, Conversation, etc.) are duplicated across multiple stacks so they're reachable from any tab. initialRouteName is Home.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/navigation.js"
+        ],
+        "dataTouched": "None",
+        "integrations": "None"
+      },
+      {
+        "name": "Tab Blur Stack Reset",
+        "status": "complete",
+        "description": "A screenListeners blur handler reads the navigation state tree, finds the blurred tab's nested stack, and dispatches StackActions.popToTop targeted at the child navigator key so leaving a tab resets it to its root screen. Carefully implemented with comments explaining the target-the-child-key subtlety.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/navigation.js"
+        ],
+        "dataTouched": "None",
+        "integrations": "None"
+      },
+      {
+        "name": "Custom Tab Bar (raised center button)",
+        "status": "complete",
+        "description": "CustomTabBar renders themed icons (filled when focused), a raised circular orange center button for Home, light haptic on press, and emits tabPress to support default-prevention. It hides itself when the keyboard is visible AND the active route opted into tabBarHideOnKeyboard (Inbox tab sets this).",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/CustomTabBar.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/navigation.js"
+        ],
+        "dataTouched": "None",
+        "integrations": "None"
+      },
+      {
+        "name": "Navigation Ref Wiring for Push Notifications",
+        "status": "complete",
+        "description": "Navigation captures a navigationRef and passes it to NotificationContext via setNavigationRef in a useEffect, enabling notification taps to deep-link into Inbox/Projects with params. The ref consumer lives in NotificationContext.js (outside this file set).",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/navigation.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/NotificationContext.js"
+        ],
+        "dataTouched": "None",
+        "integrations": "NotificationContext / push notification routing"
+      },
+      {
+        "name": "Auth-Gated Root Composition",
+        "status": "complete",
+        "description": "App.js nests SafeAreaProvider > ThemeProvider > AuthProvider > NotificationProvider > QuickBooksProvider > AppContent. AppContent branches on {user, loading} to show spinner, LoginScreen, or the authenticated tree (StatusBar + ViewModeBanner + Navigation).",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/App.js"
+        ],
+        "dataTouched": "None",
+        "integrations": "None"
+      }
+    ],
+    "incomplete": [
+      {
+        "item": "Broken color tokens: ViewModeBanner references COLORS.carbenOrange and COLORS.white, neither of which exists in theme.js (palette uses 'orange'/'primary' and has no 'white' key). Banner background and all text/icon colors resolve to undefined, so the banner likely renders with no/transparent background and invisible/default text.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/ViewModeBanner.js:8,27,44,53,73,78,84,92",
+        "evidence": "grep of theme.js for 'carbenOrange' and 'white' returns no matches; theme exports COLORS = LIGHT_COLORS which only defines primary, orange, etc."
+      },
+      {
+        "item": "ViewModeBanner is hardcoded to static COLORS (light theme) instead of useTheme() colors, so even after fixing token names it would not adapt to dark mode like the rest of the app.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/ViewModeBanner.js:8",
+        "evidence": "imports { COLORS, TYPOGRAPHY, SPACING } from '../theme' rather than useTheme()"
+      },
+      {
+        "item": "Cached userProfile in AsyncStorage is written but never read on startup; there is no offline hydration path, making the cache effectively dead code.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/AuthContext.js:56",
+        "evidence": "AsyncStorage.setItem('userProfile', ...) with no corresponding getItem anywhere in the file"
+      },
+      {
+        "item": "loadUserProfile swallows errors with only console.error; a failed profile fetch leaves userProfile null while user stays authenticated, with no user-facing error or retry.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/AuthContext.js:58-60",
+        "evidence": "catch (err) { console.error('Error loading user profile:', err); }"
+      },
+      {
+        "item": "View-as-client impersonation state (viewingAsUser, originalAdmin) is in-memory only and not persisted; an app reload or onAuthStateChanged refire silently drops impersonation, snapping back to the real admin profile.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/AuthContext.js:29-30,149-150",
+        "evidence": "No AsyncStorage/persistence for viewingAsUser/originalAdmin; onAuthStateChanged reloads the admin's own profile"
+      },
+      {
+        "item": "viewAsClient sets the global loading flag true/false, which can momentarily unmount Navigation and show the full-screen spinner (App.js gates on loading) when switching into client view.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/AuthContext.js:133,157",
+        "evidence": "setLoading(true) in viewAsClient; App.js AppContent returns spinner when loading is true"
+      },
+      {
+        "item": "Firebase API key and full config are hardcoded in source (committed) rather than loaded from env/secrets.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/config/firebase.js:10-17",
+        "evidence": "firebaseConfig object literal with apiKey 'AIzaSy...'; comment 'from CREDENTIALS.md'"
+      },
+      {
+        "item": "signIn error mapping omits common modern Firebase codes such as auth/invalid-credential and auth/network-request-failed; those fall through to the generic 'Failed to sign in'.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/AuthContext.js:74-84",
+        "evidence": "if/else chain only handles invalid-email, user-not-found, wrong-password, too-many-requests"
+      },
+      {
+        "item": "No sign-up, password reset, or 'forgot password' flow exists in LoginScreen; only sign-in is implemented.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/screens/LoginScreen.js",
+        "evidence": "Screen contains only email/password inputs and a Sign In button; no reset/register affordances"
+      },
+      {
+        "item": "LoginScreen sets its own local isLoading and also calls signIn which toggles AuthContext loading; the email returnKeyType is 'next' but there is no ref to move focus to the password field (dead UX hint).",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/screens/LoginScreen.js:23,81",
+        "evidence": "returnKeyType=\"next\" with no onSubmitEditing focusing password; duplicate loading state"
+      },
+      {
+        "item": "Home center button magic index: isHomeTab = index === 2 is hardcoded; reordering tabs in navigation.js would silently break which tab gets the raised circular button.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/CustomTabBar.js:41",
+        "evidence": "const isHomeTab = index === 2; // Center tab"
+      },
+      {
+        "item": "CustomTabBar branches on Platform.OS for iOS vs Android keyboard events and bottom padding, but the app is described/configured as iOS-only, making the Android branches likely-untested dead paths.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/CustomTabBar.js:15-16,133",
+        "evidence": "Platform.OS === 'ios' ? ... : ... conditionals"
+      },
+      {
+        "item": "Theme tokens (typography/spacing/etc.) are imported both from ThemeContext and directly from '../theme' in LoginScreen, a redundant/inconsistent access pattern.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/screens/LoginScreen.js:18",
+        "evidence": "import { TYPOGRAPHY, SPACING, RADIUS, TOUCH_TARGET } from '../theme' alongside useTheme()"
+      }
+    ],
+    "portability": "High-value, reusable assets worth harvesting in a rewrite: (1) The full Apple-style design token system in ThemeContext.js / theme.js — light+dark palettes with system backgrounds, labels, fills, separators, semantic colors, grays, plus Carben brand orange, and a clean automatic/light/dark resolution with AsyncStorage persistence. This is the most laborious and polished artifact here. (2) The CustomTabBar with the raised circular center button, themed focus icons, haptics, and keyboard-aware hide logic — a non-trivial custom component. (3) The tab-blur stack-reset logic in navigation.js (targeting the child navigator key for StackActions.popToTop) is a subtle, hard-won React Navigation pattern worth keeping. (4) The 'View as Client' admin impersonation model in AuthContext (isAdmin vs isRealAdmin separation, originalAdmin stash/restore) is a clean pattern even if it needs persistence. (5) Firebase Auth + AsyncStorage persistence wiring (initializeAuth + getReactNativePersistence) and the friendly error-code mapping. (6) The navigationRef-to-NotificationContext deep-link wiring.",
+    "notes": "Code quality overall is good: consistent style, clear comments, sensible context boundaries, haptics and Apple-style polish throughout. Key risks for a rewrite/maintainer: (1) The ViewModeBanner color bug (COLORS.carbenOrange / COLORS.white undefined) is a live defect that should be fixed first — the impersonation banner likely renders broken. (2) Impersonation and (potentially) auth recovery rely on in-memory state that does not survive reloads; treat as ephemeral. (3) Secrets are committed in config/firebase.js. (4) Heavy duplication in navigation.js — shared screens (Calendar, Profile, PrivacyPolicy, TermsOfService, Conversation, ProjectDetail) are registered in 4-5 stacks; a shared root stack or screen group would reduce drift. (5) Provider nesting order matters: Theme is outermost so App.js loading spinner can use colors before auth resolves; QuickBooks/Notification depend on Auth being above them. (6) Several Platform.OS Android branches exist despite the app being iOS-targeted. (7) The cached userProfile write with no read is a small landmine suggesting an intended-but-unfinished offline path.",
+    "_key": "auth-nav",
+    "_label": "Auth & Navigation"
+  },
+  {
+    "area": "Projects subsystem (Home hub, project list/filtering, project detail, project creation, photo management)",
+    "summary": "The Projects subsystem is the core of the Carben Connect mobile app: a Firebase-backed (Firestore + Storage) construction project-management flow spanning a Home hub, a searchable/filterable project list, a project detail view, a creation form, and a standalone photo-upload screen. It is dual-role aware (admin vs client) via useAuth().isAdmin(), with admins seeing all projects and clients scoped to their own clientId. Projects live in the `projects` Firestore collection and integrate adjacent collections (users, locations, invoices, messages) and external accounting systems (QuickBooks, FreshBooks) whose IDs/PDF links are surfaced read-only in the UI. Real-time listeners (onSnapshot) power the list and home counts; detail/photo screens use one-shot getDocs/getDoc. The code is functional and reasonably polished visually (consistent theme tokens, haptics throughout) but carries notable gaps: a known-broken unread-message count, a stubbed messageCount, hardcoded phone numbers, a non-functional pull-to-refresh, and a client-side filtering/sorting model that will not scale.",
+    "features": [
+      {
+        "name": "Home hub with quick stats and actions",
+        "status": "complete",
+        "description": "Landing screen showing active-project count and unread-message count stats, role-gated CALL BEN / CALL CARL buttons (clients only), a ClientSummary block (clients only), and Quick Actions navigating to NewProject and AddPhotos. Header has Calendar and Profile shortcuts. Recent Activity is a permanent empty-state placeholder. User flow: open app -> Home tab -> tap stat cards (display only, not tappable) or Quick Action cards to navigate.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/HomeScreen.js"
+        ],
+        "dataTouched": "Reads projects collection (filters status != COMPLETE/PAID for active count; admin = all, client = where clientId == userProfile.id). Reads messages collection (where unread == true, plus clientId for non-admins) for unread count.",
+        "integrations": "tel: deep link via Linking.openURL for call buttons; expo-haptics"
+      },
+      {
+        "name": "Active projects count (Home)",
+        "status": "complete",
+        "description": "Real-time onSnapshot counter of non-complete/non-paid projects, role-scoped.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/HomeScreen.js"
+        ],
+        "dataTouched": "projects collection; field: status, clientId"
+      },
+      {
+        "name": "Unread messages count (Home)",
+        "status": "broken",
+        "description": "Real-time count of unread messages. For clients this queries messages where clientId == userProfile.id AND unread == true, but messages created elsewhere in this subsystem (NewProject voice transcription) are written with projectId and no clientId field, and the comment block elsewhere notes general messages lack projectId/clientId. The query also requires a composite index and the documented pattern of 'avoiding Firestore permission issues' (see hardcoded phones) suggests rules friction. Count is unreliable for clients.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/HomeScreen.js"
+        ],
+        "dataTouched": "messages collection; fields: unread, clientId"
+      },
+      {
+        "name": "Call Ben / Call Carl buttons",
+        "status": "partial",
+        "description": "Two glowing call buttons (clients only) that dial hardcoded phone numbers via tel: link. Was previously dynamic (Firestore) but hardcoded to avoid permission issues per build 16 commit.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/HomeScreen.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/GlowingCallButton.js"
+        ],
+        "dataTouched": "none (numbers hardcoded: Ben 6104056901, Carl 4849479597)",
+        "integrations": "Linking tel: deep link"
+      },
+      {
+        "name": "Project list with real-time updates",
+        "status": "complete",
+        "description": "FlatList of ProjectCard items via onSnapshot. Admin sees all projects ordered by createdAt desc; client sees only where clientId == their id. Includes loading, empty, and no-results states. Each card navigates to ProjectDetail.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ProjectsScreen.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/ProjectCard.js"
+        ],
+        "dataTouched": "projects collection (orderBy createdAt desc; where clientId for clients). Reads photos (length), title, name, status, clientId, locationId, description, createdAt, txnDate, totalAmount/estimatedTotal/totalPrice, invoicePdfLink/estimatePdfLink, freshbooksInvoiceNumber, quickbooksInvoiceNumber"
+      },
+      {
+        "name": "Search / status filter / sort / client+location filter",
+        "status": "complete",
+        "description": "Client-side search across title/clientName/location/description/status; status filter chips (ALL/NEW/ESTIMATE_SENT/APPROVED/IN_PROGRESS/COMPLETE/PAID); sort menu (date desc/asc, client A-Z, status). Admin gets an expandable client>location dropdown built from project clientIds and each client's qbCustomers; clients with >1 qbCustomer get a location filter. All filtering/sorting happens in-memory in a useEffect.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ProjectsScreen.js"
+        ],
+        "dataTouched": "Reads users collection (where role == client) into clients map; reads locations collection into locations map. Filters in memory by project.clientId, project.locationId, project.status. Note location filter compares location.name/nickname to a qbCustomer.name string."
+      },
+      {
+        "name": "Multi-select bulk delete (admin)",
+        "status": "complete",
+        "description": "Admin-only selection mode toggled from header; tapping cards toggles selection; trash icon confirms via Alert and deletes selected docs. Hard delete with no soft-delete or undo, and does not clean up associated Storage photos, messages, or invoices.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ProjectsScreen.js"
+        ],
+        "dataTouched": "deleteDoc on projects/{id} for each selected id"
+      },
+      {
+        "name": "Pull-to-refresh",
+        "status": "stub",
+        "description": "RefreshControl present but handleRefresh only sets refreshing=true and relies on the existing onSnapshot listener (which never re-fires on pull). The spinner is cleared only on the next snapshot, so it effectively does nothing meaningful. Comment says 'Firestore listener will automatically refresh.'",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ProjectsScreen.js"
+        ],
+        "dataTouched": "none"
+      },
+      {
+        "name": "Project detail view",
+        "status": "complete",
+        "description": "Loads a single project via getDoc, resolves its location via locationId, shows title, status badge, client/location, FreshBooks & QuickBooks invoice/estimate numbers, a prominent Project Value card (totalAmount/estimatedTotal/totalPrice), photo grid with full-screen modal viewer, and an empty-photos state. Header shows a PDF button if invoicePdfLink/estimatePdfLink exist.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ProjectDetailScreen.js"
+        ],
+        "dataTouched": "Reads projects/{projectId} and locations/{locationId}. Fields: title, status, clientName, locationId, freshbooksInvoiceNumber, quickbooksInvoiceNumber, quickbooksEstimateNumber, totalAmount/estimatedTotal/totalPrice, description, photos, invoicePdfLink/estimatePdfLink"
+      },
+      {
+        "name": "Status change (admin)",
+        "status": "complete",
+        "description": "Admin taps status badge -> modal picker of the 6 statuses -> updateDoc sets status + updatedAt and updates local state. Clients see a non-interactive badge.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ProjectDetailScreen.js"
+        ],
+        "dataTouched": "updateDoc projects/{id} fields: status, updatedAt"
+      },
+      {
+        "name": "Invoices section (admin)",
+        "status": "complete",
+        "description": "Admin-only: queries invoices matched to this project and renders cards with payment status, date, amount; tapping navigates to InvoiceDetail. Only renders if invoices exist.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ProjectDetailScreen.js"
+        ],
+        "dataTouched": "Reads invoices collection where matchedToProject == projectId. Fields: invoiceNumber, paymentStatus, txnDate, totalAmount"
+      },
+      {
+        "name": "Navigation to Estimate workspace / Messages",
+        "status": "complete",
+        "description": "Detail screen Quick Actions: admin 'Estimate' button -> EstimateWorkspace; both roles 'Messages' -> Conversation (passes projectId, projectTitle, clientId). View Estimate header button opens invoicePdfLink/estimatePdfLink externally.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ProjectDetailScreen.js"
+        ],
+        "dataTouched": "none directly (navigation only)",
+        "integrations": "Linking.openURL for PDF links"
+      },
+      {
+        "name": "Create new project",
+        "status": "complete",
+        "description": "Form: client picker (admin) with qbCustomers location selection, voice-driven detail capture, title, description, photo capture/library, and create. Auto-selects current client for non-admins; auto-selects single location; requires location when client has multiple. On create, gathers all admin user ids into contractorIds (required for website cross-compatibility), writes the project, uploads photos to Storage, then patches photos URLs, and optionally posts a voice transcription system message.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/NewProjectScreen.js"
+        ],
+        "dataTouched": "Reads users collection (all). Writes projects collection (title, description, status=NEW, clientId, contractorIds, photos, qbCustomerId, qbCustomerName, createdAt, updatedAt). Storage path projects/{projectId}/photo_{ts}_{i}.jpg. Optionally writes messages collection (voice transcription)",
+        "integrations": "expo-image-picker (camera + library); VoiceRecorder component (transcription service); Firebase Storage"
+      },
+      {
+        "name": "Voice transcription in project creation",
+        "status": "unknown",
+        "description": "VoiceRecorder component returns {title, description, transcription}; title fills only if empty, description overwrites, raw transcription stored and later posted as a SYSTEM message to messages. The underlying transcription service is in the VoiceRecorder component (not in scope here), so its completeness is unverified from these files.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/NewProjectScreen.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/VoiceRecorder.js"
+        ],
+        "dataTouched": "writes messages collection (senderId SYSTEM, message/text both set, read:false, unread:true)",
+        "integrations": "speech-to-text service inside VoiceRecorder (external, unverified)"
+      },
+      {
+        "name": "Add photos to existing project",
+        "status": "complete",
+        "description": "Standalone screen: pick project (role-scoped), take/select up to 10 photos, upload to Storage, append photo objects to project via arrayUnion. Stores richer photo objects (url, uploadedAt, uploadedBy, uploadedByName) than NewProjectScreen which stores plain URL strings.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/AddPhotosScreen.js"
+        ],
+        "dataTouched": "Reads projects (role-scoped). Storage path projects/{projectId}/{timestamp}_{index}.jpg. updateDoc projects/{id} photos via arrayUnion, updatedAt",
+        "integrations": "expo-image-picker; Firebase Storage"
+      },
+      {
+        "name": "ProjectCard component",
+        "status": "complete",
+        "description": "Reusable card rendering client name, location, invoice IDs (FreshBooks/QuickBooks), title, status badge, description, date (prefers txnDate over createdAt), price, PDF link button, selection checkbox. Handles both lookup-based clients and imported projects carrying clientName directly.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/ProjectCard.js"
+        ],
+        "dataTouched": "none (pure presentational; reads passed project/client/location props)",
+        "integrations": "Linking.openURL for PDF link"
+      }
+    ],
+    "incomplete": [
+      {
+        "item": "messageCount hardcoded to 0 with TODO; project cards never show real message counts",
+        "location": "screens/ProjectsScreen.js:97"
+      },
+      {
+        "item": "Hardcoded phone numbers for Ben (6104056901) and Carl (4849479597); comment 'avoiding Firestore permission issues' indicates a workaround for broken/insufficient Firestore rules rather than a real fix",
+        "location": "screens/HomeScreen.js:81-83"
+      },
+      {
+        "item": "Pull-to-refresh is non-functional: handleRefresh sets refreshing=true and comments that the onSnapshot listener will refresh, but the listener does not re-fire on pull; spinner only clears on the next unrelated snapshot",
+        "location": "screens/ProjectsScreen.js:241-244"
+      },
+      {
+        "item": "Recent Activity section is a permanent placeholder empty-state ('No recent activity'); section title says 'Recent Activity' but a stale comment labels it 'Coming Soon'",
+        "location": "screens/HomeScreen.js:182-189"
+      },
+      {
+        "item": "Unread messages query for clients (clientId + unread) is unreliable because messages written by this subsystem (voice transcription) carry projectId but no clientId; general messages also lack clientId per other code comments",
+        "location": "screens/HomeScreen.js:64-70"
+      },
+      {
+        "item": "Large amount of debug console.log left in production list loader (clientId, name, email, first project clientId/title)",
+        "location": "screens/ProjectsScreen.js:71-104"
+      },
+      {
+        "item": "Inconsistent photo data shape: NewProjectScreen uploads photos as plain URL strings; AddPhotosScreen stores objects {url, uploadedAt, uploadedBy, uploadedByName}. ProjectDetail/ProjectCard defensively handle both (photo.url || photo), but this dual shape is a latent bug source",
+        "location": "screens/NewProjectScreen.js:198 and screens/AddPhotosScreen.js:171-176"
+      },
+      {
+        "item": "Bulk delete does not remove associated Storage photos, messages, or invoices (orphaned data); hard delete with no undo/soft-delete",
+        "location": "screens/ProjectsScreen.js:284-302"
+      },
+      {
+        "item": "Location filtering compares location.name/nickname (from locations collection) against qbCustomer.name strings from users.qbCustomers — two different data sources keyed by name string, fragile and likely to mismatch",
+        "location": "screens/ProjectsScreen.js:183-189, 499-519"
+      },
+      {
+        "item": "Project value display uses three overlapping/legacy fields (totalAmount, estimatedTotal, totalPrice) OR'd together, indicating schema drift across data sources (manual, QuickBooks, FreshBooks, website import)",
+        "location": "screens/ProjectDetailScreen.js:283-294, components/ProjectCard.js:170-176"
+      },
+      {
+        "item": "All catch blocks only console.error (no user-facing error recovery) in load paths: loadProject, loadInvoices, fetchClients, fetchLocations, list onSnapshot error",
+        "location": "screens/ProjectDetailScreen.js:85-88,104-107; screens/ProjectsScreen.js:142-144,165-167,111-115"
+      },
+      {
+        "item": "NewProjectScreen ternary for estimate label is dead/no-op: status==='NEW' ? 'Estimate' : 'Estimate' (both branches identical)",
+        "location": "screens/ProjectDetailScreen.js:310-312"
+      },
+      {
+        "item": "ProjectsScreen list useEffect depends on [userProfile] but uses isAdmin(); missing isAdmin in deps (works because isAdmin is stable, but fragile). Filter useEffect omits 'locations' from deps though it reads locations",
+        "location": "screens/ProjectsScreen.js:119, 239"
+      },
+      {
+        "item": "Unused/orphaned styles (draftsBanner* in HomeScreen) left after 'remove Drafts link' commit; locationFilterContainer style unused in ProjectsScreen",
+        "location": "screens/HomeScreen.js:244-278; screens/ProjectsScreen.js:876-879"
+      },
+      {
+        "item": "AddPhotosScreen loadProjects useEffect has empty dependency array but references userProfile/isAdmin (stale-closure risk if profile loads after mount)",
+        "location": "screens/AddPhotosScreen.js:36-67"
+      },
+      {
+        "item": "Voice transcription message is created with senderId 'SYSTEM' and senderRole 'system' but no clientId, so it will never surface in the client unread-count query and may break client inbox filters",
+        "location": "screens/NewProjectScreen.js:272-285"
+      },
+      {
+        "item": "Header comment 'FIXED to match website data structure' and inline 'CRITICAL - this is why projects don't show on website!' reveal a prior production data-integration bug; contractorIds population is a fragile coupling to the website backend",
+        "location": "screens/NewProjectScreen.js:1, 234-243"
+      }
+    ],
+    "portability": "Worth harvesting in a rewrite: (1) The dual-role (admin/client) data-scoping pattern used consistently across all screens (admin = full collection query, client = where clientId == userProfile.id) — this access model is reusable. (2) The QuickBooks/FreshBooks integration surface: the project schema's reconciliation of multiple external systems (qbCustomerId/qbCustomerName, quickbooksInvoiceNumber, quickbooksEstimateNumber, freshbooksInvoiceNumber, invoicePdfLink/estimatePdfLink, invoices.matchedToProject) and the contractorIds=all-admins convention required for website cross-app compatibility represent hard-won integration knowledge. (3) The photo capture+upload pipeline (expo-image-picker -> fetch(uri) -> blob -> Firebase Storage uploadBytes -> getDownloadURL -> arrayUnion into Firestore) is a clean, reusable recipe; AddPhotosScreen's richer photo-object form (with uploadedBy metadata) is the better template. (4) The design-token system (TYPOGRAPHY/SPACING/RADIUS/SHADOWS/TAB_BAR_HEIGHT from ../theme, iOS semantic colors via ThemeContext with light/dark createStyles(colors) pattern) is mature and consistent across the whole subsystem. (5) The VoiceRecorder -> {title, description, transcription} contract feeding project creation is a differentiated feature worth preserving. (6) The expandable client>location filter dropdown in ProjectsScreen is non-trivial UI logic.",
+    "notes": "Code quality is mid: visually polished and consistent (theme tokens, haptics on nearly every interaction, good empty/loading states), but architecturally naive in data handling. Key risks for a rewrite: (1) All search/filter/sort is in-memory client-side over the full project set — fine for tens of projects, will not scale to hundreds and defeats Firestore pagination. (2) Schema drift is pervasive — projects come from at least four sources (manual app creation, website import, QuickBooks, FreshBooks) and the UI defensively OR's overlapping fields (totalAmount/estimatedTotal/totalPrice, title/name, photo URL-string vs object, txnDate vs createdAt, clientName-on-doc vs clients-lookup). A rewrite should normalize this schema first. (3) The repeated 'avoiding Firestore permission issues' / hardcoded values / 'this is why projects don't show on website' comments signal that Firestore security rules and the website data contract are brittle and were patched reactively — audit rules and define a canonical project schema before porting. (4) Detail and AddPhotos screens use one-shot reads (getDoc/getDocs) while the list uses onSnapshot, so the detail view can show stale data after a list-side change. (5) Deletes are destructive with no cleanup of Storage/messages/invoices, creating orphans. (6) Two separate photo-add paths (NewProject and AddPhotos) with divergent data shapes should be unified. (7) Heavy reliance on stable-but-undeclared hook deps (isAdmin) and empty dep arrays referencing userProfile is a stale-closure footgun.",
+    "_key": "projects",
+    "_label": "Projects"
+  },
+  {
+    "area": "Estimates Engine",
+    "summary": "The Estimates Engine is an admin-only, tabbed workspace for turning a project into a priced estimate and pushing it to QuickBooks. EstimateWorkspaceScreen wires four live tabs (Overview, Estimate, Calculator, QuickBooks) driven by a real-time estimateProgress document that tracks step completion and lights up checkmarks. The active flow is: review project/customer context, write or AI-generate an estimate description (auto-saved + finalize toggle), build a costed calculator (Materials, Subcontractors, Labor, Profit with markups and auto-save), then run a pre-flight checklist, assign a QuickBooks customer fetched from a backend REST API, and POST the estimate to QuickBooks. AI features (estimate generation and an in-context chat assistant) call a remote Carben Connect backend at carbenconnect.com rather than OpenAI directly. Three components in the folder (PricingCalculatorTab, EstimateDescriptionTab, ProjectInfoTab) are orphaned dead code superseded by the AIEstimateTab/CalculatorTab/ProjectOverviewTab that the screen actually imports.",
+    "features": [
+      {
+        "name": "Estimate workspace shell + tab navigation",
+        "status": "complete",
+        "description": "Admin-gated container screen. Subscribes in real time to the project doc and an estimateProgress doc, renders a 4-tab bar (Overview/Estimate/Calculator/QuickBooks) where each tab shows a checkmark when its progress flag is set. Non-admins see an Access Restricted card. Loading spinner until progress loads; falls back to a default progress object if none exists. Header shows project.clientName.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/EstimateWorkspaceScreen.js"
+        ],
+        "dataTouched": "Reads projects/{projectId} and estimateProgress/{projectId} (fields: descriptionGenerated, descriptionFinalized, calculatorStarted, calculatorComplete, sentToQuickBooks, lastEditedBy/At) via onSnapshot.",
+        "integrations": "Firestore only. Auth via useAuth().isAdmin()."
+      },
+      {
+        "name": "Project Overview tab",
+        "status": "complete",
+        "description": "Read-only project context. Fetches the client user doc to show name/email/phone, resolves project location, renders all QuickBooks customer locations (with a 'Current' badge on the active one), legacy qbLocationName fallback, the project description, and a project photos grid with an empty state.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/ProjectOverviewTab.js"
+        ],
+        "dataTouched": "Reads users/{project.clientId} (name, email, phone, qbCustomers[], qbLocationName). Reads project fields qbCustomerName/qbCustomerId, address, location, description, photos[] (photo.url or string). One-shot getDoc, not live.",
+        "integrations": "Firestore; remote image URLs rendered via <Image>."
+      },
+      {
+        "name": "AI Estimate description tab (active)",
+        "status": "complete",
+        "description": "The live 'Estimate' tab. Edits estimate description text with 2s debounced auto-save. 'Import Description' copies project.description verbatim; 'Import with AI' calls the backend to generate a polished estimate. Collapsible AI Instructions field feeds the generator, and a collapsible AI Assistant chat panel holds a context-aware conversation. Finalize/Edit toggle sets isFinalized; editing a finalized estimate auto-unfinalizes it.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/AIEstimateTab.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/config/openai.js"
+        ],
+        "dataTouched": "Reads/writes estimateDescriptions/{projectId} (description, aiGeneratedText, finalizedText, isFinalized, finalizedAt/By, lastEditedAt/By). Writes estimateProgress/{projectId} (descriptionGenerated, descriptionFinalized) with merge.",
+        "integrations": "POST https://www.carbenconnect.com/api/ai/generate-estimate (via generateEstimate) and POST https://www.carbenconnect.com/api/ai/chat (inline fetch) for the assistant."
+      },
+      {
+        "name": "AI chat assistant (in Estimate tab)",
+        "status": "partial",
+        "description": "Collapsible chat that builds a system context from project description + current estimate + special instructions and posts to the backend chat endpoint. Renders user/assistant bubbles, optimistic send with rollback on failure. Gap: chatMessages are in-memory only (never persisted to Firestore), so the conversation is lost when the tab/screen unmounts.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/AIEstimateTab.js"
+        ],
+        "dataTouched": "None persisted; chat state is local component state.",
+        "integrations": "POST https://www.carbenconnect.com/api/ai/chat with {message, conversationHistory, systemContext}."
+      },
+      {
+        "name": "Cost Calculator tab (active)",
+        "status": "complete",
+        "description": "The live 'Calculator' tab. Three cost sections: Materials and Subcontractors (item/qty/unitCost line-item tables, per-row total, per-section markup %), and Labor (single row: rate picker with presets $4000/$3000/$2500/$2000/custom + days). A Profit section toggles percent/dollar and computes a grand total. 2s debounced auto-save plus a manual Save Now button. Uses an editingFieldRef guard so incoming Firestore snapshots do not clobber the field the user is actively typing in.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/CalculatorTab.js"
+        ],
+        "dataTouched": "Reads/writes estimateCalculators/{projectId} (materials[], materialsMarkup, subcontractors[], subcontractorsMarkup, labor[], profitType, profitValue, grandTotal, updatedAt/By). Writes estimateProgress/{projectId} (calculatorStarted, calculatorComplete = grandTotal>0).",
+        "integrations": "Firestore only."
+      },
+      {
+        "name": "Send to QuickBooks tab",
+        "status": "partial",
+        "description": "Pre-flight checklist (description finalized, calculator grandTotal>0, project.clientId present, qbCustomerId assigned). Fetches QB customers from the backend and shows a modal picker; selecting one writes qbCustomerId/qbCustomerName onto the project. When all checks pass, confirms and POSTs the estimate to the backend create-estimate endpoint, then flips estimateProgress.sentToQuickBooks. Reason for 'partial': the summary card and POST payload read calculator.subtotal/taxRate/taxAmount/estimateNumber, but the active CalculatorTab writes none of those fields (it writes grandTotal and markup/profit data instead) — so subtotal/tax always render $0.00 and estimateNumber is always null. These fields only exist in the orphaned PricingCalculatorTab, indicating a schema mismatch between the calculator that runs and the QB tab that consumes it.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/SendToQuickBooksTab.js"
+        ],
+        "dataTouched": "Reads estimateDescriptions/{projectId}, estimateCalculators/{projectId}, estimates/{projectId}. Writes projects/{projectId} (qbCustomerId, qbCustomerName) and updates estimateProgress/{projectId}.sentToQuickBooks. Note estimates/{projectId} is only read here, never written by this subsystem.",
+        "integrations": "GET https://www.carbenconnect.com/api/quickbooks/customers and POST https://www.carbenconnect.com/api/quickbooks/create-estimate."
+      },
+      {
+        "name": "QuickBooks customer assignment",
+        "status": "complete",
+        "description": "Fetches QB customers (DisplayName/FullyQualifiedName/CompanyName/Id) from the backend, presents a slide-up pageSheet modal list, and on selection persists the chosen customer onto the project doc. Re-assignable via an edit icon. Verbose console logging and a detailed troubleshooting alert on failure.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/SendToQuickBooksTab.js"
+        ],
+        "dataTouched": "Writes projects/{projectId}.qbCustomerId/qbCustomerName/updatedAt (merge).",
+        "integrations": "GET https://www.carbenconnect.com/api/quickbooks/customers."
+      },
+      {
+        "name": "Estimate progress tracking",
+        "status": "complete",
+        "description": "Cross-tab status model: each tab writes boolean flags to a single estimateProgress doc (merge writes), and the shell reads them to drive tab checkmarks and completion state. Drives getTabStatus() in the workspace and the 'already sent' / finalized badges.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/EstimateWorkspaceScreen.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/AIEstimateTab.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/CalculatorTab.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/SendToQuickBooksTab.js"
+        ],
+        "dataTouched": "estimateProgress/{projectId} read by shell, written (merge) by every editing tab.",
+        "integrations": "Firestore only."
+      },
+      {
+        "name": "PricingCalculatorTab (orphaned, dead code)",
+        "status": "broken",
+        "description": "An alternate simpler calculator: generic line items (description/quantity/rate/amount) plus a single tax rate, computing subtotal/taxAmount/grandTotal. Writes estimateCalculators with lineItems/subtotal/taxRate/taxAmount/grandTotal — the exact fields SendToQuickBooksTab expects. It is NOT imported anywhere (verified by grep), so it never runs; the workspace uses CalculatorTab instead. This is the source of the QB-tab field mismatch.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/PricingCalculatorTab.js"
+        ],
+        "dataTouched": "Would write estimateCalculators/{projectId} (lineItems[], subtotal, taxRate, taxAmount, grandTotal) and estimateProgress flags.",
+        "integrations": "Firestore only."
+      },
+      {
+        "name": "EstimateDescriptionTab (orphaned, dead code)",
+        "status": "broken",
+        "description": "An earlier, simpler description editor with Save/Finalize/Unfinalize and a stubbed 'Generate with AI' that only shows a 'coming soon' alert. Not imported anywhere; superseded by AIEstimateTab. Writes the same estimateDescriptions/estimateProgress docs but with updatedAt/By naming instead of lastEditedAt/By.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/EstimateDescriptionTab.js"
+        ],
+        "dataTouched": "estimateDescriptions/{projectId}, estimateProgress/{projectId}.",
+        "integrations": "None (AI button is a stub alert)."
+      },
+      {
+        "name": "ProjectInfoTab (orphaned, dead code)",
+        "status": "broken",
+        "description": "Simple read-only InfoRow list (client name, address, title, description, status). Not imported anywhere; superseded by the richer ProjectOverviewTab.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/ProjectInfoTab.js"
+        ],
+        "dataTouched": "Reads project prop fields only.",
+        "integrations": "None."
+      }
+    ],
+    "incomplete": [
+      {
+        "item": "QB tab consumes calculator fields the active calculator never writes — subtotal, taxRate, taxAmount, estimateNumber always render $0.00 / null because CalculatorTab writes grandTotal/markup/profit, not these.",
+        "location": "components/estimate/SendToQuickBooksTab.js:186-188, 338-364"
+      },
+      {
+        "item": "create-estimate payload sends only grandTotal + raw calculator object; no line items, tax, or estimate number actually populated, so the QB estimate will be missing detail.",
+        "location": "components/estimate/SendToQuickBooksTab.js:181-189"
+      },
+      {
+        "item": "AI chat history is never persisted — chatMessages is local state, lost on unmount; conversationHistory sent to backend resets each session.",
+        "location": "components/estimate/AIEstimateTab.js:37, 198, 235"
+      },
+      {
+        "item": "Stubbed AI generation: 'AI estimate generation is coming soon' alert (in the orphaned tab, but still shipped code).",
+        "location": "components/estimate/EstimateDescriptionTab.js:64-68"
+      },
+      {
+        "item": "Hardcoded labor rate presets ($4000/$3000/$2500/$2000) and default rate '4000' — should be configurable per company.",
+        "location": "components/estimate/CalculatorTab.js:36-49"
+      },
+      {
+        "item": "Hardcoded default markup of 30% for materials and subcontractors.",
+        "location": "components/estimate/CalculatorTab.js:381, 383, 417, 432"
+      },
+      {
+        "item": "Hardcoded default tax rate 8.5% in orphaned PricingCalculatorTab.",
+        "location": "components/estimate/PricingCalculatorTab.js:27, 40, 233"
+      },
+      {
+        "item": "Hardcoded backend base URL 'https://www.carbenconnect.com/api' duplicated across files instead of one config/env value.",
+        "location": "config/openai.js:3, components/estimate/SendToQuickBooksTab.js:20, components/estimate/AIEstimateTab.js:219"
+      },
+      {
+        "item": "AIEstimateTab auto-save useEffect depends only on [estimateText] but reads project/description/user — stale-closure risk and exhaustive-deps lint violation.",
+        "location": "components/estimate/AIEstimateTab.js:68-88"
+      },
+      {
+        "item": "Inline auto-unfinalize on edit writes a partial doc using {...description, isFinalized:false} without serverTimestamp/lastEditedBy and can race with the debounced auto-save.",
+        "location": "components/estimate/AIEstimateTab.js:516-525"
+      },
+      {
+        "item": "estimateProgress.sentToQuickBooks uses updateDoc which throws if the progress doc doesn't exist yet (other writes use setDoc+merge); inconsistent and potentially crashing.",
+        "location": "components/estimate/SendToQuickBooksTab.js:210-213"
+      },
+      {
+        "item": "QB customer/estimate onSnapshot listeners for description/calculator have no error callbacks (silent failures).",
+        "location": "components/estimate/SendToQuickBooksTab.js:39-55"
+      },
+      {
+        "item": "editingFieldRef snapshot-guard only checks 'material-'/'subcontractor-'/'labor-' prefixes and specific markup keys; labor field edits and partial matches can still be overwritten by incoming snapshots.",
+        "location": "components/estimate/CalculatorTab.js:406-448"
+      },
+      {
+        "item": "estimates/{projectId} collection is read to compute alreadySent but is never written by this subsystem — write must happen server-side in the backend; undocumented coupling.",
+        "location": "components/estimate/SendToQuickBooksTab.js:49-55, 250"
+      },
+      {
+        "item": "Unused imports: Platform in EstimateWorkspaceScreen; SHADOWS/TYPOGRAPHY partially; calculator var set but unused in SendToQuickBooksTab beyond reads.",
+        "location": "screens/EstimateWorkspaceScreen.js:10"
+      },
+      {
+        "item": "CalculatorTab markup state stored as string but default coerced inconsistently (String(data.materialsMarkup || 30)) — a saved 0% markup becomes 30%.",
+        "location": "components/estimate/CalculatorTab.js:417, 432"
+      },
+      {
+        "item": "Three orphaned components shipped (PricingCalculatorTab, EstimateDescriptionTab, ProjectInfoTab) — dead code, not imported anywhere.",
+        "location": "components/estimate/PricingCalculatorTab.js, components/estimate/EstimateDescriptionTab.js, components/estimate/ProjectInfoTab.js"
+      }
+    ],
+    "portability": "Worth harvesting: (1) The QuickBooks integration wiring — the customer-fetch + slide-up picker modal that maps QB DisplayName/FullyQualifiedName/CompanyName/Id, the create-estimate POST payload shape, and the pre-flight checklist gate are the laborious, domain-specific parts (the OAuth/token side lives in the carbenconnect.com backend, not here, so that must be ported separately). (2) The debounced auto-save + onSnapshot 'editingFieldRef' anti-clobber pattern in CalculatorTab is a genuinely useful solution to the real-time-collaboration-overwrites-my-typing problem and is reusable for any live-edited form. (3) The estimateProgress cross-tab status model (single doc of booleans driving tab checkmarks) is a clean, reusable workflow-stepper pattern. (4) The cost-rollup math (per-section subtotal + markup %, labor days*rate, percent-vs-dollar profit toggle, grand total) is the pricing algorithm core. (5) The theme token usage (TYPOGRAPHY/SPACING/RADIUS/SHADOWS + iOS-semantic color names like systemGroupedBackground/secondaryLabel via useTheme) is a consistent design system worth keeping. (6) The AI generate/chat client wrappers in config/openai.js (generateEstimate, aiChat, transcribeAudio, generateProject) document the backend API surface.",
+    "notes": "Main risk for a rewrite: there are two parallel, incompatible 'estimateCalculators' schemas. The live CalculatorTab writes {materials, subcontractors, labor, markups, profit, grandTotal}; the orphaned PricingCalculatorTab writes {lineItems, subtotal, taxRate, taxAmount, grandTotal}; and SendToQuickBooksTab reads the latter shape. Result: the QuickBooks summary and payload only ever see grandTotal correctly — tax/subtotal/line-items are silently $0/empty. Anyone touching the QB flow must reconcile this first. Similarly there are two description editors (AIEstimateTab live, EstimateDescriptionTab dead) and two overview tabs (ProjectOverviewTab live, ProjectInfoTab dead) — the dead trio should be deleted. The subsystem is admin-only (isAdmin gate) and entirely client-driven: all AI and QuickBooks logic lives behind the carbenconnect.com backend (no API keys in the app, good), but that backend is the source of truth for OAuth, estimate creation, and the estimates/{projectId} write that this code only reads. No tests present. Real-time onSnapshot everywhere plus debounced setDoc creates write-amplification and occasional self-overwrite races (partially mitigated by editingFieldRef). Error handling is mostly present (alerts + haptics) but several listeners lack error callbacks and one write uses updateDoc that can throw on a missing doc. Code quality is otherwise consistent and readable, with a coherent iOS-styled theming approach.",
+    "_key": "estimates",
+    "_label": "Estimates Engine"
+  },
+  {
+    "area": "Messaging & Notifications",
+    "summary": "This subsystem provides in-app messaging between clients and admins, plus Expo push notifications. The Inbox lists conversations (grouped by project, or by client for general messages) using a real-time Firestore listener on the `messages` collection; tapping a card opens the ConversationScreen, a chat-bubble thread with a docked composer. NewMessageScreen lets a user start a thread optionally attached to a project. Push notifications are handled client-side by NotificationContext (token registration, permission prompt, tap routing) and server-side by Firebase Cloud Functions in functions/notificationFunctions.js that fire on new messages/estimates/projects and POST to Expo's push API. DraftsScreen is included in the file set but is actually an admin estimate-pipeline screen, not messaging; it is admin-gated and was de-linked from the UI per the latest commit. Notably there is NO read/unread persistence — \"unread\" is computed heuristically on the fly and never written back, so messages are never actually marked read.",
+    "features": [
+      {
+        "name": "Inbox conversation list",
+        "status": "complete",
+        "description": "Real-time list of conversations. Subscribes to the messages collection (admins see all; clients filtered by clientId), groups messages by conversation key (project-{projectId} or client-{clientId}), shows the latest message per conversation via MessageCard, and computes an unread flag. Pull-to-refresh exists but is cosmetic since the onSnapshot listener already streams updates. Tapping a card navigates to Conversation. Header has New Message, Calendar, and Profile buttons.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/InboxScreen.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/MessageCard.js"
+        ],
+        "dataTouched": "Reads Firestore messages (fields: clientId, projectId, projectTitle, createdAt, senderRole, message/text, senderName). Client query filters where clientId == userProfile.id + orderBy createdAt desc (requires composite index).",
+        "integrations": "Firebase Firestore (onSnapshot real-time)"
+      },
+      {
+        "name": "Unread / read status",
+        "status": "broken",
+        "description": "Unread is derived purely at read time in InboxScreen: a conversation is 'unread' if the latest admin message is newer than the latest client message (or no client reply yet). MessageCard reads message.unread for styling but the Inbox overrides it with its computed value; ConversationScreen writes read:false/unread:true on every send and NEVER updates them. Opening a conversation does not mark anything read. So unread state is heuristic, asymmetric (only works from the client's perspective; admin viewing all messages gets the same logic), and the persisted read/unread fields are effectively dead.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/InboxScreen.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ConversationScreen.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/MessageCard.js"
+        ],
+        "dataTouched": "messages.read, messages.unread (written on create, never updated/read meaningfully)"
+      },
+      {
+        "name": "Conversation thread view",
+        "status": "complete",
+        "description": "Chat-style thread for a project (where projectId ==) or a general thread (where clientId == AND projectId == null). Sorts by createdAt client-side, renders sent/received bubbles with sender name, date separators (Today/Yesterday/date), and time. Auto-scrolls to bottom. Docked multiline composer with KeyboardAvoidingView and tab-bar-aware padding. Sending adds a message doc with optimistic clear + rollback on failure, plus haptic feedback.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ConversationScreen.js"
+        ],
+        "dataTouched": "Reads/writes Firestore messages. Write fields: projectId, projectTitle, clientId, senderId, senderName, senderRole(default 'client'), message, text, createdAt(new Date()), read:false, unread:true.",
+        "integrations": "Firebase Firestore, expo-haptics"
+      },
+      {
+        "name": "Compose new message",
+        "status": "complete",
+        "description": "Form to start a message, optionally attaching a project (picker lists user's projects; admins see all). On send, resolves the project's clientId via a Firestore query, writes the message, then either navigation.replace to the Conversation (if project chosen) or goBack (general). Supports pre-selecting a project via route params.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/NewMessageScreen.js"
+        ],
+        "dataTouched": "Reads projects (by clientId for clients), reads project doc via where('__name__','==',id) to get clientId; writes messages doc.",
+        "integrations": "Firebase Firestore, expo-haptics"
+      },
+      {
+        "name": "Push notification registration & token storage",
+        "status": "complete",
+        "description": "On mount, requests notification permissions (physical device only), gets an Expo push token using a hardcoded EAS projectId, sets the Android notification channel, and stores token + deviceType on the user's Firestore doc. Skips writing when an admin is impersonating a client (isViewingAsClient). Foreground handler shows alert/sound/badge.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/NotificationContext.js"
+        ],
+        "dataTouched": "Writes users/{userProfile.id}: expoPushToken, deviceType, updatedAt.",
+        "integrations": "expo-notifications, expo-device, Firebase Firestore"
+      },
+      {
+        "name": "Notification tap routing (deep link)",
+        "status": "partial",
+        "description": "Handles notification taps via a module-level navigationRef set from navigation.js. Routes by data.type: 'message' -> Inbox then Conversation; 'estimate'/'project' -> Projects then ProjectDetail. Uses a navigate-twice with setTimeout(100ms) hack to ensure the tab stack is mounted. Also checks getLastNotificationResponseAsync for cold-start. Fragile due to timing hack and unknown-type cases just log.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/NotificationContext.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/navigation.js"
+        ],
+        "dataTouched": "Reads notification data payload (type, projectId, projectTitle, clientId, messageId, estimateId).",
+        "integrations": "expo-notifications, React Navigation"
+      },
+      {
+        "name": "Server-side message notifications (Cloud Function)",
+        "status": "partial",
+        "description": "onMessageCreated triggers on messages/{id}; loads the project by message.projectId, computes recipients (project.clientId + project.contractorIds, excluding sender), fetches their expoPushTokens, and sends via Expo. Broken for general messages: it does projects.doc(message.projectId).get() with no guard, so a null/undefined projectId yields a non-existent doc and the function returns early (no notification for general/client-to-admin general messages). Also relies on project.contractorIds which is not written anywhere in the messaging screens.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/notificationFunctions.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/sendPushNotification.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js"
+        ],
+        "dataTouched": "Reads projects/{projectId} (clientId, contractorIds, title), users/{id}.expoPushToken; reads new messages doc.",
+        "integrations": "Firebase Cloud Functions (Firestore onCreate), Expo Push API (https://exp.host/--/api/v2/push/send) via node-fetch"
+      },
+      {
+        "name": "Server-side estimate & project notifications",
+        "status": "complete",
+        "description": "onEstimateCreated notifies the project's client when an estimate doc is created; onProjectCreated notifies all admin users. Both resolve push tokens and POST to Expo. Functionally separate from messaging but share the same sender helper and tap-routing types.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/notificationFunctions.js"
+        ],
+        "dataTouched": "Reads estimates/{id}, projects/{id}, users (role==admin or clientId), users.expoPushToken.",
+        "integrations": "Firebase Cloud Functions, Expo Push API"
+      },
+      {
+        "name": "DraftsScreen (estimate pipeline)",
+        "status": "complete",
+        "description": "Despite being in the messaging file set, this is an ADMIN estimate-tracking screen. Admin-gated (alerts and goBack for non-admins). Lists projects with a 5-stage estimate progress bar (descriptionGenerated, descriptionFinalized, calculatorStarted, calculatorComplete, sentToQuickBooks, 20% each) and status labels; navigates to EstimateWorkspace. Resolves client names and location names. Per commit 6c2f798 the Drafts link was removed from navigation, so this screen may be orphaned/unreachable from UI.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/DraftsScreen.js"
+        ],
+        "dataTouched": "Reads projects (orderBy createdAt), estimateProgress/{projectId}, users(role==client), locations. Reads project.locationId, client.qbCustomers.",
+        "integrations": "Firebase Firestore"
+      }
+    ],
+    "incomplete": [
+      {
+        "item": "Messages are never marked read; ConversationScreen writes read:false/unread:true on every send and no code ever updates them. Unread is recomputed heuristically in Inbox, so opening a thread does not clear unread.",
+        "location": "screens/ConversationScreen.js:131-132, screens/InboxScreen.js:101-113"
+      },
+      {
+        "item": "Pull-to-refresh is a no-op; handleRefresh only sets refreshing=true with a comment 'Firestore listener will automatically refresh'. Spinner is cleared by the next snapshot, which may not fire if nothing changed.",
+        "location": "screens/InboxScreen.js:135-138"
+      },
+      {
+        "item": "Inbox useEffect dependency array is [userProfile] but the body uses isAdmin(); stale-closure risk and lint-incomplete deps.",
+        "location": "screens/InboxScreen.js:133"
+      },
+      {
+        "item": "ConversationScreen listener effect depends only on [projectId]; clientId is used inside but not in deps, so switching general conversations for a different client without remount could query stale clientId.",
+        "location": "screens/ConversationScreen.js:109"
+      },
+      {
+        "item": "contentContainerStyle sets paddingBottom twice (TAB_BAR_HEIGHT then inputHeight) — first value is overridden, dead style.",
+        "location": "screens/ConversationScreen.js:262-265"
+      },
+      {
+        "item": "Cloud Function onMessageCreated has no guard for missing projectId; general messages (projectId null) call projects.doc(null/undefined) and silently return, so general/client-to-admin messages never push.",
+        "location": "functions/notificationFunctions.js:24-28"
+      },
+      {
+        "item": "onMessageCreated relies on project.contractorIds for admin recipients, but no messaging screen writes contractorIds; admins likely never receive message pushes unless that field is populated elsewhere.",
+        "location": "functions/notificationFunctions.js:39-45"
+      },
+      {
+        "item": "Hardcoded EAS projectId in getExpoPushTokenAsync ('f0319be5-...').",
+        "location": "contexts/NotificationContext.js:187"
+      },
+      {
+        "item": "Hardcoded Android light/accent color '#FF6B35' for notification channel (should use theme token).",
+        "location": "contexts/NotificationContext.js:167"
+      },
+      {
+        "item": "Notification tap routing uses fragile setTimeout(100) navigate-twice hack; unknown/missing data.type only logs.",
+        "location": "contexts/NotificationContext.js:97-106,146"
+      },
+      {
+        "item": "Stale backup/duplicate function files left in repo (index.js.backup, index.js.bak).",
+        "location": "functions/index.js.backup, functions/index.js.bak"
+      },
+      {
+        "item": "NewMessageScreen project lookup uses where('__name__','==', id) (a full collection query) instead of getDoc(doc(...)); inefficient and fragile.",
+        "location": "screens/NewMessageScreen.js:107-109"
+      },
+      {
+        "item": "createdAt written as new Date() (client clock) rather than serverTimestamp(), risking clock skew in ordering across devices.",
+        "location": "screens/ConversationScreen.js:130, screens/NewMessageScreen.js:96"
+      },
+      {
+        "item": "MessageCard footer distinguishes only admin vs non-admin sender icon; clientName is rendered but Inbox never sets clientName on grouped conversation objects, so it's usually absent.",
+        "location": "components/MessageCard.js:54-58, 72-78"
+      },
+      {
+        "item": "No message editing, deletion, attachments, image/file support, typing indicators, or pagination — conversation loads the entire history each time.",
+        "location": "screens/ConversationScreen.js:77-109"
+      },
+      {
+        "item": "DraftsScreen may be dead/unreachable after the Drafts nav link removal in commit 6c2f798.",
+        "location": "screens/DraftsScreen.js"
+      }
+    ],
+    "portability": "The Expo push pipeline is the most reusable asset: client-side token registration + permission flow + Firestore token storage (contexts/NotificationContext.js), the server-side sender helper that batches/validates ExponentPushToken-prefixed tokens and POSTs to https://exp.host/--/api/v2/push/send (functions/sendPushNotification.js), and the Firestore onCreate triggers that fan out to recipients (functions/notificationFunctions.js). The notification-tap deep-link router (type -> tab+screen+params) and the navigationRef pattern wired from navigation.js are worth keeping. The ConversationScreen composer UX is well-built and harvestable: KeyboardAvoidingView + tab-bar-aware inputPadBottom math, interactive keyboard dismiss, auto-scroll-to-end, optimistic send with rollback, and date-separator grouping. DraftsScreen's 5-stage estimate progress model (20% per stage: descriptionGenerated/descriptionFinalized/calculatorStarted/calculatorComplete/sentToQuickBooks) and its status-label/color mapping encode real business logic worth preserving. The theme-token usage (TYPOGRAPHY/SPACING/RADIUS/SHADOWS, iOS-style semantic colors) is consistent and portable.",
+    "notes": "Biggest architectural risk: there is no canonical 'conversations' collection — conversations are reconstructed at runtime by grouping a flat messages collection, with unread computed heuristically and never persisted. This means no reliable unread badges, no scalable pagination, and per-conversation queries that load full history. The client/admin asymmetry (clients filtered by clientId, admins read ALL messages with orderBy) requires a composite index and will not scale. createdAt uses client Date() instead of serverTimestamp, so ordering is clock-dependent. The general-message path (projectId null) is only partially supported: Inbox/Conversation handle it, but the message-push Cloud Function does not, and the cloud function's admin recipients depend on a contractorIds field the app never writes — so admin push for messages is likely silently broken. DraftsScreen is mis-bundled with messaging (it is the estimate pipeline) and appears orphaned after the recent nav cleanup. expoPushToken and EAS projectId are hardcoded/global. Several screens have incomplete useEffect dependency arrays creating stale-closure bugs. Overall the UI layer is polished and complete; the data model and notification reliability are where a rewrite should focus.",
+    "_key": "messaging",
+    "_label": "Messaging & Notifications"
+  },
+  {
+    "area": "Clients",
+    "summary": "The Clients subsystem lets admins browse a directory of client users, drill into an individual client to see their contact/QuickBooks info and associated projects, and (via a selector modal) impersonate/\"view as\" a specific client. A separate ClientSummary component renders an AI-generated, project-linked status paragraph on the client's own homepage. All client records live in the Firestore `users` collection filtered by `role == 'client'`; projects are read from the `projects` collection by `clientId`. The subsystem is read-only from the mobile side: there is no create/edit/delete client capability anywhere despite empty-state copy implying it. The AI summary is the only feature that calls an external service (a Cloud Function wrapping an LLM).",
+    "features": [
+      {
+        "name": "Client list (directory)",
+        "status": "complete",
+        "description": "ClientsScreen renders a scrollable, real-time list of clients. Admins (isAdmin()) see all users with role=='client'; non-admins see only their own user record (where('id','==',userProfile.id)). Results are sorted alphabetically by name in JS. Pull-to-refresh is present but is a no-op visual gesture since onSnapshot already streams live updates (the comment explicitly says the listener auto-refreshes). Loading spinner and empty state are handled. Tapping a card haptically taps and navigates to ClientDetail passing the full client object.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ClientsScreen.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/ClientCard.js"
+        ],
+        "dataTouched": "READS Firestore collection 'users' where role=='client' (admin) or where id==userProfile.id (client). Fields used: id, name, email, phone, qbCustomers[], qbLocationName, role.",
+        "integrations": "Firebase Firestore (onSnapshot), expo-haptics"
+      },
+      {
+        "name": "Client card rendering",
+        "status": "complete",
+        "description": "ClientCard shows an avatar (first initial of name), name, email, phone, and a location summary. Location logic handles three shapes: multiple qbCustomers (shows 'N locations'), single qbCustomer (shows its name), and legacy qbLocationName fallback when qbCustomers is absent. Chevron and haptic-on-press included.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/ClientCard.js"
+        ],
+        "dataTouched": "Consumes client object fields: name, email, phone, qbCustomers[].name, qbLocationName.",
+        "integrations": "expo-haptics"
+      },
+      {
+        "name": "Client detail + projects list",
+        "status": "complete",
+        "description": "ClientDetailScreen receives the client via route params, shows an info card (avatar, name, email, phone, address) and a QuickBooks section, then a real-time list of that client's projects via ProjectCard. Projects are streamed from Firestore by clientId. Tapping a project navigates to ProjectDetail with projectId. Shows project count badge and an empty state. Pull-to-refresh present but a no-op (onSnapshot is live; handleRefresh only sets refreshing=true and nothing resets it except the next snapshot).",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ClientDetailScreen.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/ProjectCard.js"
+        ],
+        "dataTouched": "READS Firestore 'projects' where clientId==client.id. Reads client fields: name, email, phone, address, qbCustomers[], qbCustomerId, qbLocationName.",
+        "integrations": "Firebase Firestore (onSnapshot), expo-haptics"
+      },
+      {
+        "name": "QuickBooks info display",
+        "status": "partial",
+        "description": "Both ClientCard and ClientDetailScreen render QuickBooks customer/location data with handling for new (qbCustomers array) and legacy (qbCustomerId, qbLocationName) data shapes. This is purely display of pre-existing data; nothing in this subsystem syncs, fetches, or writes QuickBooks data. Whether the data is populated depends entirely on backend/other subsystems, so the visible-here portion is read-only display only.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ClientDetailScreen.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/ClientCard.js"
+        ],
+        "dataTouched": "READS client.qbCustomers[] (id, name), client.qbCustomerId, client.qbLocationName.",
+        "integrations": "QuickBooks (data only; no API call in these files)"
+      },
+      {
+        "name": "View-as-client selector modal",
+        "status": "complete",
+        "description": "ClientSelectorModal is a page-sheet modal listing all role=='client' users with live search across name/email/phone. Selecting a client haptically confirms and invokes onSelectClient(client). Loading, empty (with search-aware copy), and reset-on-close behaviors are implemented. The modal itself is complete; it depends on a parent passing onSelectClient to actually perform impersonation (parent not in this subsystem).",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/ClientSelectorModal.js"
+        ],
+        "dataTouched": "READS Firestore 'users' where role=='client'. Fields: id, name, email, phone.",
+        "integrations": "Firebase Firestore (onSnapshot), expo-haptics"
+      },
+      {
+        "name": "AI client summary (homepage)",
+        "status": "complete",
+        "description": "ClientSummary calls the 'generateClientSummary' Firebase Cloud Function with the current userId, displays the returned text, and inline-links project mentions encoded as 'Project Title[projectId]' via a regex parser, navigating to ProjectDetail on tap. Shows a sparkles header, loading state, error state with Retry, and a 'cached' checkmark when result.data.source includes 'cached'. The client-side implementation is complete; quality depends on the backend function.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/ClientSummary.js"
+        ],
+        "dataTouched": "Sends {userId: userProfile.id} to Cloud Function. Receives {summary, source}. No direct Firestore access.",
+        "integrations": "Firebase Functions httpsCallable('generateClientSummary') -> server-side LLM"
+      },
+      {
+        "name": "Add/create/edit/delete client",
+        "status": "stub",
+        "description": "There is NO client mutation capability anywhere in this subsystem. ClientsScreen empty state tells admins to 'Start by adding your first client' but there is no add button, FAB, or form. ClientDetailScreen has no edit affordance. Client records are presumably created elsewhere (auth signup / backend). This is a visible gap the UI copy implies exists.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ClientsScreen.js"
+        ],
+        "dataTouched": "None (no writes anywhere in subsystem)",
+        "integrations": "None"
+      }
+    ],
+    "incomplete": [
+      {
+        "item": "Empty-state copy promises an 'add client' flow that does not exist anywhere (no add button/form/FAB in the subsystem).",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ClientsScreen.js:124"
+      },
+      {
+        "item": "Pull-to-refresh is effectively a no-op. handleRefresh only sets refreshing=true; the onSnapshot listener already streams updates and is what eventually clears refreshing. Comment admits this ('Firestore listener will automatically refresh'). The spinner may stick until the next unrelated snapshot.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ClientsScreen.js:78-81"
+      },
+      {
+        "item": "ClientDetail pull-to-refresh: handleRefresh sets refreshing=true with no manual refetch; relies on incidental snapshot to reset it. Same no-op pattern.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ClientDetailScreen.js:59-61"
+      },
+      {
+        "item": "useEffect dependency array uses [userProfile] but the listener branches on isAdmin(); isAdmin is not in deps, so a role change without a userProfile object change would not re-subscribe.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ClientsScreen.js:76"
+      },
+      {
+        "item": "Non-admin query uses where('id','==',userProfile.id) against the 'users' collection, querying a DATA field 'id' rather than the document ID. This requires every user doc to redundantly store its own id field; if absent the client sees an empty list.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ClientsScreen.js:44-47"
+      },
+      {
+        "item": "ClientSelectorModal hardcodes legacy static COLORS (COLORS.carbenOrange, COLORS.white, etc.) instead of the dynamic theme (useTheme/colors) used by every other file in the subsystem. It will not adapt to dark mode / theme switching.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/ClientSelectorModal.js:17,130,236,243"
+      },
+      {
+        "item": "ClientSelectorModal renders item.email unconditionally; if a client has no email an empty Text node renders (minor visual gap), unlike ClientCard which guards email.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/ClientSelectorModal.js:80"
+      },
+      {
+        "item": "ClientDetailScreen passes isAdmin={false} hardcoded to ProjectCard, so even an admin viewing a client's projects sees the non-admin ProjectCard variant.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ClientDetailScreen.js:213"
+      },
+      {
+        "item": "ClientDetail receives the full client object via navigation params (route.params.client) rather than re-fetching by id, so client info shown is a stale snapshot from the list and won't live-update even though the projects list does.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ClientDetailScreen.js:24"
+      },
+      {
+        "item": "ClientDetail projects query is not sorted (unlike the clients list which sorts in JS); project order is whatever Firestore returns.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ClientDetailScreen.js:33-36"
+      },
+      {
+        "item": "Error handling is console.error only with no user-facing error UI on either list screen; a permission/network error silently yields an empty/loading-cleared screen.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ClientsScreen.js:68-72; /Users/carlborrelli/carben-connect-mobile-2.0/screens/ClientDetailScreen.js:49-53"
+      },
+      {
+        "item": "ClientSummary 'cached' indicator depends on backend returning source string containing 'cached' (string-sniffing contract), brittle and undocumented.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/ClientSummary.js:142"
+      },
+      {
+        "item": "ClientCard defines an unused 'chevron' style (the chevron Ionicons uses color prop directly, not this style).",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/ClientCard.js:137-139"
+      },
+      {
+        "item": "Odd import spacing/formatting artifacts ('SPACING  , TAB_BAR_HEIGHT', 'SHADOWS  , TAB_BAR_HEIGHT') suggest mechanical edits; harmless but indicates churn.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ClientsScreen.js:20; /Users/carlborrelli/carben-connect-mobile-2.0/screens/ClientDetailScreen.js:19"
+      }
+    ],
+    "portability": "The genuinely valuable, non-trivial pieces to harvest: (1) The QuickBooks data-shape handling that gracefully supports three formats (qbCustomers array with multiple/single locations, legacy qbCustomerId, legacy qbLocationName) — this dual-format migration logic is duplicated in ClientCard and ClientDetailScreen and represents real domain knowledge about the data's evolution. (2) The ClientSummary inline project-link parser: the regex /([^\\[]+)\\[([a-zA-Z0-9]+)\\]/g that turns 'Project Title[projectId]' markers from an LLM response into tappable navigation links is a clean, reusable pattern for rendering AI text with embedded entity links, plus the cache-source indicator UX. (3) The generateClientSummary Cloud Function wiring (httpsCallable contract: send {userId}, receive {summary, source}). (4) The consistent iOS-style design-token usage (TYPOGRAPHY/SPACING/RADIUS/SHADOWS from ../theme) and avatar-from-initial pattern reused across cards/modal/detail.",
+    "notes": "This subsystem is read-only and fairly polished visually but shallow functionally. Key risks for a rewrite: (1) Theming inconsistency — ClientSelectorModal alone uses the legacy static COLORS module while everything else uses dynamic useTheme(); this is a dark-mode bug. (2) Two different client-data access patterns coexist: the list passes the entire client object through navigation params (stale, no live updates on the detail card) while projects use live listeners — re-fetching the client by id would be more correct. (3) The non-admin query targets a stored 'id' field instead of doc id, a fragile data-modeling assumption. (4) Pull-to-refresh is decorative on both screens because onSnapshot already streams. (5) No client CRUD exists despite UI copy implying an add flow — confirm whether client creation is intentionally backend/web-only. (6) ProjectCard is always rendered with isAdmin={false}, so admin context is lost when viewing projects through a client. (7) Client privacy/security depends entirely on Firestore rules since the mobile non-admin path filters client-side with a where clause that could be bypassed if rules are lax. Overall: solid presentational layer, thin logic, a few correctness/theming bugs, and a notable missing write path.",
+    "_key": "clients",
+    "_label": "Clients"
+  },
+  {
+    "area": "QuickBooks & FreshBooks Integrations",
+    "summary": "This subsystem provides admin-only accounting integrations for the Carben Connect app. There are two distinct integrations of very different maturity. The QuickBooks integration (QuickBooksScreen.js + QuickBooksContext.js) is essentially a settings/credentials UI shell: it persists configuration to Firestore but its core actions (Connect, Test Connection, Sync Now) are placeholders/simulations, while a separate context layer (QuickBooksContext) wires up real automatic OAuth token-refresh against a Cloud Function. The FreshBooks integration (FreshBooksScreen.js) is the genuinely functional one: it performs a real OAuth connect/disconnect via Cloud Functions, fetches invoices with date-range and pagination, lets admins map each invoice to a client (and a client location), bulk-imports invoices as projects/estimates, and offers a destructive \"clear all imported data\" action. All UI follows a shared iOS-style design system (TYPOGRAPHY/SPACING/RADIUS/SHADOWS theme tokens) and is gated behind isAdmin().",
+    "features": [
+      {
+        "name": "QuickBooks settings persistence (load/save config)",
+        "status": "complete",
+        "description": "Admin opens QuickBooks screen; settings load from Firestore on mount and populate toggles (enabled, autoSync, syncInvoices/Estimates/Customers) and API credential text inputs (companyId, clientId, clientSecret). Tapping Save writes the entire config back to Firestore. This persistence layer fully works; it just stores values.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/QuickBooksScreen.js"
+        ],
+        "dataTouched": "Reads/writes Firestore doc settings/quickbooks fields: enabled, companyId, clientId, clientSecret, accessToken, refreshToken, tokenExpiry, autoSync, syncInvoices, syncEstimates, syncCustomers, lastSync, updatedAt, updatedBy",
+        "integrations": "Firestore only"
+      },
+      {
+        "name": "QuickBooks Connect (OAuth)",
+        "status": "stub",
+        "description": "User taps 'Connect to QuickBooks' button (shown only when not enabled). Handler just shows an Alert saying 'This would normally open QuickBooks OAuth flow. For now, manually enter your API credentials.' No OAuth is performed.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/QuickBooksScreen.js"
+        ],
+        "dataTouched": "None",
+        "integrations": "None (placeholder Alert only)"
+      },
+      {
+        "name": "QuickBooks Test Connection",
+        "status": "stub",
+        "description": "User taps 'Test' (shown when enabled). Handler shows an Alert with literal text '(This is a placeholder - real API call would go here)'. No API call.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/QuickBooksScreen.js"
+        ],
+        "dataTouched": "None",
+        "integrations": "None (placeholder Alert only)"
+      },
+      {
+        "name": "QuickBooks Sync Now",
+        "status": "stub",
+        "description": "User taps 'Sync Now', confirms via Alert. Handler comment says 'Simulate sync' — it does not call any QuickBooks API; it merely sets lastSyncDate to now and merges lastSync into Firestore, then reports success. Purely cosmetic.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/QuickBooksScreen.js"
+        ],
+        "dataTouched": "Writes Firestore settings/quickbooks.lastSync (merge)",
+        "integrations": "None (simulated)"
+      },
+      {
+        "name": "QuickBooks automatic token refresh",
+        "status": "partial",
+        "description": "QuickBooksProvider subscribes (admins only) to settings/quickbooks via onSnapshot, derives isConnected from enabled+accessToken+refreshToken+tokenExpiry, and proactively refreshes the token. It checks expiry on settings change and whenever the app returns to foreground (AppState 'active'), refreshing if under 30 minutes remain by calling the 'refreshQuickBooksToken' Cloud Function. forceRefresh exposed for manual/testing. This is real working wiring, but its usefulness is undermined because the screen never produces real tokens (Connect/Sync are stubs), so in practice there are no valid tokens to refresh.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/QuickBooksContext.js"
+        ],
+        "dataTouched": "Reads Firestore settings/quickbooks (enabled, accessToken, refreshToken, tokenExpiry)",
+        "integrations": "Firebase Cloud Function 'refreshQuickBooksToken' (httpsCallable)"
+      },
+      {
+        "name": "Admin-only access gating",
+        "status": "complete",
+        "description": "Both screens, on mount, call isAdmin(); non-admins get an 'Access Denied' alert and are navigated back. QuickBooksContext only subscribes/refreshes for users with role 'admin'.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/QuickBooksScreen.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/FreshBooksScreen.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/QuickBooksContext.js"
+        ],
+        "dataTouched": "Reads userProfile/role from AuthContext",
+        "integrations": "None"
+      },
+      {
+        "name": "FreshBooks Connect (OAuth)",
+        "status": "complete",
+        "description": "Admin taps Connect; app calls 'freshbooksConnect' Cloud Function with a hardcoded redirectUri pointing at the freshbooksCallback function. On success it gets back an authUrl, shows an Alert, and on Continue opens the URL in the system browser via Linking. User authorizes in browser then returns; status is re-read on next screen load. Real OAuth initiation.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/FreshBooksScreen.js"
+        ],
+        "dataTouched": "Connection status read from Firestore settings/freshbooks (accessToken, connected, tokenExpiry)",
+        "integrations": "Firebase Cloud Functions 'freshbooksConnect' and 'freshbooksCallback'; system browser via expo Linking"
+      },
+      {
+        "name": "FreshBooks connection status display",
+        "status": "complete",
+        "description": "On load, reads settings/freshbooks doc and sets connected = accessToken && connected. Shows Connected/Not Connected with cloud icon and stores tokenExpiry (stored but never surfaced in UI).",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/FreshBooksScreen.js"
+        ],
+        "dataTouched": "Reads Firestore settings/freshbooks (accessToken, connected, tokenExpiry)",
+        "integrations": "Firestore"
+      },
+      {
+        "name": "FreshBooks Disconnect",
+        "status": "complete",
+        "description": "Admin taps Disconnect, confirms destructive alert; calls 'freshbooksDisconnect' Cloud Function, then clears local state (connected=false, invoices=[]).",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/FreshBooksScreen.js"
+        ],
+        "dataTouched": "Function presumably clears settings/freshbooks tokens (server-side)",
+        "integrations": "Firebase Cloud Function 'freshbooksDisconnect'"
+      },
+      {
+        "name": "FreshBooks fetch invoices (with date range + pagination)",
+        "status": "partial",
+        "description": "Admin enters Start/End dates as free-text 'YYYY-MM-DD' strings, taps Fetch Invoices; calls 'freshbooksGetInvoices' with startDate/endDate/page/perPage:50. Results render as selectable cards showing invoiceNumber, organization/customerName, date, amount. totalPages is captured from pagination but there is NO UI to change pages — currentPage is fixed at 1 and never updated, so pagination is effectively dead. Date inputs are unvalidated raw strings.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/FreshBooksScreen.js"
+        ],
+        "dataTouched": "Returns invoice objects from FreshBooks (server-side); no direct Firestore write here",
+        "integrations": "Firebase Cloud Function 'freshbooksGetInvoices' -> FreshBooks API"
+      },
+      {
+        "name": "FreshBooks invoice selection + client/location mapping",
+        "status": "complete",
+        "description": "Admin toggles invoice checkboxes (Set of ids). For each selected invoice, taps 'Select Client' which opens a modal listing Firestore clients. If chosen client has client.qbCustomers with length > 1, a second 'Select Location' modal appears to pick a location; otherwise the client is assigned directly. Selections stored in clientSelections keyed by invoiceId, including selectedLocation when applicable. Deselecting an invoice removes its client selection. Notably the location concept is keyed on a field named qbCustomers (QuickBooks-derived customer/location list) even though this is the FreshBooks flow — a cross-integration data dependency.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/FreshBooksScreen.js"
+        ],
+        "dataTouched": "Reads Firestore collection 'clients' (fields: name, email, qbCustomers[] with id/name)",
+        "integrations": "Firestore"
+      },
+      {
+        "name": "FreshBooks bulk import (invoices -> projects/estimates)",
+        "status": "complete",
+        "description": "Admin taps 'Import Selected'. Validates every selected invoice has an assigned client (blocks otherwise). Builds payload array of {invoiceId, clientId, optional locationId/locationName} and calls 'freshbooksBulkImport' with createEstimates:true. On success reports imported/failed counts, clears selections, and refetches invoices.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/FreshBooksScreen.js"
+        ],
+        "dataTouched": "Server-side creation of projects and estimates (Firestore) keyed by clientId/locationId",
+        "integrations": "Firebase Cloud Function 'freshbooksBulkImport'"
+      },
+      {
+        "name": "FreshBooks Clear All Imported Data (Danger Zone)",
+        "status": "complete",
+        "description": "Admin taps destructive 'Clear All Imported Data', confirms; calls 'freshbooksClearImported' which deletes all projects/estimates imported from FreshBooks. Shows the server-returned message. Irreversible.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/FreshBooksScreen.js"
+        ],
+        "dataTouched": "Server-side deletion of imported projects/estimates (Firestore)",
+        "integrations": "Firebase Cloud Function 'freshbooksClearImported'"
+      }
+    ],
+    "incomplete": [
+      {
+        "item": "Connect to QuickBooks is a placeholder — no OAuth flow, just an Alert telling the user to enter credentials manually",
+        "location": "screens/QuickBooksScreen.js:120-127"
+      },
+      {
+        "item": "Test Connection is a placeholder — Alert literally says '(This is a placeholder - real API call would go here)'",
+        "location": "screens/QuickBooksScreen.js:129-136"
+      },
+      {
+        "item": "Sync Now is simulated — comment 'Simulate sync'; only writes lastSync timestamp, no QuickBooks API call",
+        "location": "screens/QuickBooksScreen.js:138-167 (comment at line 150)"
+      },
+      {
+        "item": "QuickBooks client secret, access token, refresh token are stored in plaintext in Firestore (settings/quickbooks); secrets exposed via setDoc with no encryption",
+        "location": "screens/QuickBooksScreen.js:92-107"
+      },
+      {
+        "item": "Auto Sync toggle ('Automatically sync data every hour') has no backing scheduled job in this code — value is persisted but nothing consumes it here",
+        "location": "screens/QuickBooksScreen.js:288-302"
+      },
+      {
+        "item": "FreshBooks pagination is dead: totalPages is set from response but currentPage is never changed and no page navigation UI exists; only page 1 is ever fetchable",
+        "location": "screens/FreshBooksScreen.js:58-59, 186-194"
+      },
+      {
+        "item": "FreshBooks date range inputs are unvalidated free-text strings ('YYYY-MM-DD'); no date picker or format validation",
+        "location": "screens/FreshBooksScreen.js:519-535"
+      },
+      {
+        "item": "Hardcoded redirectUri / Cloud Functions region+project ('https://us-central1-carben-connect.cloudfunctions.net/freshbooksCallback') in client code rather than config/env",
+        "location": "screens/FreshBooksScreen.js:114"
+      },
+      {
+        "item": "FreshBooks location mapping reads client.qbCustomers (a QuickBooks-named field) inside the FreshBooks import flow — likely leftover/shared naming that couples the two integrations",
+        "location": "screens/FreshBooksScreen.js:234, 681"
+      },
+      {
+        "item": "tokenExpiry loaded for FreshBooks but never displayed or used (no expiry warning / no auto-refresh on the FreshBooks side, unlike QuickBooks which has a context)",
+        "location": "screens/FreshBooksScreen.js:34, 83"
+      },
+      {
+        "item": "handleConnect (FreshBooks) does nothing if result.data.success is false or authUrl missing — no error/else branch, silent no-op",
+        "location": "screens/FreshBooksScreen.js:117-137"
+      },
+      {
+        "item": "handleFetchInvoices / handleImportSelected / handleDisconnect / handleClearImported only act on result.data.success === true; a falsy success returns silently with no user feedback",
+        "location": "screens/FreshBooksScreen.js:191, 160, 312, 361"
+      },
+      {
+        "item": "Duplicate paddingBottom keys in QuickBooks 'content' style (100 then overridden by TAB_BAR_HEIGHT+SPACING.lg) — dead first value",
+        "location": "screens/QuickBooksScreen.js:469-471"
+      },
+      {
+        "item": "Duplicate 'invoiceHeader' style key defined twice in FreshBooks StyleSheet — first definition (line ~820) is overridden by the second (~838); reused for two semantically different layouts (section header vs card row)",
+        "location": "screens/FreshBooksScreen.js:820-825 and 838-842"
+      },
+      {
+        "item": "FreshBooks 'content' style sets paddingBottom:100 but ScrollView contentContainerStyle is not used (style vs contentContainerStyle), so the padding likely doesn't apply as intended",
+        "location": "screens/FreshBooksScreen.js:478, 734-737"
+      },
+      {
+        "item": "QuickBooks loadSettings catch only console.errors and leaves UI in default (disconnected) state with no user-facing error",
+        "location": "screens/QuickBooksScreen.js:75-79"
+      },
+      {
+        "item": "QuickBooksContext refresh-failure detection relies on brittle string matching error.message.includes('Token refresh failed') to decide reconnection is needed",
+        "location": "contexts/QuickBooksContext.js:131-134"
+      },
+      {
+        "item": "handleSaveSettings writes updatedBy: userProfile.id without null-guard; if userProfile is null this throws",
+        "location": "screens/QuickBooksScreen.js:106"
+      },
+      {
+        "item": "Footer text 'Need help? Visit QuickBooks Developer Portal' is static text with no link/handler",
+        "location": "screens/QuickBooksScreen.js:417-421"
+      }
+    ],
+    "portability": "The FreshBooks integration is the genuinely hard-won, harvest-worthy piece: a complete Cloud-Functions-backed OAuth flow (freshbooksConnect returning an authUrl opened via Linking, freshbooksCallback redirect handling, freshbooksDisconnect), invoice retrieval with date-range + pagination (freshbooksGetInvoices, perPage 50), and a full bulk-import pipeline (freshbooksBulkImport) that maps external invoices to internal clients/locations and creates projects+estimates, plus a destructive cleanup (freshbooksClearImported). The client/location mapping UX — selecting a client, then conditionally a location when client.qbCustomers.length>1, keyed selections per invoice with import-time validation — is reusable product logic. The QuickBooksContext token-refresh pattern is also worth keeping: onSnapshot-driven connection detection, AppState 'active' foreground re-check, a 30-minute pre-expiry refresh window, in-flight guard (isRefreshing), and httpsCallable 'refreshQuickBooksToken' — a clean, generic OAuth-token-keep-alive harness adaptable to any provider. The shared iOS design tokens (TYPOGRAPHY/SPACING/RADIUS/SHADOWS, themed createStyles(colors)) and the settings-card/section/status-card/danger-zone UI patterns are consistent and reusable.",
+    "notes": "The two integrations are at opposite maturity levels and should not be conflated: FreshBooks is feature-complete and backed by real Cloud Functions; QuickBooks is a UI shell whose three primary buttons (Connect, Test, Sync) are placeholders/simulations, even though a sophisticated QuickBooksContext token-refresh layer exists and is real. That asymmetry strongly implies QuickBooks was scaffolded UI-first and never finished server-side, while the context was built speculatively (and currently has nothing to refresh because no real tokens are ever produced by the screen). SECURITY RISK: QuickBooks clientSecret/accessToken/refreshToken are written to Firestore in plaintext from the client and re-read into TextInputs — anyone with read access to settings/quickbooks gets the secrets; this should move to server-side secret storage. The FreshBooks redirectUri and the Cloud Functions project/region are hardcoded ('carben-connect', 'us-central1'), which will break in other environments. The screen reads a settings/freshbooks doc directly but mutations go through Cloud Functions — good separation; QuickBooks instead mutates Firestore directly from the client, which is inconsistent and riskier. Cross-coupling: the FreshBooks import reuses a field named qbCustomers (QuickBooks customers) for client locations, indicating shared client schema where QB customers double as locations. Numerous handlers silently no-op when a Cloud Function returns success:false (no error surfaced). Two duplicate StyleSheet keys (invoiceHeader in FreshBooks, paddingBottom in QuickBooks) are latent bugs/dead code. The FreshBooks ScrollView uses style instead of contentContainerStyle for bottom padding, which likely doesn't render as intended. A rewrite should: finish or remove the QuickBooks server side, encrypt/relocate secrets, add real date pickers + working pagination to FreshBooks, externalize the hardcoded URLs, and unify the direct-Firestore vs Cloud-Function mutation patterns.",
+    "_key": "integrations",
+    "_label": "QuickBooks & FreshBooks Integrations"
+  },
+  {
+    "area": "AI & Voice",
+    "summary": "The AI & Voice subsystem lets contractors create projects by speaking and lets them generate/refine construction estimate descriptions with AI. It is implemented as a thin React Native client that posts to Vercel-hosted HTTP endpoints at carbenconnect.com/api/ai/* (transcribe, generate-project, generate-estimate, chat) which proxy to OpenAI (Whisper for speech-to-text, GPT-4o for generation/chat). Voice recording uses expo-audio; the resulting m4a is uploaded as multipart form data, transcribed, then fed to a project-generation endpoint that returns a structured title/description/summary. A parallel, fully-built set of Firebase Callable Functions (transcribeAudio, generateProject, textToSpeech) exists in functions/index.js but is NOT called by the mobile app — the app exclusively uses the Vercel HTTP API. config/openai.js exposes generateProject/transcribeAudio/aiChat helpers that are dead code (only generateEstimate is imported anywhere). lib/api.ts is a generic fetch wrapper that is also unused by this subsystem.",
+    "features": [
+      {
+        "name": "Voice-to-Project recording (VoiceRecorder)",
+        "status": "complete",
+        "description": "User taps a mic button in the New Project form, records audio (with live duration timer and haptics), taps again to stop. The m4a recording is POSTed as multipart form data to /api/ai/transcribe (Whisper), then the transcript is POSTed to /api/ai/generate-project (GPT-4o) which returns a structured title/description/summary. The component calls onTranscription({title, description, transcription, summary}); NewProjectScreen fills the title (only if empty) and description fields and stashes the raw transcription. On project save, if a transcription exists it is written as a SYSTEM message into the project's inbox thread.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/VoiceRecorder.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/NewProjectScreen.js"
+        ],
+        "dataTouched": "Reads audio from a local expo-audio file URI (recorderState.url). Writes Firestore 'messages' collection on project creation: {projectId, projectTitle, senderId:'SYSTEM', senderName:'Voice Transcription', senderRole:'system', message, text, createdAt, read:false, unread:true}. Title/description flow into the 'projects' doc created by NewProjectScreen.",
+        "integrations": "OpenAI Whisper (whisper-1) and GPT-4o, both via Vercel endpoints https://carbenconnect.com/api/ai/transcribe and /api/ai/generate-project"
+      },
+      {
+        "name": "AI Estimate generation (Import with AI)",
+        "status": "complete",
+        "description": "In the AI Estimate tab of a project, the user can tap 'Import Description' (copies the project description verbatim) or 'Import with AI' which calls generateEstimate(project.description, additionalInstructions) -> POST /api/ai/generate-estimate. The returned estimate text populates a multiline editor with debounced auto-save (2s) to Firestore. User can finalize/un-finalize the estimate; editing a finalized estimate auto-unfinalizes it.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/AIEstimateTab.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/config/openai.js"
+        ],
+        "dataTouched": "Firestore 'estimateDescriptions/{projectId}' {description, aiGeneratedText, finalizedText, isFinalized, finalizedAt, finalizedBy, lastEditedAt, lastEditedBy} and 'estimateProgress/{projectId}' {descriptionGenerated, descriptionFinalized, lastEditedAt, lastEditedBy}. Live onSnapshot read of estimateDescriptions/{projectId}.",
+        "integrations": "OpenAI via https://www.carbenconnect.com/api/ai/generate-estimate"
+      },
+      {
+        "name": "AI Estimate chat assistant",
+        "status": "complete",
+        "description": "Collapsible chat panel in AIEstimateTab. Builds a systemContext string from project description, current estimate text, and special instructions, then POSTs {message, conversationHistory, systemContext} to /api/ai/chat. Renders user/assistant bubbles. On failure it removes the optimistic user message and restores the input text. Chat history is local-only (component state); it is never persisted.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/AIEstimateTab.js"
+        ],
+        "dataTouched": "No Firestore writes; chat state is in-memory only and lost on unmount.",
+        "integrations": "OpenAI via https://www.carbenconnect.com/api/ai/chat"
+      },
+      {
+        "name": "Additional AI instructions input",
+        "status": "complete",
+        "description": "Collapsible textarea letting the user add free-form instructions (e.g. 'Include 2-year warranty') that are passed to both generate-estimate and the chat systemContext. Not persisted to Firestore (local state only).",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/AIEstimateTab.js"
+        ],
+        "dataTouched": "None persisted (additionalInstructions is local state).",
+        "integrations": "Feeds OpenAI calls"
+      },
+      {
+        "name": "Firebase Callable AI functions (transcribeAudio, generateProject, textToSpeech)",
+        "status": "partial",
+        "description": "A complete, auth-gated server implementation of audio transcription (Whisper), project generation (GPT-4o with elaborate structured prompts), and text-to-speech (OpenAI TTS) lives in functions/index.js. These are fully written but are NOT invoked anywhere in the mobile client — the app uses the parallel Vercel HTTP endpoints instead. Status is 'partial' because the feature exists end-to-end on the backend but is dead/unwired from the client's perspective.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js"
+        ],
+        "dataTouched": "None (stateless onCall functions; relies on context.auth).",
+        "integrations": "OpenAI Whisper, GPT-4o, OpenAI TTS"
+      },
+      {
+        "name": "config/openai.js client helpers (generateProject, transcribeAudio, aiChat)",
+        "status": "stub",
+        "description": "Exported wrapper functions for generate-project, transcribe, and chat that mirror what VoiceRecorder/AIEstimateTab do inline. Only generateEstimate is imported anywhere; generateProject, transcribeAudio, and aiChat are dead code — never imported by any screen/component.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/config/openai.js"
+        ],
+        "dataTouched": "None.",
+        "integrations": "Would call carbenconnect.com/api/ai/* if used"
+      },
+      {
+        "name": "Generic API client (lib/api.ts)",
+        "status": "complete",
+        "description": "A typed fetch wrapper with timeout/AbortController, bearer token support, JSON/text content negotiation, and get/post/put/delete helpers. Resolves base URL from expo-constants extra.apiUrl falling back to https://www.carbenconnect.com. Well-built but not used by any AI/voice code path (the AI components hardcode their own fetch calls).",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/lib/api.ts"
+        ],
+        "dataTouched": "None directly.",
+        "integrations": "Generic HTTP to carbenconnect.com"
+      }
+    ],
+    "incomplete": [
+      {
+        "item": "Empty catch block swallows audio-mode reset failure",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/VoiceRecorder.js:130-132",
+        "evidence": "catch (e) { // Ignore error } when resetting setAudioModeAsync after a recording error."
+      },
+      {
+        "item": "Dead error-handling branch for Firebase Callable error codes in an HTTP-fetch path",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/VoiceRecorder.js:199",
+        "evidence": "Checks error.code === 'functions/unauthenticated' but processRecording uses fetch() to the Vercel API, which never produces Firebase Functions error codes. Leftover from a Callable-based implementation."
+      },
+      {
+        "item": "Hardcoded API base URLs scattered across the subsystem (carbenconnect.com vs www.carbenconnect.com) instead of using lib/api.ts or a single config",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/VoiceRecorder.js:148,162 ; /Users/carlborrelli/carben-connect-mobile-2.0/config/openai.js:3 ; /Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/AIEstimateTab.js:219",
+        "evidence": "VoiceRecorder uses 'https://carbenconnect.com/api/...'; config/openai.js and AIEstimateTab use 'https://www.carbenconnect.com/api/...'. Inconsistent host; none use the lib/api.ts getBaseUrl()."
+      },
+      {
+        "item": "Hardcoded audio MIME 'audio/mp4' with inline comment acknowledging the mismatch",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/VoiceRecorder.js:144-145",
+        "evidence": "type: 'audio/mp4', // m4a is actually MPEG-4 audio — relies on server tolerating this."
+      },
+      {
+        "item": "Dead/unused exported client helpers",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/config/openai.js:45-107",
+        "evidence": "generateProject, transcribeAudio, aiChat are exported but never imported anywhere in the repo (only generateEstimate is used)."
+      },
+      {
+        "item": "Parameter-name mismatch between client chat call and config helper",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/config/openai.js:96 vs /Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/AIEstimateTab.js:226",
+        "evidence": "aiChat() sends body key 'history'; the actual working call in AIEstimateTab sends 'conversationHistory'. The unused helper would not match the live API contract."
+      },
+      {
+        "item": "Chat conversation is never persisted; lost on tab unmount",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/AIEstimateTab.js:37,235",
+        "evidence": "chatMessages lives only in useState; no Firestore write of chat history."
+      },
+      {
+        "item": "Estimate response field is guessed across many possible keys (fragile API contract)",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/config/openai.js:33",
+        "evidence": "estimate: data.estimateDescription || data.estimate || data.generatedText || data.text — indicates the response shape was never pinned down."
+      },
+      {
+        "item": "User-facing error references OpenAI API key config, leaking server-side implementation detail",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/estimate/AIEstimateTab.js:169",
+        "evidence": "'Failed to generate estimate. Please check your OpenAI API key configuration.' shown to end users who cannot configure the key."
+      },
+      {
+        "item": "Firebase Callable AI functions are implemented but unreachable from the client (dead backend or orphaned migration)",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:216,286,408",
+        "evidence": "transcribeAudio/generateProject/textToSpeech onCall handlers exist; no callable(...) invocation exists in the mobile codebase, which calls the Vercel /api/ai/* endpoints instead."
+      },
+      {
+        "item": "text-to-speech (textToSpeech function) has no client UI",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:408",
+        "evidence": "The generate-project prompt returns a conversational 'summary' meant 'to speak back to the user', and a TTS function exists, but nothing in the app plays it; summary is captured but unused in NewProjectScreen.handleVoiceTranscription."
+      },
+      {
+        "item": "'summary' returned by generate-project is captured but never displayed/used",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/VoiceRecorder.js:180,187 ; /Users/carlborrelli/carben-connect-mobile-2.0/screens/NewProjectScreen.js:106-124",
+        "evidence": "onTranscription receives summary, but handleVoiceTranscription only uses title/description/transcription."
+      },
+      {
+        "item": "lib/api.ts AbortController timeout is constructed but never abortable mid-stream for FormData uploads; also unused by AI paths",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/lib/api.ts:18-74",
+        "evidence": "Solid generic client, but no AI/voice code imports it; AI calls have no timeout at all."
+      }
+    ],
+    "portability": "Worth harvesting: (1) The full voice-to-structured-project pipeline — expo-audio recording lifecycle (permission request, setAudioModeAsync toggling for iOS, prepareToRecordAsync/record/stop, live timer, cleanup on unmount) in VoiceRecorder.js is non-trivial and battle-tested. (2) The React Native FormData multipart audio upload pattern ({uri,type,name}) for sending m4a to a server. (3) The GPT-4o prompt engineering in functions/index.js:307-374 that converts contractor voice notes into a structured Location/Scope-of-Work/Notes description with response_format json_object — both the 'new project' and 'append to existing' prompt variants are valuable. (4) The OpenAI Whisper invocation pattern using a Node Readable stream with a faked .path extension (functions/index.js:244-255) to avoid temp files. (5) lib/api.ts is a clean, reusable typed fetch wrapper (timeout via AbortController, bearer auth, content-type negotiation, get/post/put/delete) worth keeping as the single HTTP client. (6) The estimate auto-save + finalize/unfinalize state machine and the chat systemContext-building logic in AIEstimateTab.js.",
+    "notes": "Major architectural smell: there are TWO complete AI backends — Firebase Callable Functions (functions/index.js) and Vercel HTTP endpoints (carbenconnect.com/api/ai/*) — and the mobile app uses only the Vercel ones. This means the Firebase functions (including textToSpeech, which has no client at all) are dead weight or an abandoned migration; a rewrite must decide on one. The client hardcodes endpoint hosts inconsistently (carbenconnect.com vs www.carbenconnect.com) and never routes AI calls through the otherwise-well-built lib/api.ts, so there is no timeout, retry, or auth header on any AI/voice request (the Vercel endpoints appear to be unauthenticated, unlike the auth-gated Firebase functions — a security consideration since they call paid OpenAI APIs). config/openai.js is mostly dead code (3 of 4 exports unused) and its aiChat helper's body shape ('history') does not even match the live API ('conversationHistory'). Voice transcription is silently injected into the project 'messages' inbox as a SYSTEM message labeled 'Voice Transcription' — a non-obvious side effect a rewrite must preserve or intentionally drop. Chat history and additional-instructions are ephemeral (never persisted). Error messages leak server config details to end users. Overall the happy paths are functional and reasonably polished (haptics, loading states, auto-save), but the subsystem carries significant duplication and dead code, and the contract between client and the Vercel API is loosely defined (response keys are guessed via fallback chains).",
+    "_key": "ai-voice",
+    "_label": "AI & Voice"
+  },
+  {
+    "area": "Admin, Settings & Misc Screens",
+    "summary": "This subsystem covers the app's administrative tooling, user account UI, app preferences, and static legal/utility screens. The core admin feature is user management: an admin-only list of all Firestore `users` with search/filter/stats (UserManagementScreen) feeding into a per-user editor (UserEditScreen) that can update profile fields, trigger Firebase Auth password reset emails, force-change a password via a `changeUserPassword` Cloud Function, and delete user docs. MoreScreen is the navigation hub (profile, theme switching, admin links to User Management/QuickBooks/FreshBooks/Drafts, support links, sign out) and ProfileScreen offers profile viewing plus an admin \"View as Client\" impersonation flow backed by AuthContext. SettingsScreen, CalendarScreen, PrivacyPolicyScreen, and TermsOfServiceScreen are largely presentational: Settings has non-persisted toggles and placeholder actions, Calendar is a self-contained month grid with no real event data, and the two legal screens are hardcoded static text. There is a noticeable split between genuinely wired admin features and decorative/stub UI.",
+    "features": [
+      {
+        "name": "User Management list (admin)",
+        "status": "complete",
+        "description": "Admin-only screen listing all users with live updates, search by name/email/phone, role filter chips (All/Admin/Client), and a stats bar (total/admins/clients). Non-admins are alerted and bounced back via navigation.goBack(). Flow: More > Admin > User Management > search/filter > tap user opens UserEdit. Each card shows avatar initial, You/Admin badges, phone, and QuickBooks customer ID.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/UserManagementScreen.js"
+        ],
+        "dataTouched": "Reads Firestore collection `users` (onSnapshot, orderBy name asc); fields name, email, phone, role, quickbooksCustomerId",
+        "integrations": "Firebase Firestore"
+      },
+      {
+        "name": "User editing (profile fields)",
+        "status": "complete",
+        "description": "Loads a single user doc, edits name/email/phone/quickbooksCustomerId and writes back with updatedAt. Validates name and email non-empty, lowercases email on save. Flow: UserManagement > tap user > edit fields > Save.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/UserEditScreen.js"
+        ],
+        "dataTouched": "Reads/writes Firestore `users/{userId}` fields name, email, phone, quickbooksCustomerId, updatedAt",
+        "integrations": "Firebase Firestore"
+      },
+      {
+        "name": "Send password reset email",
+        "status": "complete",
+        "description": "Admin triggers Firebase Auth sendPasswordResetEmail to the user's email with a confirm dialog and per-error-code messaging (user-not-found, invalid-email). Flow: UserEdit > Account Actions > Send Password Reset Email > confirm.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/UserEditScreen.js"
+        ],
+        "dataTouched": "None (Firebase Auth email send keyed on email field)",
+        "integrations": "Firebase Authentication"
+      },
+      {
+        "name": "Admin force-change password",
+        "status": "complete",
+        "description": "Uses Alert.prompt (iOS-only secure-text) to capture a new password (min 6 chars) and calls the `changeUserPassword` Firebase Cloud Function with userId and newPassword. Handles permission-denied/not-found/invalid-argument/unauthenticated function errors. Flow: UserEdit > Account Actions > Change Password > enter password.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/UserEditScreen.js"
+        ],
+        "dataTouched": "None directly; delegates to Cloud Function which updates the Firebase Auth password",
+        "integrations": "Firebase Functions (httpsCallable 'changeUserPassword')"
+      },
+      {
+        "name": "Delete user",
+        "status": "partial",
+        "description": "Deletes the Firestore `users/{userId}` document after a destructive confirm, blocking deletion of your own account. Only the Firestore doc is removed; the underlying Firebase Auth account is NOT deleted, leaving an orphaned auth record. Flow: UserEdit > Danger Zone > Delete User > confirm.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/UserEditScreen.js"
+        ],
+        "dataTouched": "Deletes Firestore doc `users/{userId}`",
+        "integrations": "Firebase Firestore"
+      },
+      {
+        "name": "More hub / navigation menu",
+        "status": "complete",
+        "description": "Central menu: profile header (special Branden Sternbach logo branch), appearance theme selector, Account (Profile/Settings), Admin section (Drafts & Estimates, User Management, QuickBooks, FreshBooks) gated by isAdmin(), Support (Privacy/Terms), Sign Out, and a version label. Calendar and Profile icons in the header. Flow: Tab bar > More > tap any item.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/MoreScreen.js"
+        ],
+        "dataTouched": "Reads userProfile (email, name) from AuthContext",
+        "integrations": "None (navigation only)"
+      },
+      {
+        "name": "Theme mode switching",
+        "status": "complete",
+        "description": "Automatic(System)/Light/Dark selector with a checkmark indicating the active mode, persisted via ThemeContext.setThemeMode. Flow: More > Appearance > tap a mode.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/MoreScreen.js"
+        ],
+        "dataTouched": "ThemeContext (themeMode); persistence handled by the context, not this screen",
+        "integrations": "None"
+      },
+      {
+        "name": "Profile view",
+        "status": "complete",
+        "description": "Displays avatar/initial (or Branden logo), name, admin badge, account info (email, role, phone), and an optional QuickBooks section (customer ID, qbLocationName). Read-only display, no editing despite the file's 'view and edit' comment. Flow: More/Settings > Profile.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ProfileScreen.js"
+        ],
+        "dataTouched": "Reads userProfile fields email, name, phone, quickbooksCustomerId, qbLocationName, role",
+        "integrations": "None"
+      },
+      {
+        "name": "View as Client (admin impersonation)",
+        "status": "complete",
+        "description": "Real admins can open ClientSelectorModal, pick a client, and switch the app into client-view mode via AuthContext.viewAsClient(clientId); an Exit Client View button restores admin context. Navigates Home after switching. Flow: Profile > View as Client > select client; later Profile > Exit Client View.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ProfileScreen.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/ClientSelectorModal.js"
+        ],
+        "dataTouched": "Delegated to AuthContext (viewAsClient/exitViewAsClient/isViewingAsClient)",
+        "integrations": "AuthContext"
+      },
+      {
+        "name": "Sign out",
+        "status": "complete",
+        "description": "Calls AuthContext.signOut with haptic feedback. Present in both MoreScreen and ProfileScreen. Flow: More or Profile > Sign Out.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/MoreScreen.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/ProfileScreen.js"
+        ],
+        "dataTouched": "AuthContext",
+        "integrations": "Firebase Auth (via AuthContext)"
+      },
+      {
+        "name": "Settings screen",
+        "status": "stub",
+        "description": "Renders an Account link to Profile (works), notification toggles (All/Email/Push) that are local useState only with NO persistence or effect, Clear Cache (fake success alert, clears nothing), Report a Bug (alert telling user to email support), App Version (hardcoded 2.0.0, no-op onPress), and Privacy/Terms links (work). Flow: More > Settings > toggle/tap items.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/SettingsScreen.js"
+        ],
+        "dataTouched": "None persisted; reads userProfile.email for display",
+        "integrations": "None"
+      },
+      {
+        "name": "Calendar",
+        "status": "stub",
+        "description": "Self-contained month grid with prev/next month navigation and selectable date highlighting. The Today button has no onPress handler. The Events section is a hardcoded empty-state placeholder; no Firestore data, milestones, or deadlines are ever loaded or rendered. Flow: More > Calendar icon > navigate months / tap dates.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/CalendarScreen.js"
+        ],
+        "dataTouched": "None",
+        "integrations": "None"
+      },
+      {
+        "name": "Privacy Policy (static)",
+        "status": "complete",
+        "description": "Static, hardcoded privacy policy text with 10 sections, last-updated date, and contact info. Renders correctly; purely informational. Flow: Settings/More > Privacy Policy.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/PrivacyPolicyScreen.js"
+        ],
+        "dataTouched": "None",
+        "integrations": "None"
+      },
+      {
+        "name": "Terms of Service (static)",
+        "status": "complete",
+        "description": "Static, hardcoded terms of service with 14 sections, last-updated date, and contact info. Renders correctly; purely informational. Flow: Settings/More > Terms of Service.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/screens/TermsOfServiceScreen.js"
+        ],
+        "dataTouched": "None",
+        "integrations": "None"
+      }
+    ],
+    "incomplete": [
+      {
+        "item": "Settings notification toggles are pure local state with no persistence and no side effects — flipping them does nothing",
+        "location": "screens/SettingsScreen.js:23-25,120-145"
+      },
+      {
+        "item": "Clear Cache action is fake — shows a success alert but clears no cache/storage",
+        "location": "screens/SettingsScreen.js:62-79"
+      },
+      {
+        "item": "Report a Bug just shows an alert telling the user to email support@carbenconnect.com; no in-app reporting",
+        "location": "screens/SettingsScreen.js:81-88"
+      },
+      {
+        "item": "App Version row has empty no-op onPress and hardcoded version string '2.0.0' (not read from app config/Constants)",
+        "location": "screens/SettingsScreen.js:177-181"
+      },
+      {
+        "item": "Hardcoded version '2.0.0' duplicated in MoreScreen footer; should come from expo Constants/app.json",
+        "location": "screens/MoreScreen.js:187"
+      },
+      {
+        "item": "Hardcoded copyright year '© 2025' in Settings footer (current date 2026)",
+        "location": "screens/SettingsScreen.js:207"
+      },
+      {
+        "item": "Calendar Events section is a permanent placeholder empty-state; no event data is ever loaded",
+        "location": "screens/CalendarScreen.js:146-156"
+      },
+      {
+        "item": "Calendar 'Today' button has no onPress handler — tapping it does nothing",
+        "location": "screens/CalendarScreen.js:108-110"
+      },
+      {
+        "item": "Delete user only deletes the Firestore doc, not the Firebase Auth account — leaves an orphaned auth user",
+        "location": "screens/UserEditScreen.js:213"
+      },
+      {
+        "item": "Email field is freely editable in UserEdit but only the Firestore email is updated, not the Firebase Auth email — they can silently drift out of sync",
+        "location": "screens/UserEditScreen.js:85-91"
+      },
+      {
+        "item": "Empty/weak error handling: failures loading the user list only console.error with no user-facing feedback",
+        "location": "screens/UserManagementScreen.js:61-65"
+      },
+      {
+        "item": "handleRefresh just sets refreshing=true and relies on the onSnapshot listener to clear it — pull-to-refresh does not actually re-fetch and could spin indefinitely if no snapshot fires",
+        "location": "screens/UserManagementScreen.js:96-98"
+      },
+      {
+        "item": "isAdmin redirect effect depends on [isAdmin] (a function reference) rather than a boolean; correctness depends on a stable reference from AuthContext",
+        "location": "screens/UserManagementScreen.js:35-40"
+      },
+      {
+        "item": "Alert.prompt used for Change Password is an iOS-only API — would break on Android",
+        "location": "screens/UserEditScreen.js:143-194"
+      },
+      {
+        "item": "Hardcoded special-case branding for a specific user (email contains 'bsternbach') shows BrandenSternbach.png in MoreScreen",
+        "location": "screens/MoreScreen.js:17,60-73"
+      },
+      {
+        "item": "Hardcoded special-case branding for 'bsternbach' in ProfileScreen avatar",
+        "location": "screens/ProfileScreen.js:60,76-81"
+      },
+      {
+        "item": "Duplicate paddingBottom keys in style object (paddingBottom:100 then overwritten by TAB_BAR_HEIGHT+SPACING.lg) — dead first value",
+        "location": "screens/SettingsScreen.js:240-242"
+      },
+      {
+        "item": "Duplicate paddingBottom keys in MoreScreen content style — dead first value",
+        "location": "screens/MoreScreen.js:221-223"
+      },
+      {
+        "item": "Profile screen has no profile editing despite the filename comment 'View and edit user profile' — read-only only",
+        "location": "screens/ProfileScreen.js:1"
+      },
+      {
+        "item": "Legal screens 'Last Updated: January 12, 2025' is hardcoded and stale relative to the current date",
+        "location": "screens/PrivacyPolicyScreen.js:25"
+      },
+      {
+        "item": "Privacy Policy references Vercel hosting and OpenAI Whisper/GPT — these claims must stay in sync with the actual backend or become misleading",
+        "location": "screens/PrivacyPolicyScreen.js:71-73"
+      }
+    ],
+    "portability": "The genuinely valuable, non-trivial pieces worth harvesting in a rewrite: (1) The admin user-management pipeline in UserEditScreen — the wiring of Firebase Auth sendPasswordResetEmail, the httpsCallable('changeUserPassword') Cloud Function call with full per-error-code handling (permission-denied/not-found/invalid-argument/unauthenticated), plus the validation/haptics/confirm-dialog patterns. This is real backend integration, not just UI. (2) The live-updating filtered list pattern in UserManagementScreen (onSnapshot + client-side search across name/email/phone + role filter + computed stats) is a clean reusable template. (3) The 'View as Client' admin impersonation flow (ProfileScreen + ClientSelectorModal + AuthContext.viewAsClient/exitViewAsClient/isRealAdmin/isViewingAsClient) is a meaningful access-control feature worth preserving. (4) The full Privacy Policy and Terms of Service legal copy is laborious to write and tailored to this app's stack (Firebase, OpenAI Whisper/GPT, QuickBooks, Vercel) — keep the text. (5) The consistent iOS-style design-token usage (TYPOGRAPHY/SPACING/RADIUS/SHADOWS from theme, systemGroupedBackground card patterns, themed createStyles(colors) factory) is the app's design language and should be carried over wholesale.",
+    "notes": "Code quality is consistent and readable: every screen uses the same createStyles(colors) + useTheme pattern, SafeAreaView with top edge, 44pt touch targets, and haptics on interactions — a coherent iOS-native aesthetic. The big risk is the gap between screens that look done and screens that are decorative: SettingsScreen and CalendarScreen render polished UI but do essentially nothing (toggles don't persist, cache clear is fake, calendar has no data). A developer must not assume rendered = functional. Security/data-integrity risks in the admin flow: (a) deleting a user removes only the Firestore doc, orphaning the Firebase Auth account; (b) editing email updates Firestore but not Firebase Auth, causing drift; (c) password operations rely on a Cloud Function ('changeUserPassword') and Firestore security rules outside these files — the screens trust them but enforce nothing server-side here (the isAdmin() gate is client-side only, so server rules/function checks are the real boundary). Surprising choices: hardcoded special-case branding for a single user ('bsternbach' → BrandenSternbach.png) baked into two screens; Alert.prompt for password entry is iOS-only; version strings and copyright year are hardcoded in multiple places and already stale. The theme import lines have odd spacing (e.g. 'SHADOWS  , TAB_BAR_HEIGHT') suggesting automated edits. Overall this subsystem is roughly half production-ready admin tooling and half placeholder shell.",
+    "_key": "admin-settings",
+    "_label": "Admin, Settings & Misc Screens"
+  },
+  {
+    "area": "Cloud Functions (backend)",
+    "summary": "The Firebase Cloud Functions backend (Node 20, firebase-functions v4) provides server-side capabilities the React Native client cannot do safely on-device: admin user management (password changes, welcome emails), AI features via OpenAI (Whisper transcription, GPT-4o project generation, TTS), accounting integrations (QuickBooks token refresh, full FreshBooks OAuth + invoice import pipeline), and Firestore-triggered Expo push notifications for messages, estimates, and new projects. Almost all callable functions gate on a Firebase Auth token plus an 'admin' role lookup in the Firestore users collection, and write an audit trail to audit_logs for sensitive actions. The most substantial and complete subsystem is the FreshBooks integration (connect, OAuth callback, token refresh, list invoices, single/bulk import as projects+estimates, disconnect, clear-imported). Notable risks: hardcoded FreshBooks client ID/secret committed in source, an OpenAI placeholder API key fallback, and a fragile internal use of `.run()` for bulk import.",
+    "features": [
+      {
+        "name": "Admin: Change user password",
+        "status": "complete",
+        "description": "Callable function that lets an admin reset another user's Firebase Auth password (min 6 chars). Flow: admin in app triggers reset -> function verifies caller role -> verifies target user exists -> admin.auth().updateUser sets new password -> writes audit log. Returns success.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:30-120"
+        ],
+        "dataTouched": "Reads users/{callerId}, users/{userId}; writes audit_logs (action=password_change). Uses Firebase Auth updateUser.",
+        "integrations": "Firebase Auth (Admin SDK)"
+      },
+      {
+        "name": "Admin: Send welcome email",
+        "status": "partial",
+        "description": "Callable that generates a Firebase password-reset link (used as a welcome link) for a new user and returns it to the app. The function itself does NOT send any email; the comment notes the mobile app must send the email via an external service. So the 'email' part is unimplemented server-side.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:133-204"
+        ],
+        "dataTouched": "Reads users/{callerId}; writes audit_logs (action=welcome_email_sent). Generates Firebase Auth password reset link.",
+        "integrations": "Firebase Auth generatePasswordResetLink. No email-sending service wired in."
+      },
+      {
+        "name": "AI: Audio transcription (Whisper)",
+        "status": "complete",
+        "description": "Callable that accepts base64 audio, decodes to a buffer, builds an in-memory Readable stream with a fake .path/extension, and calls OpenAI whisper-1 (language forced to 'en') to return transcribed text. Used by the voice-to-project feature in the app.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:216-274"
+        ],
+        "dataTouched": "No Firestore. In-memory buffer/stream only.",
+        "integrations": "OpenAI Audio Transcriptions (whisper-1)"
+      },
+      {
+        "name": "AI: Generate project from transcription (GPT-4o)",
+        "status": "complete",
+        "description": "Callable that takes a transcription (and optional existingDescription) and prompts gpt-4o with response_format json_object to return {title, description, summary} formatted as a structured contractor project (Location, Scope of Work bullets, Notes). Supports incremental append flow when existingDescription is supplied.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:286-397"
+        ],
+        "dataTouched": "No Firestore.",
+        "integrations": "OpenAI Chat Completions (gpt-4o, temp 0.7, max_tokens 500)"
+      },
+      {
+        "name": "AI: Text to speech (TTS)",
+        "status": "complete",
+        "description": "Callable that converts text to speech via OpenAI tts-1 (voice 'alloy', speed 1.0) and returns base64 mp3 for the app to play back the AI's spoken response.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:408-455"
+        ],
+        "dataTouched": "No Firestore.",
+        "integrations": "OpenAI Audio Speech (tts-1)"
+      },
+      {
+        "name": "QuickBooks token refresh",
+        "status": "partial",
+        "description": "Admin-only callable that refreshes a QuickBooks OAuth access token using a stored refresh token via Intuit's bearer token endpoint, then persists new access/refresh tokens and expiry. This is the ONLY QuickBooks function present — there is no QB connect/OAuth-callback/invoice-fetch/import here, so QB integration is incomplete relative to FreshBooks. Uses global fetch (Node 20) without importing node-fetch.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:467-573"
+        ],
+        "dataTouched": "Reads users/{callerId}, settings/quickbooks; writes settings/quickbooks (accessToken, refreshToken, tokenExpiry, lastRefresh).",
+        "integrations": "Intuit OAuth (oauth.platform.intuit.com/oauth2/v1/tokens/bearer)"
+      },
+      {
+        "name": "FreshBooks: Connect / get auth URL",
+        "status": "partial",
+        "description": "Admin-only callable that lazily creates the settings/freshbooks doc (with HARDCODED clientId/clientSecret/accountId) or updates redirectUri, then builds and returns the FreshBooks OAuth authorize URL for the app to open in a browser.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:593-676"
+        ],
+        "dataTouched": "Reads users/{callerId}; reads/creates/updates settings/freshbooks (enabled, accountId, clientId, clientSecret, apiVersion, tokens null, redirectUri).",
+        "integrations": "FreshBooks OAuth authorize endpoint (auth.freshbooks.com/oauth/authorize)"
+      },
+      {
+        "name": "FreshBooks: OAuth callback (token exchange)",
+        "status": "complete",
+        "description": "Public HTTPS (onRequest) endpoint hit by FreshBooks redirect with ?code=. Exchanges the auth code for access/refresh tokens via axios, stores them in settings/freshbooks (connected=true), and returns styled HTML success/error pages. Note: redirectUri is hardcoded to the cloud function URL, ignoring the value stored at connect time.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:689-838"
+        ],
+        "dataTouched": "Reads settings/freshbooks; writes settings/freshbooks (accessToken, refreshToken, tokenExpiry, connected, connectedAt).",
+        "integrations": "FreshBooks token endpoint (api.freshbooks.com/auth/oauth/token)"
+      },
+      {
+        "name": "FreshBooks: Refresh token",
+        "status": "complete",
+        "description": "Admin-only callable that refreshes the FreshBooks access token using stored refresh token and persists new tokens/expiry.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:847-936"
+        ],
+        "dataTouched": "Reads users/{callerId}, settings/freshbooks; writes settings/freshbooks tokens + lastRefresh.",
+        "integrations": "FreshBooks token endpoint"
+      },
+      {
+        "name": "FreshBooks: Get invoices (list)",
+        "status": "complete",
+        "description": "Admin-only callable that lists FreshBooks invoices with optional date filters and pagination. Performs inline token-expiry check (refreshes if within 1 hour of expiry) before fetching, then transforms raw invoices into a normalized shape (number, client, amount, status, lines) plus pagination metadata.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:951-1109"
+        ],
+        "dataTouched": "Reads users/{callerId}, settings/freshbooks; may write settings/freshbooks tokens on refresh.",
+        "integrations": "FreshBooks Accounting API (invoices), FreshBooks token endpoint"
+      },
+      {
+        "name": "FreshBooks: Import single invoice -> project + estimate",
+        "status": "complete",
+        "description": "Admin-only callable that fetches a specific FreshBooks invoice, verifies the target Carben client, creates a projects doc (status COMPLETE, source=freshbooks) and optionally an estimates doc (status=approved, line items mapped from invoice lines), and stamps settings/freshbooks.lastImport. Optional location tagging.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:1123-1292"
+        ],
+        "dataTouched": "Reads users/{callerId}, clients/{clientId}, settings/freshbooks; writes projects/* and estimates/* (freshbooksInvoiceId, source, importedBy etc.), settings/freshbooks.lastImport.",
+        "integrations": "FreshBooks Accounting API (single invoice fetch)"
+      },
+      {
+        "name": "FreshBooks: Bulk import invoices",
+        "status": "broken",
+        "description": "Admin-only callable intended to import an array of invoices by looping and invoking the single-import logic. It calls exports.freshbooksImportInvoice.run(importData, context) — `.run()` is not a standard/public API on a Gen1 onCall handler and is fragile; result.data shape assumption (result.data.projectId) is inconsistent with how the single function returns data. Likely fails or behaves unexpectedly at runtime; should refactor shared import logic into a plain helper.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:1305-1389"
+        ],
+        "dataTouched": "Same as single import (projects, estimates, settings/freshbooks).",
+        "integrations": "FreshBooks Accounting API (via the called single-import function)"
+      },
+      {
+        "name": "FreshBooks: Disconnect",
+        "status": "complete",
+        "description": "Admin-only callable that nulls out FreshBooks tokens and sets connected=false with disconnectedAt timestamp.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:1398-1446"
+        ],
+        "dataTouched": "Reads users/{callerId}; writes settings/freshbooks (tokens null, connected false).",
+        "integrations": "None"
+      },
+      {
+        "name": "FreshBooks: Clear imported data",
+        "status": "complete",
+        "description": "Admin-only callable that queries projects and estimates where source==freshbooks and batch-deletes them, then stamps settings/freshbooks.lastClear. Does not chunk beyond a single batch (Firestore 500 op limit), so will fail if combined deletes exceed 500.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:1455-1531"
+        ],
+        "dataTouched": "Reads users/{callerId}, projects (where source=freshbooks), estimates (where source=freshbooks); deletes those docs; writes settings/freshbooks.lastClear.",
+        "integrations": "None"
+      },
+      {
+        "name": "Push notification: on new message",
+        "status": "partial",
+        "description": "Firestore onCreate trigger on messages/{messageId}. Looks up the project, computes recipients (clientId + contractorIds minus sender), fetches their expoPushToken from users, and sends via Expo. Gap: requires message.projectId — general/non-project messages (which recent commits show the app now supports) have no projectId, so projectDoc lookup fails and no notification is sent.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/notificationFunctions.js:14-86",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/sendPushNotification.js:48-84"
+        ],
+        "dataTouched": "Reads messages/{id} (data), projects/{projectId} (clientId, contractorIds, title), users/{recipientId}.expoPushToken.",
+        "integrations": "Expo Push API (exp.host/--/api/v2/push/send)"
+      },
+      {
+        "name": "Push notification: on estimate created",
+        "status": "complete",
+        "description": "Firestore onCreate trigger on estimates/{estimateId}. Resolves the project's clientId, fetches the client's expoPushToken, and sends a single 'New Estimate Available' push.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/notificationFunctions.js:92-145",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/sendPushNotification.js:12-41"
+        ],
+        "dataTouched": "Reads estimates/{id}.projectId, projects/{projectId}.clientId+title, users/{clientId}.expoPushToken.",
+        "integrations": "Expo Push API"
+      },
+      {
+        "name": "Push notification: on project created",
+        "status": "complete",
+        "description": "Firestore onCreate trigger on projects/{projectId}. Queries all users with role==admin, collects their expoPushTokens, and sends a 'New Project Created' push to all admins. Note: this fires for FreshBooks-imported projects too, potentially spamming admins during bulk import.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/notificationFunctions.js:151-200",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/sendPushNotification.js:48-84"
+        ],
+        "dataTouched": "Reads users where role==admin (.expoPushToken), reads triggering project doc.",
+        "integrations": "Expo Push API"
+      },
+      {
+        "name": "Expo push helper (single + batch)",
+        "status": "complete",
+        "description": "Helper module with sendPushNotification (single token) and sendPushNotifications (array). Batch version filters tokens that start with 'ExponentPushToken' before posting. Both POST to Expo with sound=default, priority=high, channelId=default. Single-token sender does NOT validate token prefix.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/functions/sendPushNotification.js:1-89"
+        ],
+        "dataTouched": "None.",
+        "integrations": "Expo Push API via node-fetch"
+      }
+    ],
+    "incomplete": [
+      {
+        "item": "Hardcoded FreshBooks clientId, clientSecret, and accountId committed in source and written into Firestore on first connect. These are live-looking secrets in version control.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:631-634"
+      },
+      {
+        "item": "OpenAI API key falls back to a placeholder 'sk-placeholder-for-local-analysis' if config/env not set, which will cause silent auth failures rather than a clear startup error.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:16"
+      },
+      {
+        "item": "Bulk import uses exports.freshbooksImportInvoice.run(importData, context) — non-standard internal invocation of a Gen1 onCall handler; fragile and likely broken. Shared import logic should be extracted into a plain async helper.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:1355"
+      },
+      {
+        "item": "freshbooksCallback hardcodes redirectUri to the cloud function URL, ignoring the redirectUri persisted during freshbooksConnect; if the connect-time URI differs, token exchange may mismatch.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:740"
+      },
+      {
+        "item": "sendWelcomeEmail does not actually send an email — it only returns a reset link and notes the app must send it via an external service. No email provider wired.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:185-190"
+      },
+      {
+        "item": "onMessageCreated assumes message.projectId exists; general messages without projectId (supported per recent commits c97fee0/1921c3e) will hit a failed project lookup and silently skip notification.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/functions/notificationFunctions.js:24-29"
+      },
+      {
+        "item": "freshbooksClearImported deletes via a single Firestore batch with no 500-op chunking; will throw if projects+estimates deletes exceed 500.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:1489-1503"
+      },
+      {
+        "item": "QuickBooks integration is only token-refresh; no connect/OAuth-callback/list/import functions exist (unlike FreshBooks), and refreshQuickBooksToken depends on settings/quickbooks fields (refreshToken, clientId, clientSecret) presumably populated elsewhere.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:467-573"
+      },
+      {
+        "item": "Push notification triggers swallow all errors and return null (no retry, no dead-letter, no surfacing). Acceptable for fire-and-forget but means failures are invisible beyond logs.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/functions/notificationFunctions.js:82-85"
+      },
+      {
+        "item": "onProjectCreated fires for every project insert including FreshBooks bulk-imported projects, which can mass-notify all admins during an import.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/functions/notificationFunctions.js:151-200"
+      },
+      {
+        "item": "Whisper transcription hardcodes language:'en'; non-English voice notes will be mis-transcribed/translated.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:254"
+      },
+      {
+        "item": "refreshQuickBooksToken builds the request body via string interpolation of refreshToken without URL-encoding; a token containing reserved chars could break the form body.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js:526"
+      },
+      {
+        "item": "sendPushNotification (single) does not validate the 'ExponentPushToken' prefix like the batch variant does, so a stale/invalid stored token is posted directly to Expo.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/functions/sendPushNotification.js:12-21"
+      },
+      {
+        "item": "All functions are Gen1 firebase-functions v4 with no region pinning, memory/timeout config, or App Check; FreshBooks import + AI calls may exceed default timeout/memory.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/functions/index.js (global)"
+      }
+    ],
+    "portability": "The FreshBooks integration is the clearly laborious, high-value piece worth harvesting: full OAuth lifecycle (authorize URL build at index.js:654-657, code-for-token exchange in the onRequest callback at 743-757, token refresh at 888-916, and a reusable inline 'refresh-if-within-1hr-of-expiry' pattern at 994-1029), plus the invoice normalization/transformation mapping (1056-1076) and the invoice->project+estimate import mapping including line-item conversion (1199-1259). The styled HTML success/error OAuth callback pages (704-836) are reusable UX. The QuickBooks bearer-token refresh (Basic-auth + form-encoded grant_type=refresh_token, 515-551) is a clean reference for Intuit OAuth. The OpenAI wiring is also reusable: the base64-audio -> Readable-stream-with-fake-.path Whisper trick (235-255), the GPT-4o JSON-mode contractor prompt templates for both new and incremental project descriptions (305-374), and the TTS base64 round-trip (427-441). The Expo push helper (sendPushNotification.js) with token-prefix filtering and the admin-role-gating + audit_logs pattern (repeated across every admin callable) are clean, portable building blocks.",
+    "notes": "Architecture is a single 1539-line index.js plus two notification modules; consistent and readable but monolithic. Every admin-sensitive callable repeats the identical auth-check + role lookup boilerplate — a candidate for a shared assertAdmin(context) helper. Error handling is consistently good in callables (re-throws HttpsError, wraps others, logs) but notification triggers intentionally swallow errors. Mixed HTTP clients: axios (FreshBooks), global fetch (QuickBooks, Node 20), and node-fetch (Expo helper) — three different fetch mechanisms in one codebase. Security risks a rewrite must address: (1) committed FreshBooks secrets at index.js:631-634 must move to Secret Manager / functions config and be rotated; (2) the OpenAI placeholder-key fallback should fail loudly instead; (3) no App Check on any callable. Correctness risks: freshbooksBulkImport's `.run()` call is the most likely runtime failure; the single-batch delete in clear-imported won't scale past 500 docs; and onMessageCreated won't notify for the app's newly-supported general (project-less) messages. The functions are Gen1 (firebase-functions ^4.5.0) — a rewrite should consider Gen2 with explicit region, memory, timeout, and secrets binding. Deploy/test tooling is standard (firebase emulators, functions:shell, deploy, log) and firebase-functions-test is installed though no test files were referenced here.",
+    "_key": "cloud-functions",
+    "_label": "Cloud Functions (backend)"
+  },
+  {
+    "area": "Design System & Data Layer",
+    "summary": "This subsystem provides the foundational design tokens, shared UI components, Firebase/data-layer wiring, and security rules for the Carben Connect Mobile 2.0 app. theme.js defines an Apple-HIG-based token set (typography, semantic light/dark colors, spacing, radius, shadows, animation, touch targets). config/firebase.js initializes Firebase (Auth with AsyncStorage persistence, Firestore, Storage, Functions). firestore.rules / storage.rules / firestore.indexes.json define access control and query indexes. A handful of branded components (BrandWelcomeHeader, GlowingCallButton, StripedCallButton, VoiceRecorder) and utilities (lib/images.ts image compression, lib/secureStore.ts keychain wrapper, AppErrorBoundary) round out the layer. VoiceRecorder is the most substantial feature, wiring expo-audio recording to remote AI transcription + project-generation endpoints. Notable risks: the color tokens are duplicated (not shared) between theme.js and ThemeContext.js, the Firebase API key is hardcoded in source, and secureStore is fully implemented but unused.",
+    "features": [
+      {
+        "name": "Design token system (typography, colors, spacing, radius, shadows)",
+        "status": "complete",
+        "description": "Centralized Apple-HIG design tokens. TYPOGRAPHY (largeTitle through caption2), light + dark semantic color palettes, 8pt SPACING grid, RADIUS, three SHADOW levels, ANIMATION timings, TOUCH_TARGET sizes, and a platform-aware TAB_BAR_HEIGHT. Consumed across virtually every screen and component via named imports.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/theme.js"
+        ],
+        "dataTouched": "none",
+        "integrations": "none"
+      },
+      {
+        "name": "getTheme() helper and COLORS/COLORS_DARK exports",
+        "status": "partial",
+        "description": "theme.js exports COLORS (=LIGHT_COLORS), COLORS_DARK, and a getTheme(isDark) helper intended to return a full theme bundle. In practice dark-mode color resolution is handled by contexts/ThemeContext.js (which redefines its own duplicate LIGHT/DARK palettes and useTheme hook). getTheme() and COLORS_DARK appear unused; static COLORS is imported only by ViewModeBanner and ClientSelectorModal, which therefore ignore dark mode. Comment at line 209 admits 'will be dynamic later'.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/theme.js",
+          "/Users/carlborrelli/carben-connect-mobile-2.0/contexts/ThemeContext.js"
+        ],
+        "dataTouched": "none",
+        "integrations": "none"
+      },
+      {
+        "name": "Firebase initialization / SDK wiring",
+        "status": "complete",
+        "description": "Initializes the Firebase app and exports auth (initializeAuth with getReactNativePersistence over AsyncStorage), db (Firestore), storage, and functions. Single source of truth imported app-wide.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/config/firebase.js"
+        ],
+        "dataTouched": "Firestore (db), Firebase Storage, Cloud Functions handles created here",
+        "integrations": "Firebase (Auth, Firestore, Storage, Functions); project carben-connect"
+      },
+      {
+        "name": "Firestore security rules",
+        "status": "complete",
+        "description": "Role-aware rules. Helpers authed(), uid(), isAdmin() (reads users/{uid}.role=='admin'). Collections: users (self/admin read, self create, self update with role-change guard, admin delete), projects (any authed read/create; owner update blocked from setting approved/paid/finalized; owner-or-admin delete), projects/*/messages (authed read, sender-only create, immutable), top-level messages (authed read/create/update, admin delete), estimateCalculators, clients (admin-write only), drafts (creator/admin scoped), adminInfo (authed read, admin write).",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/firestore.rules"
+        ],
+        "dataTouched": "Firestore collections: users, projects, projects/{id}/messages, messages, estimateCalculators, clients, drafts, adminInfo",
+        "integrations": "Firebase Firestore"
+      },
+      {
+        "name": "Firestore composite indexes",
+        "status": "partial",
+        "description": "Defines two composite indexes: projects on (clientId ASC, createdAt DESC) and messages on (clientId ASC, createdAt DESC). fieldOverrides is empty. Coverage looks thin relative to the number of collections/queries the app likely runs (e.g. projects ordered by createdAt alone, owner-scoped queries), so some queries may rely on auto-indexes or fail at runtime.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/firestore.indexes.json"
+        ],
+        "dataTouched": "Firestore indexes for projects, messages",
+        "integrations": "Firebase Firestore"
+      },
+      {
+        "name": "Cloud Storage security rules",
+        "status": "complete",
+        "description": "Three buckets: projectUploads/{projectId}/{file} (authed read/delete; write <15MB, image|audio|pdf), profileImages/{userId}/{file} (owner-only write <5MB image, owner delete), estimateAttachments/{estimateId}/{file} (authed read/delete; write <10MB image|pdf).",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/storage.rules"
+        ],
+        "dataTouched": "Storage paths: projectUploads/, profileImages/, estimateAttachments/",
+        "integrations": "Firebase Storage"
+      },
+      {
+        "name": "Image compression utility",
+        "status": "complete",
+        "description": "compressForUpload() resizes to max 1600px width and 75% JPEG before Storage upload; createThumbnail() makes a 400px/60% preview. Both fall back to the original URI on failure. createThumbnail appears unused in the codebase.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/lib/images.ts"
+        ],
+        "dataTouched": "Local file URIs (pre-upload); feeds Storage uploads",
+        "integrations": "expo-image-manipulator"
+      },
+      {
+        "name": "Secure storage wrapper",
+        "status": "stub",
+        "description": "secureStore.set/get/remove wrapping expo-secure-store (iOS Keychain / Android EncryptedSharedPreferences) with a localStorage web fallback, plus SecureStoreKeys (SESSION_TOKEN, USER_ID, REFRESH_TOKEN). Fully implemented but NOT imported anywhere in the app, so it is currently dead/unwired code. Auth persistence instead uses Firebase + AsyncStorage.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/lib/secureStore.ts"
+        ],
+        "dataTouched": "iOS Keychain service 'carbenconnect' / web localStorage",
+        "integrations": "expo-secure-store"
+      },
+      {
+        "name": "App error boundary",
+        "status": "partial",
+        "description": "Class component catching render errors, showing a friendly screen with a Try Again reset, and a __DEV__-only stack dump. Errors are only console.logged; remote error reporting (Sentry) is a TODO and not wired.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/AppErrorBoundary.tsx"
+        ],
+        "dataTouched": "none",
+        "integrations": "none (Sentry TODO)"
+      },
+      {
+        "name": "BrandWelcomeHeader component",
+        "status": "complete",
+        "description": "Branded 'Welcome back, {clientName}' header with decorative orange + blue LinearGradient accent lines. Theme-aware via useTheme; defaults clientName to 'User'.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/BrandWelcomeHeader.js"
+        ],
+        "dataTouched": "none (clientName passed as prop)",
+        "integrations": "expo-linear-gradient"
+      },
+      {
+        "name": "GlowingCallButton component",
+        "status": "complete",
+        "description": "Premium CTA button with a gradient border, soft halo glow, and self-measuring onLayout that scales radius/padding/font/icon/halo to height. Triggers medium haptic on press. Note: imports Ionicons but never renders an icon; 'reverse' prop is declared but unused.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/GlowingCallButton.js"
+        ],
+        "dataTouched": "none",
+        "integrations": "expo-linear-gradient, expo-haptics"
+      },
+      {
+        "name": "StripedCallButton component",
+        "status": "complete",
+        "description": "Call button with orange top stripes and blue bottom stripes (gradient lines) and a centered phone icon + uppercase label. Theme-aware background/text. 'subtle' prop toggles stripe opacity.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/StripedCallButton.js"
+        ],
+        "dataTouched": "none",
+        "integrations": "expo-linear-gradient"
+      },
+      {
+        "name": "VoiceRecorder (voice-to-project) component",
+        "status": "complete",
+        "description": "Records audio via expo-audio (HIGH_QUALITY preset), requests mic permission, manages iOS audio mode and a live duration timer with haptics. On stop it POSTs the m4a to https://carbenconnect.com/api/ai/transcribe (Whisper-style), then POSTs the transcription to https://carbenconnect.com/api/ai/generate-project, and returns {title, description, transcription, summary} via onTranscription callback. Shows a processing spinner and handles errors with alerts.",
+        "entryPoints": [
+          "/Users/carlborrelli/carben-connect-mobile-2.0/components/VoiceRecorder.js"
+        ],
+        "dataTouched": "Local audio recording URI; results flow into project creation (NewProjectScreen) and admin inbox",
+        "integrations": "expo-audio, expo-haptics; remote Vercel AI APIs at carbenconnect.com/api/ai/transcribe and /api/ai/generate-project"
+      }
+    ],
+    "incomplete": [
+      {
+        "item": "Color tokens duplicated, not shared: theme.js defines LIGHT_COLORS/DARK_COLORS and ThemeContext.js redefines its own identical copies instead of importing from theme.js. Two sources of truth that can drift.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/theme.js:98-211 and /Users/carlborrelli/carben-connect-mobile-2.0/contexts/ThemeContext.js (own LIGHT_COLORS/DARK_COLORS)"
+      },
+      {
+        "item": "Comment admits dark-mode export is not wired: 'Export colors (default to light mode, will be dynamic later)'. COLORS is a static light alias; getTheme() and COLORS_DARK appear unused.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/theme.js:209-211, 283-292"
+      },
+      {
+        "item": "Components importing static COLORS bypass dark mode (ViewModeBanner, ClientSelectorModal) — they will render light colors even in dark mode.",
+        "location": "components/ViewModeBanner.js:8, components/ClientSelectorModal.js:17"
+      },
+      {
+        "item": "Hardcoded Firebase web API key / config committed in source (config originally from CREDENTIALS.md).",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/config/firebase.js:10-17"
+      },
+      {
+        "item": "Error reporting TODOs: error boundary only console.logs; no Sentry/crash reporting integrated.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/AppErrorBoundary.tsx:20, 41-42"
+      },
+      {
+        "item": "secureStore wrapper + SecureStoreKeys fully implemented but never imported/used anywhere (dead code); web fallback uses insecure localStorage.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/lib/secureStore.ts:78-88, 22-26"
+      },
+      {
+        "item": "createThumbnail() defined but not referenced anywhere in app code (likely dead).",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/lib/images.ts:41-57"
+      },
+      {
+        "item": "Empty catch block swallowing audio-mode reset error.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/VoiceRecorder.js:130-132"
+      },
+      {
+        "item": "Hardcoded remote AI endpoint URLs (no env/config) — production domain baked into component.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/VoiceRecorder.js:148, 162"
+      },
+      {
+        "item": "VoiceRecorder transcribe POST sends no auth header, but error handling checks for 'functions/unauthenticated' — mismatched/dead error path (endpoint is HTTP, not a callable function).",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/VoiceRecorder.js:148-156, 199-200"
+      },
+      {
+        "item": "Unused import Ionicons and unused 'reverse' prop in GlowingCallButton.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/GlowingCallButton.js:5, 15"
+      },
+      {
+        "item": "Unused Dimensions/SCREEN_WIDTH and Ionicons imports scattered (e.g. StripedCallButton imports Ionicons but only uses 'call').",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/components/StripedCallButton.js:5"
+      },
+      {
+        "item": "Firestore indexes likely under-specified: only two composite indexes defined, fieldOverrides empty, despite many collections and ordered queries app-wide.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/firestore.indexes.json:2-33"
+      },
+      {
+        "item": "Top-level messages rule allows any authed user to update any message (no sender/owner check), and create has no senderId validation (unlike subcollection messages).",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/firestore.rules:49-55"
+      },
+      {
+        "item": "projects read/create allowed for any authenticated user (no ownership/role scoping on read), broad access.",
+        "location": "/Users/carlborrelli/carben-connect-mobile-2.0/firestore.rules:33-34"
+      }
+    ],
+    "portability": "High-value to harvest: (1) The full Apple-HIG design token set in theme.js — typography scale with exact letterSpacing/lineHeight, light+dark iOS semantic color palettes, spacing/radius/shadow/animation/touch-target constants — is a complete, reusable design system. (2) VoiceRecorder.js is the most laborious piece: a working expo-audio record/permission/audio-mode lifecycle plus the two-step AI pipeline (multipart m4a upload to a transcription endpoint, then JSON call to a project-generation endpoint returning title/description/summary) — the React-Native FormData file-append pattern (uri/type/name) and the transcribe→generate flow are worth keeping verbatim. (3) lib/images.ts compression presets (1600px/75% upload, 400px/60% thumbnail with graceful fallback) are tuned and reusable. (4) lib/secureStore.ts is a clean, ready-to-use Keychain wrapper with web fallback. (5) GlowingCallButton's self-measuring onLayout height-proportional scaling (radius/padding/font/icon/halo) and the gradient-border + halo glow technique are non-trivial custom UI. (6) Firestore/Storage rules encode the real role model (admin via users.role, owner-locked project state fields approved/paid/finalized, per-bucket size/content-type limits) and are worth porting as the security baseline.",
+    "notes": "Code quality is generally clean and well-commented, but the design layer has a significant structural smell: theme.js and ThemeContext.js maintain duplicate color palettes, and theme.js's COLORS/COLORS_DARK/getTheme are largely vestigial — dark mode actually flows through ThemeContext's useTheme hook. Any component importing the static COLORS export silently breaks dark mode. The Firebase config (including API key) is committed in plaintext; while Firebase web API keys are not strictly secret, security depends entirely on the rules files in this subsystem, so the broad 'any authed' read on projects and the unguarded update on top-level messages are the real exposure. VoiceRecorder depends on external Vercel endpoints at carbenconnect.com (no auth token sent, no retry/timeout), so it will silently fail if those endpoints change or the device is offline; its 'functions/unauthenticated' error branch is dead since it uses plain fetch, not Firebase callables. secureStore and createThumbnail are implemented-but-unused, suggesting planned-but-abandoned features. The component library is small and stylistically consistent (haptics, theme-awareness, gradient branding in orange #F97316 / blue #3B82F6). A rewrite should consolidate to a single theme source, externalize endpoint URLs/config, add Sentry per the existing TODO, and tighten the messages/projects Firestore rules.",
+    "_key": "design-data",
+    "_label": "Design System & Data Layer"
+  }
+]
